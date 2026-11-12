@@ -304,6 +304,61 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
 
 </details>`,
     },
+    {
+      id: 'trophy_card',
+      title: 'Developer Trophies',
+      enabled: data.githubStatsEnabled,
+      order: 7,
+      content: `### 🏆 Developer Trophies
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=trophy" alt="Developer Trophies" />
+</div>`,
+    },
+    {
+      id: 'activity_graph',
+      title: 'Commit Activity Graph',
+      enabled: data.githubStatsEnabled,
+      order: 8,
+      content: `### 📊 Commit Activity Graph
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=activity" alt="Commit Activity" />
+</div>`,
+    },
+    {
+      id: 'visitor_card',
+      title: 'Visitor Analytics',
+      enabled: data.githubStatsEnabled,
+      order: 9,
+      content: `### 👀 Visitor Analytics
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=visitor" alt="Visitor Analytics" />
+</div>`,
+    },
+    {
+      id: 'contribution_heatmap',
+      title: 'Contribution Heatmap',
+      enabled: data.githubStatsEnabled,
+      order: 10,
+      content: `### 🗓️ Contribution Heatmap
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=heatmap" alt="Contribution Heatmap" />
+</div>`,
+    },
+    {
+      id: 'snake_animation',
+      title: 'Contribution Snake',
+      enabled: data.githubStatsEnabled,
+      order: 11,
+      content: `### 🐍 Contribution Snake
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=snake" alt="Contribution Snake" />
+</div>`,
+    },
   ];
 }
 

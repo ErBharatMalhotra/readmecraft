@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { Octokit } from '@octokit/rest';
+import { fetchProfileData, checkETag, createETagResponse, createNotModifiedResponse } from '@/lib/github-api';
 
 // ============================================================================
 // DESIGN SYSTEM CONSTANTS
@@ -25,15 +25,6 @@ const FONTS = {
   display: "'Space Grotesk', sans-serif",
   mono: "'JetBrains Mono', monospace",
   ui: "'Verdana', 'Geneva', 'DejaVu Sans', sans-serif",
-} as const;
-
-const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 28,
 } as const;
 
 const RADIUS = {
@@ -154,19 +145,17 @@ function generateActivityGraphSvg(username: string): string {
   const chartW = width - margin.left - margin.right;
   const chartH = height - margin.top - margin.bottom;
 
-  // Generate realistic activity data
   const points = Array.from({ length: 30 }, (_, i) => ({
     x: margin.left + (i / 29) * chartW,
     y: margin.top + chartH - (Math.random() * 0.6 + 0.2) * chartH,
   }));
 
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-  const areaPath = path.replace('M', 'M') + ` L ${points[points.length - 1].x} ${margin.top + chartH} L ${points[0].x} ${margin.top + chartH} Z`;
+  const areaPath = path + ` L ${points[points.length - 1].x} ${margin.top + chartH} L ${points[0].x} ${margin.top + chartH} Z`;
 
   let inner = '';
   inner += text(width / 2, 28, `📈 ${username}'s Commit Activity (30 Days)`, 'badge-title');
 
-  // Chart area
   inner += translate(margin.left, margin.top, `
     ${rect(0, 0, chartW, chartH, COLORS.bgElevated, RADIUS.sm, COLORS.border)}
     <defs>
@@ -180,13 +169,11 @@ function generateActivityGraphSvg(username: string): string {
     ${points.map((p, i) => i % 4 === 0 ? `<circle cx="${p.x - margin.left}" cy="${p.y - margin.top}" r="3" fill="${COLORS.emerald}" stroke="${COLORS.bg}" stroke-width="2"/>` : '').join('')}
   `);
 
-  // Axis labels
   ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach((day, i) => {
     const x = margin.left + (i / 6) * chartW;
     inner += text(x, height - 12, day, 'muted');
   });
 
-  // Y-axis label
   inner += `<text x="12" y="${height / 2}" class="muted" text-anchor="middle" transform="rotate(-90, 12, ${height / 2})">Commits</text>`;
 
   return createSvg(width, height, `${username}'s Commit Activity`, inner);
@@ -256,7 +243,6 @@ function generateHeatmapSvg(username: string, calendar: any): string {
   let inner = '';
   inner += text(30, 24, `🗓️ ${username}'s Contribution Calendar`, 'badge-title');
 
-  // Month labels
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   weeks.forEach((week: any, weekIndex: number) => {
     if (week.contributionDays[0]) {
@@ -268,7 +254,6 @@ function generateHeatmapSvg(username: string, calendar: any): string {
     }
   });
 
-  // Day cells
   weeks.forEach((week: any, weekIndex: number) => {
     week.contributionDays.forEach((day: any, dayIndex: number) => {
       const color = getColor(day.contributionCount);
@@ -278,13 +263,11 @@ function generateHeatmapSvg(username: string, calendar: any): string {
     });
   });
 
-  // Day labels (left)
   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((label, i) => {
     const y = startY + i * (cellSize + cellGap) + cellSize / 2 + 3;
     inner += text(startX - 10, y, label, 'muted');
   });
 
-  // Legend
   const legendY = height - 15;
   inner += translate(startX, legendY, `
     <text x="0" y="5" class="muted" font-size="9">Less</text>
@@ -292,7 +275,6 @@ function generateHeatmapSvg(username: string, calendar: any): string {
     <text x="110" y="5" class="muted" font-size="9">More</text>
   `);
 
-  // Total contributions
   const total = calendar?.totalContributions || allDays.reduce((s: number, d: any) => s + d.contributionCount, 0);
   inner += text(width - 30, 24, `${total.toLocaleString()} contributions in ${new Date().getFullYear()}`, 'muted');
 
@@ -318,7 +300,6 @@ function generateSnakeSvg(username: string, calendar: any): string {
   let inner = '';
   inner += text(30, 24, `🐍 ${username}'s Contribution Snake`, 'badge-title');
 
-  // Draw the grid background (dimmed)
   weeks.forEach((week: any, weekIndex: number) => {
     week.contributionDays.forEach((day: any, dayIndex: number) => {
       const count = day.contributionCount;
@@ -329,7 +310,6 @@ function generateSnakeSvg(username: string, calendar: any): string {
     });
   });
 
-  // Snake segments with animation
   activeDays.forEach((day: any, i: number) => {
     const origIndex = days.findIndex((d: any) => d.date === day.date);
     const weekIdx = Math.floor(origIndex / 7);
@@ -344,13 +324,11 @@ function generateSnakeSvg(username: string, calendar: any): string {
     </circle>`;
   });
 
-  // Day labels
   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((label, i) => {
     const y = startY + i * (cellSize + cellGap) + cellSize / 2 + 3;
     inner += text(startX - 10, y, label, 'muted');
   });
 
-  // Month labels
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   weeks.forEach((week: any, weekIndex: number) => {
     if (week.contributionDays[0]) {
@@ -388,16 +366,13 @@ function generateTypingSvg(username: string, bio?: string): string {
 
   phrases.forEach((phrase, i) => {
     const start = i * phraseDuration;
-    const end = start + phraseDuration;
     inner += `<text x="${width / 2}" y="${height / 2 + 6}" text-anchor="middle" class="typing-text" fill="${COLORS.emerald}" font-family="${FONTS.mono}" font-size="18" font-weight="bold" opacity="0">
       <animate attributeName="opacity" values="0;1;1;0" dur="${cycleTime}s" begin="${start}s" repeatCount="indefinite" keyTimes="0;0.1;0.9;1" keySplines="0 0 1 1;0 0 1 1;0 0 1 1"/>
       ${phrase}
     </text>`;
   });
 
-  // Cursor
   inner += `<text x="${width / 2 + 2}" y="${height / 2 + 6}" text-anchor="start" class="cursor" fill="${COLORS.emerald}" font-family="${FONTS.mono}" font-size="18" font-weight="bold">|</text>`;
-  inner += `<animate attributeName="opacity" values="1;0" dur="1s" repeatCount="indefinite" xlink:href="#cursor"/>`;
 
   return createSvg(width, height, `${username}'s Typing Animation`, `
     ${styleBlock(
@@ -418,8 +393,7 @@ function generateStarHistorySvg(username: string, repos: any[]): string {
   const chartW = width - margin.left - margin.right;
   const chartH = height - margin.top - margin.bottom;
 
-  // Simulate star history from repo data
-  const totalStars = repos.reduce((s, r) => s + (r.stargazers_count || 0), 0);
+  const totalStars = repos.reduce((s, r) => s + (r.stargazerCount || 0), 0);
   const dataPoints = Array.from({ length: 12 }, (_, i) => ({
     month: new Date(2024, i, 1).toLocaleString('default', { month: 'short' }),
     stars: Math.floor((totalStars / 12) * (i + 1) * (0.8 + Math.random() * 0.4)),
@@ -469,17 +443,16 @@ function generateRepoCardSvg(repo: any): string {
   const height = 180;
   const name = repo.name || 'Repository';
   const desc = repo.description || 'No description provided';
-  const stars = repo.stargazers_count || 0;
-  const forks = repo.forks_count || 0;
-  const language = repo.language || 'Unknown';
-  const languageColor = repo.language_color || COLORS.emerald;
-  const topics = (repo.topics || []).slice(0, 5);
+  const stars = repo.stargazerCount || 0;
+  const forks = repo.forkCount || 0;
+  const language = repo.primaryLanguage?.name || 'Unknown';
+  const languageColor = repo.primaryLanguage?.color || COLORS.emerald;
+  const topics = (repo.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || []).slice(0, 5);
 
   let inner = '';
   inner += text(30, 30, name, 'badge-title');
   inner += text(30, 50, desc, 'label-lg');
 
-  // Stats row
   const stats = [
     { icon: '⭐', value: stars.toLocaleString(), label: 'Stars' },
     { icon: '🍴', value: forks.toLocaleString(), label: 'Forks' },
@@ -493,7 +466,6 @@ function generateRepoCardSvg(repo: any): string {
     `);
   });
 
-  // Topics
   if (topics.length > 0) {
     let topicX = 30;
     topics.forEach((topic: string) => {
@@ -545,7 +517,6 @@ function generateLanguageDonutSvg(languages: any[]): string {
       <animate attributeName="stroke-dasharray" values="0 ${2 * Math.PI * radius}; ${sweepAngle / 360 * 2 * Math.PI * radius} ${2 * Math.PI * radius}" dur="1.5s" begin="${i * 0.2}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </path>`;
 
-    // Legend
     const legendY = 180 + i * 22;
     inner += translate(60, legendY, `
       ${rect(0, 0, 14, 14, color, RADIUS.sm)}
@@ -555,7 +526,6 @@ function generateLanguageDonutSvg(languages: any[]): string {
     currentAngle = endAngle;
   });
 
-  // Center text
   inner += `<text x="${centerX}" y="${centerY - 4}" text-anchor="middle" class="value" font-size="24">${total.toFixed(0)}%</text>`;
   inner += `<text x="${centerX}" y="${centerY + 20}" text-anchor="middle" class="muted" font-size="11">Languages</text>`;
 
@@ -585,7 +555,6 @@ function generateSkillBubblesSvg(skills: string[]): string {
       ${rect(0, 0, w, 36, COLORS.bgElevated, RADIUS.lg, COLORS.borderLight, 1)}
       <text x="${w / 2}" y="22" text-anchor="middle" class="label-lg">${skill}</text>
       <animate attributeName="opacity" values="0;1" dur="0.6s" begin="${delay}s" fill="freeze"/>
-      <animate attributeName="transform" values="translate(${x - w / 2} ${y + 20});translate(${x - w / 2} ${y - 18})" dur="0.6s" begin="${delay}s" fill="freeze" type="translate"/>
     `);
   });
 
@@ -602,7 +571,6 @@ function generateAsciiBannerSvg(text_content: string, font = 'standard'): string
   const charWidth = 8;
   const lineHeight = 18;
 
-  // Simple figlet-style rendering using monospace
   let inner = '';
   inner += text(width / 2, 20, 'ASCII Banner', 'badge-title');
 
@@ -651,56 +619,8 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
 }
 
 // ============================================================================
-// FETCH FUNCTIONS
+// DEMO CALENDAR FALLBACK
 // ============================================================================
-async function fetchContributionCalendar(username: string, client: Octokit): Promise<{ totalContributions: number; streak: number; source: string; calendar?: any }> {
-  try {
-    const to = new Date().toISOString();
-    const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
-    const query = `
-      query($username: String!, $from: DateTime!, $to: DateTime!) {
-        user(login: $username) {
-          contributionsCollection(from: $from, to: $to) {
-            contributionCalendar { totalContributions weeks { contributionDays { contributionCount date } } }
-          }
-        }
-      }`;
-    const response = await client.graphql<{ user: { contributionsCollection: { contributionCalendar: { totalContributions: number; weeks: { contributionDays: { contributionCount: number; date: string }[] }[] } } } }>(query, { username, from, to });
-    const calendar = response.user?.contributionsCollection?.contributionCalendar;
-    if (calendar && calendar.weeks.length > 0) {
-      const days = calendar.weeks.flatMap((w: any) => w.contributionDays);
-      days.sort((a: any, b: any) => b.date.localeCompare(a.date));
-      let streak = 0;
-      const mostRecentDate = days[0].date;
-      for (const day of days) {
-        if (day.contributionCount > 0) streak++;
-        else if (day.date !== mostRecentDate) break;
-      }
-      return { totalContributions: calendar.totalContributions, streak, source: 'graphql', calendar };
-    }
-  } catch (e) { console.log('GraphQL failed:', e); }
-  try {
-    const { data: events } = await client.rest.activity.listPublicEventsForUser({ username, per_page: 100 });
-    const pushEvents = events.filter(e => e.type === 'PushEvent');
-    if (pushEvents.length > 0) {
-      const dates = new Set<string>();
-      for (const event of pushEvents) dates.add(event.created_at!.split('T')[0]);
-      const sortedDates = Array.from(dates).sort().reverse();
-      let streak = 0;
-      const today = new Date().toISOString().split('T')[0];
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-      let checkDate = sortedDates[0] === today || sortedDates[0] === yesterday ? sortedDates[0] : today;
-      for (let i = 0; i < 365; i++) {
-        const checkStr = new Date(checkDate).toISOString().split('T')[0];
-        if (dates.has(checkStr)) { streak++; checkDate = new Date(new Date(checkDate).getTime() - 86400000).toISOString().split('T')[0]; }
-        else break;
-      }
-      return { totalContributions: pushEvents.length, streak: Math.max(streak, 1), source: 'events' };
-    }
-  } catch (e) { console.log('Events API failed:', e); }
-  return { totalContributions: 0, streak: 0, source: 'none' };
-}
-
 function generateDemoCalendar() {
   interface ContributionDay {
     date: string;
@@ -724,7 +644,7 @@ function generateDemoCalendar() {
 }
 
 // ============================================================================
-// MAIN HANDLER
+// MAIN HANDLER WITH ETAG & CACHING
 // ============================================================================
 export async function GET(req: NextRequest) {
   try {
@@ -732,46 +652,51 @@ export async function GET(req: NextRequest) {
     const username = searchParams.get('username');
     const type = searchParams.get('type') || 'stats';
     const token = searchParams.get('token') || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    const userToken = searchParams.get('user_token') || undefined; // User's OAuth token from NextAuth
 
     if (!username) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });
     }
 
-    const client = token ? new Octokit({ auth: token }) : new Octokit();
+    // Fetch profile data with caching and ETag support
+    const { data: profileData, etag, fromCache } = await fetchProfileData(username, { token, userToken });
 
-    // Fetch user data with fallback
-    let userData: { public_repos: number; followers: number; following: number; bio: string } = { public_repos: 20, followers: 443, following: 1871, bio: '' };
-    let reposData: any[] = [];
-    let languagesData: any[] = [];
+    // Check ETag for conditional request
+    if (checkETag(req, etag)) {
+      return createNotModifiedResponse(etag);
+    }
 
-    try {
-      const { data: user } = await client.rest.users.getByUsername({ username });
-      const { data: repos } = await client.rest.repos.listForUser({ username, type: 'owner', sort: 'updated', per_page: 100 });
-      userData = { public_repos: user.public_repos, followers: user.followers, following: user.following, bio: user.bio || '' };
-      reposData = repos;
+    const userData = {
+      public_repos: profileData.repositories?.totalCount || 0,
+      followers: profileData.followers?.totalCount || 0,
+      following: profileData.following?.totalCount || 0,
+      bio: profileData.bio || '',
+      login: profileData.login,
+    };
 
-      // Language stats
-      const langStats: Record<string, number> = {};
-      for (const repo of repos) {
-        if (!repo.fork && repo.language) langStats[repo.language] = (langStats[repo.language] || 0) + 1;
-      }
-      languagesData = Object.entries(langStats)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6)
-        .map(([name, count]) => ({ name, percentage: (count / repos.length) * 100, color: undefined }));
-    } catch (e) { console.log('REST API rate limited, using fallback data'); }
-
-    const { streak, totalContributions, source, calendar } = await fetchContributionCalendar(username, client);
+    const reposData = profileData.reposList?.nodes || [];
+    const calendar = profileData.contributionsCollection?.contributionCalendar;
     const demoCalendar = calendar || generateDemoCalendar();
+
+    // Calculate streak from calendar
+    const days = calendar?.weeks?.flatMap((w: any) => w.contributionDays) || demoCalendar.weeks.flatMap((w: any) => w.contributionDays);
+    days.sort((a: any, b: any) => b.date.localeCompare(a.date));
+    let streak = 0;
+    const mostRecentDate = days[0]?.date;
+    for (const day of days) {
+      if (day.contributionCount > 0) streak++;
+      else if (day.date !== mostRecentDate) break;
+    }
+
+    const languagesData = calculateLanguages(reposData);
 
     const stats = {
       publicRepos: userData.public_repos,
       followers: userData.followers,
       following: userData.following,
       topLanguage: languagesData[0]?.name || 'TypeScript',
-      totalContributions,
+      totalContributions: calendar?.totalContributions || demoCalendar.totalContributions,
       streak,
-      source,
     };
 
     let badgeSvg: string;
@@ -787,7 +712,7 @@ export async function GET(req: NextRequest) {
     else if (type === 'contributions') badgeSvg = generateBadge('Contributions', String(stats.totalContributions), color, labelColor);
 
     // ===== RICH SVG CARDS =====
-    else if (type === 'trophy') badgeSvg = generateTrophySvg(username, userData.public_repos, userData.followers, reposData.reduce((s, r) => s + (r.stargazers_count || 0), 0));
+    else if (type === 'trophy') badgeSvg = generateTrophySvg(username, userData.public_repos, userData.followers, reposData.reduce((s, r) => s + (r.stargazerCount || 0), 0));
     else if (type === 'activity') badgeSvg = generateActivityGraphSvg(username);
     else if (type === 'visitor') badgeSvg = generateVisitorCardSvg(username, userData.followers, userData.public_repos, stats.totalContributions);
     else if (type === 'heatmap') badgeSvg = generateHeatmapSvg(username, demoCalendar);
@@ -796,7 +721,7 @@ export async function GET(req: NextRequest) {
     else if (type === 'star-history') badgeSvg = generateStarHistorySvg(username, reposData);
     else if (type === 'repo-card') {
       const repoName = searchParams.get('repo');
-      const repo = reposData.find(r => r.name === repoName) || reposData[0];
+      const repo = reposData.find((r: any) => r.name === repoName) || reposData[0];
       badgeSvg = generateRepoCardSvg(repo);
     }
     else if (type === 'language-donut') badgeSvg = generateLanguageDonutSvg(languagesData);
@@ -835,13 +760,49 @@ export async function GET(req: NextRequest) {
 
     // ===== STATS JSON =====
     else {
-      return NextResponse.json({ ...stats, languages: languagesData, username });
+      return createETagResponse({ ...stats, languages: languagesData, username, fromCache }, etag);
     }
 
     return new NextResponse(badgeSvg, {
-      headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=3600, s-maxage=86400' },
+      headers: {
+        'Content-Type': 'image/svg+xml',
+        'ETag': etag,
+        'Cache-Control': 'public, max-age=21600, stale-while-revalidate=21600', // 6 hours
+      },
     });
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Failed to generate badge' }, { status: 500 });
   }
+}
+
+// Helper function moved from github.ts
+function calculateLanguages(repos: any[]): Array<{ name: string; percentage: number; color: string }> {
+  const LANG_COLORS: Record<string, string> = {
+    TypeScript: '#3178c6', JavaScript: '#f1e05a', Rust: '#dea584', Python: '#3572A5',
+    Go: '#00ADD8', HTML: '#e34c26', CSS: '#563d7c', Java: '#b07219', C: '#555555',
+    'C++': '#f34b7d', Ruby: '#701516', PHP: '#4F5D95', Swift: '#ffac45', Kotlin: '#A97BFF',
+  };
+  
+  const langCounts: Record<string, number> = {};
+  let totalLangCount = 0;
+  repos.forEach((repo) => {
+    if (repo.primaryLanguage && !repo.isFork) {
+      const lang = repo.primaryLanguage.name;
+      langCounts[lang] = (langCounts[lang] || 0) + 1;
+      totalLangCount++;
+    }
+    repo.languages?.nodes?.forEach((l: any) => {
+      if (!repo.isFork) {
+        langCounts[l.name] = (langCounts[l.name] || 0) + 1;
+        totalLangCount++;
+      }
+    });
+  });
+
+  const sortedLangs = Object.entries(langCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  return sortedLangs.map(([name, count]) => ({
+    name,
+    percentage: totalLangCount > 0 ? Number(((count / totalLangCount) * 100).toFixed(1)) : 20,
+    color: LANG_COLORS[name] || '#8b5cf6',
+  }));
 }

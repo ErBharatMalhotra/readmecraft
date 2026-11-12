@@ -1,4 +1,5 @@
 import type { ProfileData, ProjectData } from '@/types/readmecraft';
+import { fetchProfileData, fetchRepoData, createOctokitClient } from './github-api';
 
 export const SAMPLE_PROFILE: ProfileData = {
   username: 'ErBharatMalhotra',
@@ -98,110 +99,111 @@ export const SAMPLE_PROJECT: ProjectData = {
   gitChronicleEnabled: true,
 };
 
-export async function fetchGitHubProfile(username: string, token?: string): Promise<ProfileData> {
+const LANG_COLORS: Record<string, string> = {
+  TypeScript: '#3178c6',
+  JavaScript: '#f1e05a',
+  Rust: '#dea584',
+  Python: '#3572A5',
+  Go: '#00ADD8',
+  HTML: '#e34c26',
+  CSS: '#563d7c',
+  Java: '#b07219',
+  C: '#555555',
+  'C++': '#f34b7d',
+  Ruby: '#701516',
+  PHP: '#4F5D95',
+  Swift: '#ffac45',
+  Kotlin: '#A97BFF',
+};
+
+function calculateLanguages(repos: any[]): Array<{ name: string; percentage: number; color: string }> {
+  const langCounts: Record<string, number> = {};
+  let totalLangCount = 0;
+  repos.forEach((repo) => {
+    if (repo.primaryLanguage && !repo.isFork) {
+      const lang = repo.primaryLanguage.name;
+      langCounts[lang] = (langCounts[lang] || 0) + 1;
+      totalLangCount++;
+    }
+    repo.languages?.nodes?.forEach((l: any) => {
+      if (!repo.isFork) {
+        langCounts[l.name] = (langCounts[l.name] || 0) + 1;
+        totalLangCount++;
+      }
+    });
+  });
+
+  const sortedLangs = Object.entries(langCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  return sortedLangs.map(([name, count]) => ({
+    name,
+    percentage: totalLangCount > 0 ? Number(((count / totalLangCount) * 100).toFixed(1)) : 20,
+    color: LANG_COLORS[name] || '#8b5cf6',
+  }));
+}
+
+function calculateLanguagesFromRepoData(languages: any[]): Array<{ name: string; percentage: number; color: string }> {
+  const totalSize = languages.reduce((sum, l) => sum + l.size, 0);
+  if (totalSize === 0) return [];
+  
+  return languages.map((l) => ({
+    name: l.name,
+    percentage: Number(((l.size / totalSize) * 100).toFixed(1)),
+    color: l.color || LANG_COLORS[l.name] || '#8b5cf6',
+  }));
+}
+
+export async function fetchGitHubProfile(
+  username: string,
+  token?: string,
+  userToken?: string
+): Promise<ProfileData> {
   if (!username || username.trim() === '') {
     return SAMPLE_PROFILE;
   }
 
   try {
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github.v3+json',
-    };
-    if (token) {
-      headers['Authorization'] = `token ${token}`;
+    const { data } = await fetchProfileData(username, { token, userToken });
+    const userData = data;
+
+    const repos = userData.reposList?.nodes || [];
+    const languages = calculateLanguages(repos);
+
+    let pinnedRepos = userData.pinnedItems?.nodes || [];
+    if (pinnedRepos.length === 0) {
+      const sortedRepos = repos
+        .filter((r: any) => !r.isFork)
+        .sort((a: any, b: any) => b.stargazerCount - a.stargazerCount)
+        .slice(0, 3);
+      pinnedRepos = sortedRepos;
     }
 
-    const userRes = await fetch(`https://api.github.com/users/${username}`, { headers });
-    if (!userRes.ok) {
-      if (userRes.status === 404) {
-        throw new Error(`GitHub user "${username}" not found.`);
-      }
-      throw new Error(`GitHub API error: ${userRes.statusText}`);
-    }
-    const userData = await userRes.json();
-
-    // Fetch user repos to determine top languages and pinned-like repos
-    const reposRes = await fetch(
-      `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
-      { headers }
-    );
-    let repos = [];
-    if (reposRes.ok) {
-      repos = await reposRes.json();
-    }
-
-    // Calculate languages from repos
-    const langCounts: Record<string, number> = {};
-    let totalLangCount = 0;
-    repos.forEach((repo: any) => {
-      if (repo.language && !repo.fork) {
-        langCounts[repo.language] = (langCounts[repo.language] || 0) + 1;
-        totalLangCount++;
-      }
-    });
-
-    const langColors: Record<string, string> = {
-      TypeScript: '#3178c6',
-      JavaScript: '#f1e05a',
-      Rust: '#dea584',
-      Python: '#3572A5',
-      Go: '#00ADD8',
-      HTML: '#e34c26',
-      CSS: '#563d7c',
-      Java: '#b07219',
-      C: '#555555',
-      'C++': '#f34b7d',
-      Ruby: '#701516',
-      PHP: '#4F5D95',
-      Swift: '#ffac45',
-      Kotlin: '#A97BFF',
-    };
-
-    const sortedLangs = Object.entries(langCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-
-    const languages = sortedLangs.map(([name, count]) => ({
-      name,
-      percentage: totalLangCount > 0 ? Number(((count / totalLangCount) * 100).toFixed(1)) : 20,
-      color: langColors[name] || '#8b5cf6',
-    }));
-
-    // Fallback languages if none detected
-    const finalLanguages = languages.length > 0 ? languages : SAMPLE_PROFILE.languages;
-
-    // Get top starred repos for pinned representation
-    const sortedRepos = repos
-      .filter((r: any) => !r.fork)
-      .sort((a: any, b: any) => b.stargazers_count - a.stargazers_count)
-      .slice(0, 3);
-
-    const pinnedRepos = sortedRepos.map((r: any) => ({
+    const finalPinned = pinnedRepos.map((r: any) => ({
       name: r.name,
       description: r.description || 'No description provided.',
-      url: r.html_url,
-      stargazersCount: r.stargazers_count,
-      language: r.language || 'Code',
+      url: r.url,
+      stargazersCount: r.stargazerCount,
+      language: r.primaryLanguage?.name || 'Code',
     }));
-
-    const finalPinned = pinnedRepos.length > 0 ? pinnedRepos : SAMPLE_PROFILE.pinnedRepos;
 
     return {
       username: userData.login,
       name: userData.name || userData.login,
       bio: userData.bio || 'Developer & Open Source Contributor',
-      avatarUrl: userData.avatar_url,
+      avatarUrl: userData.avatarUrl,
       company: userData.company || '',
       location: userData.location || '',
-      website: userData.blog || '',
-      twitter: userData.twitter_username || '',
-      githubUrl: userData.html_url,
-      publicRepos: userData.public_repos,
-      followers: userData.followers,
-      following: userData.following,
-      languages: finalLanguages,
-      pinnedRepos: finalPinned,
-      skills: finalLanguages.map((l) => l.name).concat(['Git', 'Docker', 'REST APIs', 'CI/CD']),
+      website: userData.websiteUrl || '',
+      twitter: userData.twitterUsername || '',
+      githubUrl: userData.url,
+      publicRepos: userData.repositories?.totalCount || 0,
+      followers: userData.followers?.totalCount || 0,
+      following: userData.following?.totalCount || 0,
+      languages: languages.length > 0 ? languages : SAMPLE_PROFILE.languages,
+      pinnedRepos: finalPinned.length > 0 ? finalPinned : SAMPLE_PROFILE.pinnedRepos,
+      skills: languages.map((l) => l.name).concat(['Git', 'Docker', 'REST APIs', 'CI/CD']),
       gitHoloEnabled: true,
       gitChronicleEnabled: true,
       visitorBadgeEnabled: true,
@@ -210,25 +212,88 @@ export async function fetchGitHubProfile(username: string, token?: string): Prom
       topLanguagesEnabled: true,
     };
   } catch (error) {
-    console.warn('Failed to fetch real GitHub profile, using intelligent sample fallback:', error);
-    return {
-      ...SAMPLE_PROFILE,
-      username: username || SAMPLE_PROFILE.username,
-      name: username || SAMPLE_PROFILE.name,
-    };
+    console.warn('Failed to fetch real GitHub profile via GraphQL, using fallback:', error);
+    
+    try {
+      const client = createOctokitClient(token);
+      const headers: Record<string, string> = {
+        Accept: 'application/vnd.github.v3+json',
+      };
+      if (token) headers['Authorization'] = `token ${token}`;
+
+      const userRes = await fetch(`https://api.github.com/users/${username}`, { headers });
+      if (!userRes.ok) {
+        if (userRes.status === 404) throw new Error(`GitHub user "${username}" not found.`);
+        throw new Error(`GitHub API error: ${userRes.statusText}`);
+      }
+      const userData = await userRes.json();
+
+      const reposRes = await fetch(
+        `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
+        { headers }
+      );
+      let repos: any[] = [];
+      if (reposRes.ok) repos = await reposRes.json();
+
+      const languages = calculateLanguages(repos);
+
+      const sortedRepos = repos
+        .filter((r: any) => !r.fork)
+        .sort((a: any, b: any) => b.stargazers_count - a.stargazers_count)
+        .slice(0, 3);
+
+      const pinnedRepos = sortedRepos.map((r: any) => ({
+        name: r.name,
+        description: r.description || 'No description provided.',
+        url: r.html_url,
+        stargazersCount: r.stargazers_count,
+        language: r.language || 'Code',
+      }));
+
+      return {
+        username: userData.login,
+        name: userData.name || userData.login,
+        bio: userData.bio || 'Developer & Open Source Contributor',
+        avatarUrl: userData.avatar_url,
+        company: userData.company || '',
+        location: userData.location || '',
+        website: userData.blog || '',
+        twitter: userData.twitter_username || '',
+        githubUrl: userData.html_url,
+        publicRepos: userData.public_repos,
+        followers: userData.followers,
+        following: userData.following,
+        languages: languages.length > 0 ? languages : SAMPLE_PROFILE.languages,
+        pinnedRepos: pinnedRepos.length > 0 ? pinnedRepos : SAMPLE_PROFILE.pinnedRepos,
+        skills: languages.map((l) => l.name).concat(['Git', 'Docker', 'REST APIs', 'CI/CD']),
+        gitHoloEnabled: true,
+        gitChronicleEnabled: true,
+        visitorBadgeEnabled: true,
+        githubStatsEnabled: true,
+        githubStreakEnabled: true,
+        topLanguagesEnabled: true,
+      };
+    } catch (fallbackError) {
+      console.warn('REST API fallback also failed, using sample data:', fallbackError);
+      return {
+        ...SAMPLE_PROFILE,
+        username: username || SAMPLE_PROFILE.username,
+        name: username || SAMPLE_PROFILE.name,
+      };
+    }
   }
 }
 
 export async function fetchGitHubProject(
   repoUrlOrSlug: string,
-  token?: string
+  token?: string,
+  userToken?: string
 ): Promise<ProjectData> {
   if (!repoUrlOrSlug || repoUrlOrSlug.trim() === '') {
     return SAMPLE_PROJECT;
   }
 
   try {
-    // Parse owner/repo from URL or slug (e.g. "facebook/react" or "https://github.com/vercel/next.js")
     let cleanSlug = repoUrlOrSlug.trim();
     if (cleanSlug.includes('github.com/')) {
       const parts = cleanSlug.split('github.com/')[1].split('/');
@@ -240,83 +305,55 @@ export async function fetchGitHubProject(
       throw new Error('Invalid repository format. Use owner/repo or GitHub URL.');
     }
 
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github.v3+json',
-    };
-    if (token) {
-      headers['Authorization'] = `token ${token}`;
-    }
+    const { data } = await fetchRepoData(owner, repo, { token, userToken });
+    const repoData = data;
 
-    const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
-    if (!repoRes.ok) {
-      throw new Error(`Repository "${owner}/${repo}" not found.`);
-    }
-    const repoData = await repoRes.json();
-
-    // Check package.json or cargo.toml for package manager and scripts
     let packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'cargo' | 'pip' = 'npm';
     let installCommand = 'npm install';
     let runCommand = 'npm run dev';
     let testCommand = 'npm test';
-    let framework = repoData.language || 'TypeScript';
+    let framework = repoData.primaryLanguage?.name || 'TypeScript';
 
-    try {
-      const contentRes = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/package.json`,
-        { headers }
-      );
-      if (contentRes.ok) {
-        const pkgFile = await contentRes.json();
-        const pkgContent = JSON.parse(Buffer.from(pkgFile.content, 'base64').toString('utf8'));
-        if (pkgContent.devDependencies?.pnpm || pkgContent.dependencies?.pnpm) {
-          packageManager = 'pnpm';
-          installCommand = 'pnpm install';
-          runCommand = 'pnpm dev';
-          testCommand = 'pnpm test';
-        } else if (pkgContent.devDependencies?.yarn || pkgContent.dependencies?.yarn) {
-          packageManager = 'yarn';
-          installCommand = 'yarn install';
-          runCommand = 'yarn dev';
-          testCommand = 'yarn test';
-        } else if (pkgContent.devDependencies?.bun) {
-          packageManager = 'bun';
-          installCommand = 'bun install';
-          runCommand = 'bun dev';
-          testCommand = 'bun test';
-        }
-        if (pkgContent.dependencies?.next) framework = 'Next.js';
-        else if (pkgContent.dependencies?.react) framework = 'React';
-        else if (pkgContent.dependencies?.vue) framework = 'Vue.js';
-        else if (pkgContent.dependencies?.express) framework = 'Express.js';
-      } else {
-        // Check Cargo.toml
-        const cargoRes = await fetch(
-          `https://api.github.com/repos/${owner}/${repo}/contents/Cargo.toml`,
-          { headers }
-        );
-        if (cargoRes.ok) {
-          packageManager = 'cargo';
-          installCommand = 'cargo build';
-          runCommand = 'cargo run';
-          testCommand = 'cargo test';
-          framework = 'Rust';
-        }
-      }
-    } catch (e) {
-      // Ignore content inspect errors
+    const topics = repoData.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || [];
+    if (topics.includes('pnpm') || topics.includes('package-manager-pnpm')) {
+      packageManager = 'pnpm';
+      installCommand = 'pnpm install';
+      runCommand = 'pnpm dev';
+      testCommand = 'pnpm test';
+    } else if (topics.includes('yarn') || topics.includes('package-manager-yarn')) {
+      packageManager = 'yarn';
+      installCommand = 'yarn install';
+      runCommand = 'yarn dev';
+      testCommand = 'yarn test';
+    } else if (topics.includes('bun')) {
+      packageManager = 'bun';
+      installCommand = 'bun install';
+      runCommand = 'bun dev';
+      testCommand = 'bun test';
+    } else if (repoData.primaryLanguage?.name === 'Rust') {
+      packageManager = 'cargo';
+      installCommand = 'cargo build';
+      runCommand = 'cargo run';
+      testCommand = 'cargo test';
+      framework = 'Rust';
     }
+
+    const languages = calculateLanguagesFromRepoData(repoData.languages?.nodes || []);
+    const techStack = languages.length > 0 
+      ? languages.map(l => l.name) 
+      : [repoData.primaryLanguage?.name || 'TypeScript', framework, 'Git', 'GitHub Actions'];
 
     return {
       owner,
       repo,
       title: repoData.name,
       description: repoData.description || 'High-performance open source repository.',
-      license: repoData.license?.spdx_id || 'MIT',
-      defaultBranch: repoData.default_branch || 'main',
-      stars: repoData.stargazers_count,
-      forks: repoData.forks_count,
-      openIssues: repoData.open_issues_count,
-      language: repoData.language || 'TypeScript',
+      license: repoData.licenseInfo?.spdxId || 'MIT',
+      defaultBranch: repoData.defaultBranchRef?.name || 'main',
+      stars: repoData.stargazerCount,
+      forks: repoData.forkCount,
+      openIssues: repoData.openIssues?.totalCount || 0,
+      language: repoData.primaryLanguage?.name || 'TypeScript',
       framework,
       packageManager,
       installCommand,
@@ -327,21 +364,104 @@ export async function fetchGitHubProject(
         `🛡️ Robust architecture built with modern standards`,
         `📦 Easy integration with ${packageManager}`,
       ],
-      techStack: [repoData.language || 'TypeScript', framework, 'Git', 'GitHub Actions'],
+      techStack,
       architectureDiagram: `┌──────────────────────────────────────────────┐
 │                  ${repoData.name}            │
 ├──────────────────────┬───────────────────────┤
 │    Core Engine       │    Interface Layer    │
 └──────────────────────┴───────────────────────┘`,
-      demoUrl: repoData.homepage || `https://github.com/${owner}/${repo}`,
+      demoUrl: repoData.homepageUrl || `https://github.com/${owner}/${repo}`,
       gitHoloEnabled: true,
       gitChronicleEnabled: true,
     };
   } catch (error) {
-    console.warn(
-      'Failed to fetch real GitHub repository, using intelligent sample fallback:',
-      error
-    );
-    return SAMPLE_PROJECT;
+    console.warn('Failed to fetch real GitHub repository via GraphQL, using fallback:', error);
+    
+    try {
+      let cleanSlug = repoUrlOrSlug.trim();
+      if (cleanSlug.includes('github.com/')) {
+        const parts = cleanSlug.split('github.com/')[1].split('/');
+        cleanSlug = `${parts[0]}/${parts[1]}`;
+      }
+      const [owner, repo] = cleanSlug.split('/');
+      if (!owner || !repo) throw new Error('Invalid repository format.');
+
+      const client = createOctokitClient(token);
+      const { data: repoData } = await client.rest.repos.get({ owner, repo });
+
+      let packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'cargo' | 'pip' = 'npm';
+      let installCommand = 'npm install';
+      let runCommand = 'npm run dev';
+      let testCommand = 'npm test';
+      let framework = repoData.language || 'TypeScript';
+
+      try {
+        const contentRes = await client.rest.repos.getContent({
+          owner,
+          repo,
+          path: 'package.json',
+        });
+        if ('content' in contentRes.data) {
+          const pkgContent = JSON.parse(Buffer.from(contentRes.data.content, 'base64').toString('utf8'));
+          if (pkgContent.devDependencies?.pnpm || pkgContent.dependencies?.pnpm) {
+            packageManager = 'pnpm';
+            installCommand = 'pnpm install';
+            runCommand = 'pnpm dev';
+            testCommand = 'pnpm test';
+          } else if (pkgContent.devDependencies?.yarn || pkgContent.dependencies?.yarn) {
+            packageManager = 'yarn';
+            installCommand = 'yarn install';
+            runCommand = 'yarn dev';
+            testCommand = 'yarn test';
+          } else if (pkgContent.devDependencies?.bun) {
+            packageManager = 'bun';
+            installCommand = 'bun install';
+            runCommand = 'bun dev';
+            testCommand = 'bun test';
+          }
+          if (pkgContent.dependencies?.next) framework = 'Next.js';
+          else if (pkgContent.dependencies?.react) framework = 'React';
+          else if (pkgContent.dependencies?.vue) framework = 'Vue.js';
+          else if (pkgContent.dependencies?.express) framework = 'Express.js';
+        }
+      } catch (e) {
+        // Ignore
+      }
+
+      return {
+        owner,
+        repo,
+        title: repoData.name,
+        description: repoData.description || 'High-performance open source repository.',
+        license: repoData.license?.spdx_id || 'MIT',
+        defaultBranch: repoData.default_branch || 'main',
+        stars: repoData.stargazers_count,
+        forks: repoData.forks_count,
+        openIssues: repoData.open_issues_count,
+        language: repoData.language || 'TypeScript',
+        framework,
+        packageManager,
+        installCommand,
+        runCommand,
+        testCommand,
+        features: [
+          `⚡ High performance and lightning fast execution`,
+          `🛡️ Robust architecture built with modern standards`,
+          `📦 Easy integration with ${packageManager}`,
+        ],
+        techStack: [repoData.language || 'TypeScript', framework, 'Git', 'GitHub Actions'],
+        architectureDiagram: `┌──────────────────────────────────────────────┐
+│                  ${repoData.name}            │
+├──────────────────────┬───────────────────────┤
+│    Core Engine       │    Interface Layer    │
+└──────────────────────┴───────────────────────┘`,
+        demoUrl: repoData.homepage || `https://github.com/${owner}/${repo}`,
+        gitHoloEnabled: true,
+        gitChronicleEnabled: true,
+      };
+    } catch (fallbackError) {
+      console.warn('REST API fallback also failed, using sample data:', fallbackError);
+      return SAMPLE_PROJECT;
+    }
   }
 }
