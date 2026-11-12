@@ -28,18 +28,18 @@
 
 ## 🔄 Phase 2: Production Hardening (NEXT BATCH)
 
-| Step | Description                              | Status     | Notes                                                                            |
-| ---- | ---------------------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| 2.1  | ESLint + Prettier config, CI integration | ✅ Done | `eslint.config.mjs`, `.prettierrc`, `npm run lint` passes, `npm run format` works |
-| 2.2  | Unit tests for generators (Vitest)       | ✅ Done | 45 tests passing, covers all 6 presets, compileSectionsToMarkdown, ecosystem toggles, quality checks |
-| 2.3  | Integration test for ingestion (MSW)     | ⬜ Pending | Mock GitHub REST endpoints, test success/error/rate-limit paths                  |
-| 2.4  | Rate limit handling                      | ⬜ Pending | Show remaining, 5min cache, graceful fallback to sample data                     |
-| 2.5  | Error boundaries per pane                | ⬜ Pending | React error boundaries for each pane + global fallback UI                        |
-| 2.6  | Keyboard shortcuts                       | ⬜ Pending | `⌘S` copy, `⌘E` export JSON, `⌘1/2/3` pane focus, `⌘K` command palette (stretch) |
-| 2.7  | Accessibility audit                      | ⬜ Pending | ARIA labels, focus management, color contrast (WCAG AA), keyboard nav            |
-| 2.8  | SEO: meta, OG, sitemap, robots           | ⬜ Pending | Dynamic OG image for generated READMEs, `next-sitemap`                           |
-| 2.9  | Vercel deploy + domain mapping           | ⬜ Pending | `vercel.json`, map `readme.bharatdn.com`, env vars for GitHub token              |
-| 2.10 | Privacy-friendly analytics               | ⬜ Pending | Plausible or Umami self-hosted, track mode usage, export actions                 |
+| Step | Description                              | Status     | Notes                                                                                                |
+| ---- | ---------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| 2.1  | ESLint + Prettier config, CI integration | ✅ Done    | `eslint.config.mjs`, `.prettierrc`, `npm run lint` passes, `npm run format` works                    |
+| 2.2  | Unit tests for generators (Vitest)       | ✅ Done    | 45 tests passing, covers all 6 presets, compileSectionsToMarkdown, ecosystem toggles, quality checks |
+| 2.3  | Integration test for ingestion (MSW)     | ⬜ Pending | Mock GitHub REST endpoints, test success/error/rate-limit paths                                      |
+| 2.4  | Rate limit handling                      | ⬜ Pending | Show remaining, 5min cache, graceful fallback to sample data                                         |
+| 2.5  | Error boundaries per pane                | ⬜ Pending | React error boundaries for each pane + global fallback UI                                            |
+| 2.6  | Keyboard shortcuts                       | ⬜ Pending | `⌘S` copy, `⌘E` export JSON, `⌘1/2/3` pane focus, `⌘K` command palette (stretch)                     |
+| 2.7  | Accessibility audit                      | ⬜ Pending | ARIA labels, focus management, color contrast (WCAG AA), keyboard nav                                |
+| 2.8  | SEO: meta, OG, sitemap, robots           | ⬜ Pending | Dynamic OG image for generated READMEs, `next-sitemap`                                               |
+| 2.9  | Vercel deploy + domain mapping           | ⬜ Pending | `vercel.json`, map `readme.bharatdn.com`, env vars for GitHub token                                  |
+| 2.10 | Privacy-friendly analytics               | ⬜ Pending | Plausible or Umami self-hosted, track mode usage, export actions                                     |
 
 ---
 

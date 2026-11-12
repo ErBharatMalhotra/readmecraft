@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  getProfileSections,
-  getProjectSections,
-  compileSectionsToMarkdown,
-} from './generators';
+import { getProfileSections, getProjectSections, compileSectionsToMarkdown } from './generators';
 import { SAMPLE_PROFILE, SAMPLE_PROJECT } from './github';
 import type { ProfilePreset, ProjectPreset } from '@/types/readmecraft';
 

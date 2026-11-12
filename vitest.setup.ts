@@ -9,9 +9,18 @@ vi.mock('canvas-confetti', () => ({
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => `<div ${Object.entries(props).map(([k,v]) => `${k}="${v}"`).join(' ')}>${children}</div>`,
-    button: ({ children, ...props }: any) => `<button ${Object.entries(props).map(([k,v]) => `${k}="${v}"`).join(' ')}>${children}</button>`,
-    span: ({ children, ...props }: any) => `<span ${Object.entries(props).map(([k,v]) => `${k}="${v}"`).join(' ')}>${children}</span>`,
+    div: ({ children, ...props }: any) =>
+      `<div ${Object.entries(props)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(' ')}>${children}</div>`,
+    button: ({ children, ...props }: any) =>
+      `<button ${Object.entries(props)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(' ')}>${children}</button>`,
+    span: ({ children, ...props }: any) =>
+      `<span ${Object.entries(props)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(' ')}>${children}</span>`,
   },
   AnimatePresence: ({ children }: any) => children,
 }));
