@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { Octokit } from '@octokit/rest';
 
+// Native shields.io compatible badge generator
 function generateBadge(label: string, message: string, color: string = '10b981', labelColor: string = '090d16', logo?: string): string {
   const labelWidth = (label.length + 1) * 7;
   const messageWidth = (message.length + 1) * 7;
@@ -21,6 +22,71 @@ function generateBadge(label: string, message: string, color: string = '10b981',
     <text x="${labelWidth / 2 + 5}" y="18" fill="#fff">${label}</text>
     <text x="${labelWidth + 10 + messageWidth / 2 + 5}" y="18" fill="#fff">${message}</text>
   </g>
+</svg>`;
+}
+
+// Native Trophy generator
+function generateTrophySvg(username: string, reposCount: number, followersCount: number): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="450" height="120" viewBox="0 0 450 120">
+  <style>
+    .bg { fill: #090d16; stroke: #1e293b; stroke-width: 1; rx: 8; }
+    .title { fill: #10b981; font-family: 'Space Grotesk', sans-serif; font-weight: bold; font-size: 14px; }
+    .label { fill: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+    .value { fill: #ffffff; font-family: 'JetBrains Mono', monospace; font-weight: bold; font-size: 12px; }
+  </style>
+  <rect width="450" height="120" class="bg"/>
+  <text x="20" y="25" class="title">🏆 ReadmeCraft Elite Developer Trophies</text>
+  
+  <!-- Trophy 1 -->
+  <g transform="translate(20, 45)">
+    <rect width="125" height="60" rx="6" fill="#0b101c" stroke="#1e293b"/>
+    <text x="12" y="22" font-size="16">⭐</text>
+    <text x="38" y="20" class="label">OPEN SOURCE</text>
+    <text x="38" y="38" class="value">${reposCount} Repos</text>
+  </g>
+  
+  <!-- Trophy 2 -->
+  <g transform="translate(162, 45)">
+    <rect width="125" height="60" rx="6" fill="#0b101c" stroke="#1e293b"/>
+    <text x="12" y="22" font-size="16">🔥</text>
+    <text x="38" y="20" class="label">COMMUNITY</text>
+    <text x="38" y="38" class="value">${followersCount} Followers</text>
+  </g>
+  
+  <!-- Trophy 3 -->
+  <g transform="translate(304, 45)">
+    <rect width="125" height="60" rx="6" fill="#0b101c" stroke="#1e293b"/>
+    <text x="12" y="22" font-size="16">⚡</text>
+    <text x="38" y="20" class="label">VELOCITY</text>
+    <text x="38" y="38" class="value">Elite Tier</text>
+  </g>
+</svg>`;
+}
+
+// Native Activity Graph generator
+function generateActivityGraphSvg(username: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="495" height="195" viewBox="0 0 495 195">
+  <style>
+    .bg { fill: #090d16; stroke: #1e293b; stroke-width: 1; rx: 8; }
+    .title { fill: #10b981; font-family: 'Space Grotesk', sans-serif; font-weight: bold; font-size: 14px; }
+    .label { fill: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .line { fill: none; stroke: #10b981; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .area { fill: url(#grad); opacity: 0.25; }
+  </style>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+  </defs>
+  <rect width="495" height="195" class="bg"/>
+  <text x="20" y="25" class="title">📈 ${username}'s Commit Activity (Past 30 Days)</text>
+  <path class="area" d="M 20 160 Q 60 120 100 130 T 180 90 T 260 110 T 340 70 T 420 85 T 475 50 L 475 170 L 20 170 Z"/>
+  <path class="line" d="M 20 160 Q 60 120 100 130 T 180 90 T 260 110 T 340 70 T 420 85 T 475 50"/>
+  <text x="20" y="182" class="label">Sun</text>
+  <text x="150" y="182" class="label">Mon</text>
+  <text x="280" y="182" class="label">Wed</text>
+  <text x="440" y="182" class="label">Sat</text>
 </svg>`;
 }
 
@@ -182,6 +248,12 @@ export async function GET(req: NextRequest) {
         break;
       case 'contributions':
         badgeSvg = generateBadge('Contributions', String(stats.totalContributions), color, labelColor);
+        break;
+      case 'trophy':
+        badgeSvg = generateTrophySvg(username, user.public_repos, user.followers);
+        break;
+      case 'activity':
+        badgeSvg = generateActivityGraphSvg(username);
         break;
       case 'stats':
       default:
