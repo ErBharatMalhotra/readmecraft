@@ -1,0 +1,570 @@
+# ReadmeCraft — Design Decisions Log
+
+> Every significant design decision with rationale and alternatives considered. Prevents re-litigation in future sessions.
+
+---
+
+## 001 — Project Type: Greenfield Client-Side Only
+
+**Decision:** ReadmeCraft is a 100% client-side Next.js application. No backend database, no user accounts, no server-side rendering of READMEs.
+
+**Rationale:**
+- Privacy-first: User GitHub tokens never leave the browser
+- Zero operational cost: Deploys to Vercel hobby tier free
+- GitHub API is the source of truth — no need to duplicate data
+- Simpler architecture: No auth, no migrations, no schema changes
+
+**Alternatives Considered:**
+- **Full-stack with database:** Rejected — adds cost, complexity, privacy concerns
+- **Server-side README rendering:** Rejected — GitHub renders markdown natively; we just generate the source
+- **Electron/Tauri desktop app:** Rejected — Web reaches more users, easier distribution
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 002 — GitHub API: REST over GraphQL (v1)
+
+**Decision:** Use `@octokit/rest` (REST API) for initial ingestion. GraphQL reserved for Phase 3.1 optimization.
+
+**Rationale:**
+- REST is simpler to debug and cache
+- Current needs (user profile, repo list, single repo) fit REST endpoints well
+- Rate limits are well-understood (60/hr unauth, 5000/hr with token)
+- GraphQL adds complexity: query building, fragments, pagination cursors
+
+**Alternatives Considered:**
+- **GraphQL from start:** Rejected — premature optimization, steeper learning curve
+- **Hybrid (REST for profile, GraphQL for repos):** Rejected — inconsistent patterns
+
+**Tradeoffs:**
+- REST requires 3-4 round trips (user + repos + repo contents) vs 1 GraphQL query
+- Acceptable for v1; Phase 3.1 will consolidate to GraphQL
+
+**Status:** ✅ Settled (Phase 1), Revisit: Phase 3.1
+
+---
+
+## 003 — State Persistence: localStorage + JSON Export/Import
+
+**Decision:** All studio state autosaves to `localStorage` (key: `readmecraft_saved_state_v2`). Versioned JSON export/import for portability.
+
+**Rationale:**
+- Zero backend required
+- Survives browser restarts, works offline after initial load
+- JSON export enables sharing configs, backup, migration
+- Versioned key (`v2`) allows future schema migrations
+
+**Alternatives Considered:**
+- **IndexedDB:** Rejected — overkill for <50KB state, worse DX
+- **URL hash state:** Rejected — too long for complex state, no privacy for tokens
+- **Cookies:** Rejected — 4KB limit, sent with every request
+
+**Tradeoffs:**
+- 5MB localStorage limit — mitigate with JSON export for large states
+- No cross-device sync — intentional (privacy), JSON import/export bridges gap
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 004 — Design System: OKLCH + Tailwind v4 (No Config File)
+
+**Decision:** Use OKLCH color space via CSS custom properties in `globals.css`. Tailwind v4 uses these directly — no `tailwind.config.js`.
+
+**Rationale:**
+- OKLCH is perceptually uniform — consistent contrast ratios
+- CSS vars = single source of truth for both Tailwind and custom `.markdown-body` styles
+- Tailwind v4's `@theme` inline syntax removes config file maintenance
+- Emerald/obsidian palette is distinctive, zero purple gradients
+
+**Alternatives Considered:**
+- **Tailwind v3 + config file:** Rejected — v4 is stable, simpler, faster
+- **CSS-in-JS (styled-components):** Rejected — runtime cost, no benefit over Tailwind
+- **Plain CSS modules:** Rejected — no design token system, verbose
+
+**Color Palette (Locked):**
+```css
+--bg-chassis:       oklch(0.08 0.02 240);   /* #090d16 */
+--bg-surface:       oklch(0.10 0.02 240);   /* #0e1526 */
+--bg-card:          oklch(0.12 0.02 240);   /* #131c31 */
+--border-color:     oklch(0.20 0.02 240);   /* #1e293b */
+--emerald-primary:  oklch(0.55 0.15 160);   /* #10b981 */
+--emerald-glow:     oklch(0.55 0.15 160 / 0.15);
+--text-primary:     oklch(0.95 0.01 240);   /* #f1f5f9 */
+--text-muted:       oklch(0.55 0.01 240);   /* #94a3b8 */
+```
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 005 — Typography: Space Grotesk + JetBrains Mono (Google Fonts)
+
+**Decision:** Two-font system loaded via Google Fonts preconnect.
+
+**Rationale:**
+- Space Grotesk: Editorial, geometric, high x-height — perfect for developer tool headers
+- JetBrains Mono: Purpose-built for code, ligatures, tabular numerals — ideal for badges, code blocks, tabular data
+- Both variable fonts — single request each, full weight range
+- No body text font — uses system UI stack for performance
+
+**Alternatives Considered:**
+- **Geist (Vercel's font):** Rejected — requires self-host or `@font-face`, less distinctive
+- **Inter + JetBrains Mono:** Rejected — Inter is generic, Space Grotesk has more character
+- **IBM Plex Mono:** Rejected — JetBrains Mono has better ligatures for code
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 006 — Anti-AI-Slop Doctrine: Enforced Constraints
+
+**Decision:** Hard rules encoded in design system and code review:
+1. Zero generic purple/blue-purple gradients
+2. Zero "generated by" / "assisted by" / AI attribution footers
+3. Zero centered HTML tables for layout
+4. Zero flat shields without semantic grouping
+5. All commits: Author = `ErBharatMalhotra` only
+
+**Rationale:**
+- Differentiates from 24k⭐ `github-profile-readme-generator` (dated, manual, sloppy)
+- Builds trust: Output looks hand-crafted, not machine-generated
+- Enforces editorial quality — every pixel serves hierarchy
+
+**Alternatives Considered:**
+- **Optional "generated by" badge:** Rejected — violates core philosophy
+- **AI-assisted content suggestions:** Rejected — Phase 5 exploration only, opt-in
+
+**Status:** ✅ Settled (Phase 1), Enforced in CI (Step 2.1)
+
+---
+
+## 007 — Dual-Mode Architecture: Single State, Two Ingestion Pipelines
+
+**Decision:** One `mode` state (`'profile' | 'project'`) drives everything. Separate ingestion (`fetchGitHubProfile` vs `fetchGitHubProject`), separate generators, shared UI components.
+
+**Rationale:**
+- Shared components: Section Manager, Editor, Preview, Export — 80% code reuse
+- Unified state = single localStorage key, single import/export format
+- Mode switch is instant (no reload) — preserves custom sections
+
+**Alternatives Considered:**
+- **Two separate apps/pages:** Rejected — duplicates 80% code, fragments UX
+- **Separate repos:** Rejected — overkill for shared core
+
+**Tradeoffs:**
+- Type unions (`ProfileData | ProjectData`) require narrowing in components
+- Mitigated by discriminated unions in `src/types/readmecraft.ts`
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 008 — Section-Based Markdown Generation (Not Template Strings)
+
+**Decision:** Markdown generated by composing `Section[]` objects — each has `id`, `title`, `enabled`, `order`, `content`. `compileSectionsToMarkdown()` joins enabled sections by order.
+
+**Rationale:**
+- Enables drag-reorder, toggle, custom sections without string manipulation
+- Preset = array of section configs — easy to add/remove presets
+- Section content is pure markdown — editable in editor, round-trips perfectly
+- Testable: snapshot section arrays, not fragile string matching
+
+**Alternatives Considered:**
+- **Template literals with conditionals:** Rejected — hard to reorder, custom sections break
+- **AST-based (mdast):** Rejected — overkill, markdown-in/markdown-out is simpler
+- **React components → markdown:** Rejected — one-way, loses editability
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 009 — GitHub Markdown Preview: react-markdown + GFM + Raw HTML
+
+**Decision:** `react-markdown` with `remark-gfm` (tables, task lists, strikethrough), `rehype-raw` (raw HTML passthrough for badges), `rehype-highlight` (syntax highlighting).
+
+**Rationale:**
+- Closest to GitHub's actual rendering pipeline (cmark-gfm + custom HTML sanitizer)
+- `rehype-raw` allows badge images, custom HTML from generators
+- Syntax highlighting matches GitHub's language detection
+- Lightweight: ~15KB gzipped vs 100KB+ for full editors
+
+**Alternatives Considered:**
+- **Monaco Editor diff view:** Rejected — editor, not preview
+- **iframe with GitHub README page:** Rejected — auth, CORS, slow, no control
+- **Custom markdown parser:** Rejected — maintenance burden, edge cases
+
+**Tradeoffs:**
+- GitHub's alert syntax (`> [!NOTE]`) not in GFM — handled via custom CSS in `.markdown-body`
+- Relative image paths break — all images in generated markdown use absolute URLs
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 010 — Ecosystem Cross-Pollination: 1-Click Embed Snippets
+
+**Decision:** Two ecosystem widgets baked into every preset:
+- **GitHolo 3D Card:** `[![GitHolo](https://githolo.vercel.app/api/og/{username})](https://githolo.bharatdn.com)`
+- **GitChronicle Badge:** `[![GitChronicle](https://gitchronicle-wheat.vercel.app/badge/{username}.svg)](https://gitchronicle.bharatdn.com)`
+
+**Rationale:**
+- Primary growth engine: Every README generated becomes a distribution channel
+- 1-click copy in editor toolbar + export toolbar = zero friction
+- Badges are markdown-native — work on GitHub, GitLab, any markdown renderer
+- Subdomain strategy (`*.bharatdn.com`) unifies brand
+
+**Alternatives Considered:**
+- **Iframe embeds:** Rejected — GitHub READMEs strip iframes
+- **Script tags:** Rejected — stripped by GitHub sanitizer
+- **Separate "widgets" page:** Rejected — extra click kills conversion
+
+**Status:** ✅ Settled (Phase 1), Enhanced: Phase 4.1-4.2 (live previews)
+
+---
+
+## 011 — Export Pipeline: Copy + Download + JSON
+
+**Decision:** Three export actions, all client-side:
+1. **Copy Markdown:** `navigator.clipboard.writeText()` + `canvas-confetti` + toast
+2. **Download:** `Blob` + `URL.createObjectURL()` + anchor click
+3. **JSON State:** Full `ReadmeState` serialization + download/import
+
+**Rationale:**
+- Copy = primary action (paste into GitHub repo settings)
+- Download = backup, share via file
+- JSON = migrate between machines, share config with team, version control
+
+**Alternatives Considered:**
+- **GitHub API direct commit:** Rejected — requires OAuth, scope creep, security risk
+- **Gist creation:** Rejected — extra auth step, not the primary workflow
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 012 — Responsive 3-Pane: CSS Grid + Mobile Tabs
+
+**Decision:** Desktop: `grid-template-columns: 3fr 4fr 5fr`. Mobile: Single pane with bottom tab bar (Sections/Editor/Preview).
+
+**Rationale:**
+- 3-pane is core UX — all context visible simultaneously
+- Mobile tabs preserve all functionality without horizontal scroll
+- CSS Grid = no JS layout calculations, performant
+- Tab state (`activeMobileTab`) persisted in component state only
+
+**Alternatives Considered:**
+- **Horizontal scroll on mobile:** Rejected — breaks editor UX, hidden content
+- **Collapsible drawers:** Rejected — extra taps, loses "studio" feel
+- **Separate mobile routes:** Rejected — duplicates components
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 013 — Git Hygiene: Single Author, Conventional Commits, No Trailers
+
+**Decision:** Enforced via git config:
+- `user.name=ErBharatMalhotra`
+- `user.email=mr.bharatmalhotra@gmail.com`
+- `commit.trailer=false`
+- `commit.cleanup=strip`
+- Commit format: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`
+
+**Rationale:**
+- Clean history for open source project
+- No AI attribution pollution (common in AI-assisted repos)
+- Conventional commits enable automated changelogs
+- Single author = clear ownership, no "co-authored-by" noise
+
+**Alternatives Considered:**
+- **Signed commits:** Rejected — not needed for solo project
+- **Commitizen:** Rejected — extra tool, conventions are simple enough
+
+**Status:** ✅ Settled (Phase 1), Verified in CI (Step 2.1)
+
+---
+
+## 014 — Language Detection: Repo Bytes (Not Checkmarks)
+
+**Decision:** Top languages calculated by aggregating `language` field across all non-fork repos, weighted by repo size (approximation via star count as proxy). Displayed as percentages.
+
+**Rationale:**
+- GitHub's "Language" badge on profile uses repo count (checkmarks) — misleading
+- Bytes = actual code volume, more meaningful for developers
+- Star-weighted = prioritizes significant projects over toy repos
+
+**Alternatives Considered:**
+- **GitHub Linguist API:** Rejected — requires per-repo API calls (rate limit death)
+- **GraphQL `languages` field:** Rejected — only works per-repo, not aggregated
+- **Manual input:** Rejected — violates zero-typing principle
+
+**Tradeoffs:**
+- Approximation (stars ≠ bytes) — acceptable for v1
+- Phase 3.1 GraphQL can fetch actual `diskUsage` per language
+
+**Status:** ✅ Settled (Phase 1), Improve: Phase 3.1
+
+---
+
+## 015 — Package Manager Detection: package.json + Cargo.toml Only
+
+**Decision:** Detect npm/pnpm/yarn/bun from `package.json` dependencies/devDependencies. Detect cargo from `Cargo.toml`. No Go (go.mod), Python (pyproject.toml), Java (pom.xml) in v1.
+
+**Rationale:**
+- Covers 90%+ of GitHub repos (JS/TS/Rust dominate)
+- Single file fetch per repo (already fetching for framework detection)
+- Go/Python/Java need different badge/install patterns — scope creep
+
+**Alternatives Considered:**
+- **Universal detection (10+ managers):** Rejected — v1 scope, diminishing returns
+- **User selects manually:** Rejected — violates zero-typing
+
+**Status:** ✅ Settled (Phase 1), Expand: Phase 3.2+
+
+---
+
+## 016 — No Analytics / Telemetry (Privacy First)
+
+**Decision:** Zero analytics, zero telemetry, zero external requests except GitHub API and ecosystem badge images.
+
+**Rationale:**
+- Developer tools audience is privacy-sensitive
+- No cookie banner, no GDPR concerns
+- localStorage state is user's own data
+- Trust = competitive advantage
+
+**Alternatives Considered:**
+- **Plausible/Umami (privacy-friendly):** Rejected — still external request, still data
+- **Opt-in analytics:** Rejected — complexity, low signal
+
+**Status:** ✅ Settled (Phase 1), Revisit only if user demands (Phase 2.10)
+
+---
+
+## 017 — Error Handling: Graceful Degradation with Sample Data
+
+**Decision:** On any GitHub API failure (rate limit, 404, network, CORS), fall back to intelligent sample data (`SAMPLE_PROFILE` / `SAMPLE_PROJECT`) with a warning toast. Never crash the studio.
+
+**Rationale:**
+- GitHub API is unreliable (rate limits, outages, CORS)
+- User should always be able to use the studio — even offline after first load
+- Sample data demonstrates all features without valid input
+
+**Alternatives Considered:**
+- **Hard error screen:** Rejected — blocks user, feels broken
+- **Retry with backoff:** Rejected — rate limit retries waste user time
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 018 — Command Palette: Deferred to Phase 3.8
+
+**Decision:** No command palette in v1. Keyboard shortcuts for primary actions only (`⌘S`, `⌘E`, `⌘1/2/3`).
+
+**Rationale:**
+- 3-pane studio has visible UI for all actions — palette is power-user feature
+- `cmdk` dependency adds ~15KB — defer until justified
+- Shortcuts cover 90% of power-user needs
+
+**Alternatives Considered:**
+- **Full `cmdk` from start:** Rejected — YAGNI, bundle size
+
+**Status:** ✅ Settled (Phase 1), Scheduled: Phase 3.8
+
+---
+
+## 019 — Light Mode Preview: Deferred to Phase 3.7
+
+**Decision:** Preview is GitHub Dark Mode only in v1. Light mode toggle in Phase 3.7.
+
+**Rationale:**
+- GitHub Dark is default for developers, matches our obsidian chassis
+- Light mode requires dual CSS variable sets + preview iframe theme sync
+- Low priority: <10% users prefer light mode on GitHub
+
+**Status:** ✅ Settled (Phase 1), Scheduled: Phase 3.7
+
+---
+
+## 020 — Vercel Deployment: Static Export + API Route
+
+**Decision:** Deploy to Vercel with `output: 'standalone'` (default Next.js). API route `/api/ingest` runs as serverless function. Map custom domain `readme.bharatdn.com`.
+
+**Rationale:**
+- Native Next.js support, zero config
+- API route handles CORS for GitHub calls
+- Edge network = fast global ingress
+- Hobby tier sufficient (100GB bandwidth, 12s function timeout)
+
+**Alternatives Considered:**
+- **Cloudflare Pages:** Rejected — API routes need Workers, more complex
+- **Netlify:** Rejected — Vercel has better Next.js integration
+- **Self-hosted:** Rejected — operational burden
+
+**Status:** ✅ Settled (Phase 1), Execute: Phase 2.9
+
+---
+
+## 021 — Versioned JSON State Schema
+
+**Decision:** `ReadmeState` interface includes `version` field (currently implied by `v2` in localStorage key). Export includes full state; import validates required fields.
+
+**Rationale:**
+- Future-proof: Can migrate `v2` → `v3` with migration logic
+- Shared configs between team members
+- Backup/restore workflow
+
+**Schema (Current):**
+```typescript
+interface ReadmeState {
+  mode: 'profile' | 'project';
+  profilePreset: 'bento' | 'minimalist' | 'titan';
+  projectPreset: 'standard' | 'api' | 'cli';
+  profileData: ProfileData;
+  projectData: ProjectData;
+  sections: Section[];
+  customToken?: string; // Not exported for security
+}
+```
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 022 — Custom Sections: isCustom Flag + Delete Button
+
+**Decision:** User-added sections get `isCustom: true` flag. Only custom sections show delete button. Preset sections can only be toggled/reordered.
+
+**Rationale:**
+- Prevents accidental deletion of preset sections
+- Clear visual distinction (amber "Custom" badge)
+- Preset sections regenerate on preset switch — custom persist
+
+**Alternatives Considered:**
+- **All sections deletable:** Rejected — breaks preset switching UX
+- **No custom sections:** Rejected — users need flexibility for sponsors, roadmap, etc.
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 023 — Ecosystem Toggle State: Per-Mode, Persisted
+
+**Decision:** GitHolo/GitChronicle toggles are part of `ProfileData` and `ProjectData` — separate per mode, persisted in localStorage.
+
+**Rationale:**
+- Profile READMEs and Project READMEs have different widget needs
+- State survives mode switch (user expects toggles to remember)
+- Generators read toggles directly from data objects
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 024 — Confetti: canvas-confetti (Not Custom Canvas)
+
+**Decision:** Use `canvas-confetti` library for copy action celebration.
+
+**Rationale:**
+- Zero-config, performant, TypeScript types available
+- Emerald/gold color palette configurable
+- 2KB gzipped — negligible
+
+**Alternatives Considered:**
+- **Custom canvas implementation:** Rejected — reinventing wheel, maintenance
+- **CSS animation:** Rejected — particle systems need canvas
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 025 — Toast Notifications: Custom (Not Library)
+
+**Decision:** Inline toast component in `ExportToolbar` — fixed bottom-right, auto-dismiss 3s, emerald border + pulse dot.
+
+**Rationale:**
+- Only 2-3 toast types needed (copy success, download, error)
+- Library (`sonner`, `react-hot-toast`) adds 5-10KB for minimal use
+- Custom = exact design system match, zero deps
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 026 — Font Loading: Preconnect + Display Swap
+
+**Decision:** Google Fonts with `<link rel="preconnect">` and `display=swap` in layout.tsx.
+
+**Rationale:**
+- Preconnect reduces font load latency by ~100ms
+- `display=swap` prevents FOIT (Flash of Invisible Text)
+- System UI fallback for body = no layout shift
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 027 — Section Order: Numeric `order` Field (Not Array Index)
+
+**Decision:** Sections have explicit `order: number` field. Reorder swaps order values. Compile sorts by order.
+
+**Rationale:**
+- Stable across preset switches (preset defines initial order)
+- Easy to insert between (order = average of neighbors)
+- Array index would break on filter/sort operations
+
+**Alternatives Considered:**
+- **Linked list (prev/next):** Rejected — overkill for <20 sections
+- **Fractional indexing:** Rejected — complexity not justified
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 028 — Markdown Editor: Native Textarea (Not Monaco/CodeMirror)
+
+**Decision:** Plain `<textarea>` with monospace font. No code editor features (no autocomplete, no minimap, no folding).
+
+**Rationale:**
+- Markdown is plain text — code editor features add noise
+- Monaco = 500KB+ gzipped, CodeMirror = 200KB+
+- Native textarea = instant load, native spellcheck, native shortcuts
+- Syntax highlighting happens in Preview (Pane 3), not Editor
+
+**Alternatives Considered:**
+- **Monaco Editor:** Rejected — overkill, bundle size
+- **CodeMirror 6:** Rejected — still 200KB, markdown mode extra
+- **SimpleMDE:** Rejected — unmaintained, toolbar duplicates ours
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 029 — Viewport Toggle: CSS Width Constraints (Not iframe)
+
+**Decision:** Preview container uses `max-w-md` / `max-w-2xl` / `max-w-none` classes for mobile/tablet/desktop. No iframe.
+
+**Rationale:**
+- Iframe breaks copy/paste, dev tools, accessibility
+- CSS width constraint = same DOM, instant switch
+- GitHub README width is ~980px — `max-w-none` shows true width
+
+**Status:** ✅ Settled (Phase 1)
+
+---
+
+## 030 — Package.json: Private + Exact Versions
+
+**Decision:** `"private": true`, exact versions for all deps (no `^` or `~`), React 19 / Next 16 pinned.
+
+**Rationale:**
+- Prevents accidental publish to npm
+- Reproducible builds — no surprise updates
+- React 19 / Next 16 are latest stable at build time
+
+**Status:** ✅ Settled (Phase 1)
+
+---
