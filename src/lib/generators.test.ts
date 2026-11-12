@@ -229,7 +229,7 @@ describe('Ecosystem toggles in generators', () => {
     const sections = getProfileSections(data, 'bento');
     const markdown = compileSectionsToMarkdown(sections);
 
-    expect(markdown).toContain('githolo.vercel.app/api/og');
+    expect(markdown).toContain('githolo.bharatdn.com/api/og');
     expect(markdown).toContain('githolo.bharatdn.com');
   });
 
@@ -238,7 +238,7 @@ describe('Ecosystem toggles in generators', () => {
     const sections = getProfileSections(data, 'bento');
     const markdown = compileSectionsToMarkdown(sections);
 
-    expect(markdown).not.toContain('githolo.vercel.app/api/og');
+    expect(markdown).not.toContain('githolo.bharatdn.com/api/og');
   });
 
   it('includes GitChronicle when gitChronicleEnabled is true', () => {
@@ -246,7 +246,7 @@ describe('Ecosystem toggles in generators', () => {
     const sections = getProfileSections(data, 'bento');
     const markdown = compileSectionsToMarkdown(sections);
 
-    expect(markdown).toContain('gitchronicle-wheat.vercel.app/badge');
+    expect(markdown).toContain('gitchronicle.bharatdn.com/badge');
     expect(markdown).toContain('gitchronicle.bharatdn.com');
   });
 
@@ -255,7 +255,7 @@ describe('Ecosystem toggles in generators', () => {
     const sections = getProfileSections(data, 'bento');
     const markdown = compileSectionsToMarkdown(sections);
 
-    expect(markdown).not.toContain('gitchronicle-wheat.vercel.app/badge');
+    expect(markdown).not.toContain('gitchronicle.bharatdn.com/badge');
   });
 
   it('project mode uses owner for ecosystem snippets', () => {
@@ -263,8 +263,8 @@ describe('Ecosystem toggles in generators', () => {
     const sections = getProjectSections(data, 'standard');
     const markdown = compileSectionsToMarkdown(sections);
 
-    expect(markdown).toContain(`githolo.vercel.app/api/og/${SAMPLE_PROJECT.owner}`);
-    expect(markdown).toContain(`gitchronicle-wheat.vercel.app/badge/${SAMPLE_PROJECT.owner}`);
+    expect(markdown).toContain(`githolo.bharatdn.com/api/og/${SAMPLE_PROJECT.repo}`);
+    expect(markdown).toContain(`gitchronicle.bharatdn.com/badge/${SAMPLE_PROJECT.repo}`);
   });
 });
 

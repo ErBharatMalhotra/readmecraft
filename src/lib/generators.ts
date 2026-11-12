@@ -203,9 +203,9 @@ ${data.skills.map((s) => `<img src="https://img.shields.io/badge/-${encodeURICom
 
 <div align="center">
 
-${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.vercel.app/api/og/${username})](https://githolo.bharatdn.com)` : ''}
+${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.bharatdn.com/api/og/${username})](https://githolo.bharatdn.com)` : ''}
 
-${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/${username}.svg)](https://gitchronicle.bharatdn.com)` : ''}
+${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bharatdn.com/badge/${username}.svg)](https://gitchronicle.bharatdn.com)` : ''}
 
 </div>`,
     },
@@ -549,9 +549,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 
 <div align="center">
 
-${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.vercel.app/api/og/${owner}/${repo})](https://githolo.bharatdn.com)` : ''}
+${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.bharatdn.com/api/og/${repo})](https://githolo.bharatdn.com)` : ''}
 
-${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/${owner}/${repo}.svg)](https://gitchronicle.bharatdn.com)` : ''}
+${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bharatdn.com/badge/${repo}.svg)](https://gitchronicle.bharatdn.com)` : ''}
 
 </div>
 
