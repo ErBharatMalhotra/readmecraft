@@ -54,16 +54,27 @@ async function fetchContributionCalendar(username: string): Promise<{ totalContr
     if (!calendar) return { totalContributions: 0, streak: 0 };
     
     // Calculate current streak
+    // GitHub contribution dates are in user's local timezone (YYYY-MM-DD format)
+    // We need to find the most recent date in the calendar and work backwards from there
     const days = calendar.weeks.flatMap((w: any) => w.contributionDays);
-    let streak = 0;
-    const today = new Date().toISOString().split('T')[0];
     
-    for (let i = days.length - 1; i >= 0; i--) {
-      const day = days[i];
-      if (day.date === today || day.date < today) {
-        if (day.contributionCount > 0) {
-          streak++;
-        } else if (day.date !== today) {
+    if (days.length === 0) return { totalContributions: calendar.totalContributions, streak: 0 };
+    
+    // Sort days by date (newest first) - GitHub returns chronological but let's be safe
+    days.sort((a: any, b: any) => b.date.localeCompare(a.date));
+    
+    let streak = 0;
+    // Use the most recent date in the calendar as "today" reference
+    // This avoids UTC vs user timezone issues
+    const mostRecentDate = days[0].date;
+    
+    for (const day of days) {
+      if (day.contributionCount > 0) {
+        streak++;
+      } else {
+        // If we hit a day with 0 contributions, streak ends
+        // But only if it's not the most recent date (today might have 0 yet)
+        if (day.date !== mostRecentDate) {
           break;
         }
       }
@@ -104,14 +115,14 @@ export async function GET(req: NextRequest) {
     const topLanguage = Object.entries(langStats).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None';
     
     // Fetch contribution calendar for streak
-    const { streak } = await fetchContributionCalendar(username);
+    const { streak, totalContributions } = await fetchContributionCalendar(username);
     
     const stats = {
       publicRepos: user.public_repos,
       followers: user.followers,
       following: user.following,
       topLanguage,
-      totalContributions: 0,
+      totalContributions,
       streak,
     };
     
