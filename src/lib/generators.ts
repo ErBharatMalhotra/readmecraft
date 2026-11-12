@@ -45,10 +45,17 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-whea
         order: 3,
         content: `### ⚡ Current Focus
 
-- 🔭 Architecting scalable distributed systems and developer tooling.
-- 🌱 Exploring low-level systems programming and real-time graphics.
+- 🔭 Architecting scalable distributed systems & developer tooling.
+- 🌱 Exploring low-level systems programming & real-time graphics.
 - 💬 Ask me about **${data.skills.slice(0, 3).join(', ')}** or modern web architecture.
-- ⚡ Fun fact: Anti-slop enthusiast committed to minimal, high-taste interfaces.`,
+- ⚡ Fun fact: Anti-slop enthusiast committed to minimal, high-taste interfaces.
+
+### 🏛️ Engineering Principles
+
+- **Simplicity > Cleverness** — Code is read more than written.
+- **Observability First** — Logs, metrics, traces from day one.
+- **Boring Technology** — Proven tools over hype-driven choices.
+- **Zero-Dependency Mindset** — Build it yourself when it matters.`,
       },
       {
         id: 'skills',
@@ -219,12 +226,19 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bhar
 <table>
   <tr>
     <td width="50%" valign="top">
-      <h4>⚡ About Me</h4>
+      <h4>⚡ Focus & Principles</h4>
       <ul>
-        <li>🔭 Working on high-performance web applications</li>
-        <li>💡 Exploring next-gen developer tools & graphics</li>
-        <li>🎯 Committed to clean, high-taste typography and code</li>
-        <li>📫 Reach me at: <b>${data.twitter ? `@${data.twitter}` : username}</b></li>
+        <li>🔭 High-performance web apps & distributed systems</li>
+        <li>💡 Next-gen developer tools & real-time graphics</li>
+        <li>🎯 Clean, high-taste typography & code</li>
+        <li>📫 Reach me: <b>${data.twitter ? `@${data.twitter}` : username}</b></li>
+      </ul>
+      <h4>🏛️ Engineering Creed</h4>
+      <ul>
+        <li>Simplicity > Cleverness</li>
+        <li>Observability First</li>
+        <li>Boring Technology Wins</li>
+        <li>Zero-Dependency Mindset</li>
       </ul>
     </td>
     <td width="50%" valign="top">
