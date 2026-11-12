@@ -40,10 +40,10 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
   return (
     <section className="relative border-b border-[#1e293b] bg-gradient-to-b from-[#090d16] via-[#0b101c] to-[#090d16] px-4 py-6 lg:px-8">
       <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
-        {/* Anti-AI Slop Tag */}
+        {/* Design Tag */}
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-xs text-emerald-400">
           <Sparkles className="h-3.5 w-3.5" />
-          <span>Zero-Typing Ingestion • Anti-AI-Slop Geometry • OKLCH Obsidian</span>
+          <span>Zero-Typing Ingestion • High-Taste Geometry • OKLCH Obsidian</span>
         </div>
 
         <h1 className="mb-3 font-['Space_Grotesk'] text-2xl font-extrabold tracking-tight text-white sm:text-3xl md:text-4xl">
