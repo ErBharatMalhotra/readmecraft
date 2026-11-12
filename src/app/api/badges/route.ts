@@ -30,10 +30,14 @@ function generateBadge(label: string, message: string, color: string = '10b981',
 
 async function fetchContributionCalendar(username: string): Promise<{ totalContributions: number; streak: number }> {
   try {
+    // Get date range for the past year
+    const to = new Date().toISOString().split('T')[0];
+    const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
     const query = `
-      query($username: String!) {
+      query($username: String!, $from: DateTime!, $to: DateTime!) {
         user(login: $username) {
-          contributionsCollection {
+          contributionsCollection(from: $from, to: $to) {
             contributionCalendar {
               totalContributions
               weeks {
@@ -48,7 +52,7 @@ async function fetchContributionCalendar(username: string): Promise<{ totalContr
       }
     `;
     
-    const response = await octokit.graphql<{ user: { contributionsCollection: { contributionCalendar: { totalContributions: number; weeks: { contributionDays: { contributionCount: number; date: string }[] }[] } } } }>(query, { username });
+    const response = await octokit.graphql<{ user: { contributionsCollection: { contributionCalendar: { totalContributions: number; weeks: { contributionDays: { contributionCount: number; date: string }[] }[] } } } }>(query, { username, from, to });
     const calendar = response.user?.contributionsCollection?.contributionCalendar;
     
     if (!calendar) return { totalContributions: 0, streak: 0 };
