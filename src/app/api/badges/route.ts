@@ -2,10 +2,6 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { Octokit } from '@octokit/rest';
 
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN || process.env.GH_TOKEN,
-});
-
 function generateBadge(label: string, message: string, color: string = '10b981', labelColor: string = '090d16', logo?: string): string {
   const labelWidth = (label.length + 1) * 7;
   const messageWidth = (message.length + 1) * 7;
@@ -28,10 +24,9 @@ function generateBadge(label: string, message: string, color: string = '10b981',
 </svg>`;
 }
 
-async function fetchContributionCalendar(username: string): Promise<{ totalContributions: number; streak: number }> {
+async function fetchContributionCalendar(username: string, client: Octokit): Promise<{ totalContributions: number; streak: number; source: string }> {
+  // Strategy 1: GraphQL with auth (most accurate)
   try {
-    // If no token is set, return default/fallback or public proxy
-    // Let's use public contributions count or estimate from public events if graphql fails due to rate limit
     const to = new Date().toISOString();
     const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
     
@@ -53,39 +48,69 @@ async function fetchContributionCalendar(username: string): Promise<{ totalContr
       }
     `;
     
-    const response = await octokit.graphql<{ user: { contributionsCollection: { contributionCalendar: { totalContributions: number; weeks: { contributionDays: { contributionCount: number; date: string }[] }[] } } } }>(query, { username, from, to });
+    const response = await client.graphql<{ user: { contributionsCollection: { contributionCalendar: { totalContributions: number; weeks: { contributionDays: { contributionCount: number; date: string }[] }[] } } } }>(query, { username, from, to });
     const calendar = response.user?.contributionsCollection?.contributionCalendar;
     
-    if (!calendar) return { totalContributions: 150, streak: 7 };
+    if (calendar && calendar.weeks.length > 0) {
+      const days = calendar.weeks.flatMap((w: any) => w.contributionDays);
+      days.sort((a: any, b: any) => b.date.localeCompare(a.date));
+      
+      let streak = 0;
+      const mostRecentDate = days[0].date;
+      
+      for (const day of days) {
+        if (day.contributionCount > 0) streak++;
+        else if (day.date !== mostRecentDate) break;
+      }
+      
+      return { totalContributions: calendar.totalContributions, streak, source: 'graphql' };
+    }
+  } catch (e) {
+    console.log('GraphQL failed:', e);
+  }
+  
+  // Strategy 2: REST Events API - count recent PushEvents for streak estimate (no auth needed, 60/hr)
+  try {
+    const { data: events } = await client.rest.activity.listPublicEventsForUser({ 
+      username, 
+      per_page: 100 
+    });
     
-    const days = calendar.weeks.flatMap((w: any) => w.contributionDays);
-    if (days.length === 0) return { totalContributions: calendar.totalContributions, streak: 5 };
-    
-    days.sort((a: any, b: any) => b.date.localeCompare(a.date));
-    
-    let streak = 0;
-    const mostRecentDate = days[0].date;
-    
-    for (const day of days) {
-      if (day.contributionCount > 0) {
-        streak++;
-      } else {
-        if (day.date !== mostRecentDate) {
+    const pushEvents = events.filter(e => e.type === 'PushEvent');
+    if (pushEvents.length > 0) {
+      // Group by date
+      const dates = new Set<string>();
+      for (const event of pushEvents) {
+        const date = event.created_at!.split('T')[0];
+        dates.add(date);
+      }
+      
+      // Calculate streak from most recent date backwards
+      const sortedDates = Array.from(dates).sort().reverse();
+      let streak = 0;
+      const today = new Date().toISOString().split('T')[0];
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      
+      let checkDate = sortedDates[0] === today || sortedDates[0] === yesterday ? sortedDates[0] : today;
+      
+      for (let i = 0; i < 365; i++) {
+        const checkStr = new Date(checkDate).toISOString().split('T')[0];
+        if (dates.has(checkStr)) {
+          streak++;
+          checkDate = new Date(new Date(checkDate).getTime() - 86400000).toISOString().split('T')[0];
+        } else {
           break;
         }
       }
+      
+      return { totalContributions: pushEvents.length, streak: Math.max(streak, 1), source: 'events' };
     }
-    
-    // Fallback if streak is 0 but user is active (or rate limited / empty graph)
-    const finalStreak = streak > 0 ? streak : 12;
-    const finalContributions = calendar.totalContributions > 0 ? calendar.totalContributions : 420;
-    
-    return { totalContributions: finalContributions, streak: finalStreak };
-  } catch (error) {
-    console.error('Error fetching contribution calendar, using intelligent fallback:', error);
-    // Intelligent fallback so badges never fail or show 0 on public unauthenticated requests
-    return { totalContributions: 420, streak: 12 };
+  } catch (e) {
+    console.log('Events API failed:', e);
   }
+  
+  // Strategy 3: Return 0 if unable to calculate
+  return { totalContributions: 0, streak: 0, source: 'none' };
 }
 
 export async function GET(req: NextRequest) {
@@ -93,14 +118,20 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const username = searchParams.get('username');
     const type = searchParams.get('type') || 'stats';
+    const token = searchParams.get('token') || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
     
     if (!username) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });
     }
     
+    // Create Octokit with token if provided
+    const client = token 
+      ? new Octokit({ auth: token })
+      : new Octokit();
+    
     // Fetch user data
-    const { data: user } = await octokit.rest.users.getByUsername({ username });
-    const { data: repos } = await octokit.rest.repos.listForUser({ 
+    const { data: user } = await client.rest.users.getByUsername({ username });
+    const { data: repos } = await client.rest.repos.listForUser({ 
       username, 
       type: 'owner', 
       sort: 'updated',
@@ -117,7 +148,7 @@ export async function GET(req: NextRequest) {
     const topLanguage = Object.entries(langStats).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None';
     
     // Fetch contribution calendar for streak
-    const { streak, totalContributions } = await fetchContributionCalendar(username);
+    const { streak, totalContributions, source } = await fetchContributionCalendar(username, client);
     
     const stats = {
       publicRepos: user.public_repos,
@@ -126,6 +157,7 @@ export async function GET(req: NextRequest) {
       topLanguage,
       totalContributions,
       streak,
+      source,
     };
     
     let badgeSvg: string;
@@ -146,7 +178,7 @@ export async function GET(req: NextRequest) {
         badgeSvg = generateBadge('Top Language', stats.topLanguage, color, labelColor);
         break;
       case 'streak':
-        badgeSvg = generateBadge('Streak', `${stats.streak} days`, 'f59e0b', labelColor);
+        badgeSvg = generateBadge('Streak', streak === -1 ? 'Token Required' : `${stats.streak} days`, streak === -1 ? 'ef4444' : 'f59e0b', labelColor);
         break;
       case 'contributions':
         badgeSvg = generateBadge('Contributions', String(stats.totalContributions), color, labelColor);
