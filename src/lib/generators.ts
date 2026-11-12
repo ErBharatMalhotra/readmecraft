@@ -223,7 +223,7 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bhar
       <ul>
         <li>🔭 Working on high-performance web applications</li>
         <li>💡 Exploring next-gen developer tools & graphics</li>
-        <li>🎯 Committed to clean, anti-AI-slop typography and code</li>
+        <li>🎯 Committed to clean, high-taste typography and code</li>
         <li>📫 Reach me at: <b>${data.twitter ? `@${data.twitter}` : username}</b></li>
       </ul>
     </td>
