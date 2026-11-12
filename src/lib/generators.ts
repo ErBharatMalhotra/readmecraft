@@ -258,13 +258,23 @@ ${data.skills.map((s) => `<img src="https://img.shields.io/badge/${encodeURIComp
 
 ${data.pinnedRepos
   .map(
-    (repo) => `<a href="${repo.url}">
-  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=${username}&repo=${repo.name}&theme=tokyonight&hide_border=true&bg_color=090d16&title_color=10b981&icon_color=10b981&text_color=94a3b8" />
-</a>`
+    (repo) => `[![${repo.name}](${repo.language ? `https://img.shields.io/badge/${repo.name}-${repo.language}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16` : `https://img.shields.io/badge/${repo.name}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16`})](${repo.url})`
   )
-  .join('\n\n')}
+  .join(' ')}
 
-</div>`,
+</div>
+
+${data.pinnedRepos.length > 0 ? `
+<details>
+<summary><b>Repository Details</b></summary>
+
+${data.pinnedRepos
+  .map(
+    (repo) => `- **[${repo.name}](${repo.url})** ${repo.description ? `— ${repo.description}` : ''} ${repo.language ? `\`${repo.language}\`` : ''} ⭐ ${repo.stargazersCount}`
+  )
+  .join('\n')}
+
+</details>` : ''}`,
     },
     {
       id: 'github_metrics',
@@ -274,9 +284,24 @@ ${data.pinnedRepos
       content: `### 📈 Velocity & Metrics
 
 <div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=tokyonight&hide_border=true&bg_color=090d16&title_color=10b981&icon_color=10b981&text_color=94a3b8" alt="GitHub Stats" width="48%" />
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=tokyonight&hide_border=true&background=090d16&ring=10b981&fire=10b981&currStreakLabel=10b981" alt="Streak Stats" width="48%" />
-</div>`,
+
+![Public Repos](https://img.shields.io/badge/Public_Repos-${data.publicRepos}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16)
+![Followers](https://img.shields.io/badge/Followers-${data.followers}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16)
+![Following](https://img.shields.io/badge/Following-${data.following}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16)
+${data.topLanguagesEnabled && data.languages.length > 0 ? `\n![Top Language](https://img.shields.io/badge/Top_Language-${data.languages[0].name}-${data.languages[0].color || '10b981'}?style=for-the-badge&logo=${data.languages[0].name.toLowerCase()}&logoColor=white&labelColor=090d16)` : ''}
+
+</div>
+
+<details>
+<summary><b>Contribution Breakdown</b></summary>
+
+- **Public Repositories:** ${data.publicRepos}
+- **Followers:** ${data.followers}
+- **Following:** ${data.following}
+${data.topLanguagesEnabled && data.languages.length > 0 ? `- **Top Language:** ${data.languages[0].name} (${data.languages[0].percentage}%)` : ''}
+${data.githubStreakEnabled ? `- **Streak Tracking:** Enabled (configure at [github-readme-streak-stats](https://github.com/ErBharatMalhotra/github-readme-streak-stats))` : ''}
+
+</details>`,
     },
   ];
 }
