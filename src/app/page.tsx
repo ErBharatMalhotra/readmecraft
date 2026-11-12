@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import {
+import type {
   AppMode,
   ProfilePreset,
   ProjectPreset,
@@ -40,7 +40,9 @@ export default function Home() {
     compileSectionsToMarkdown(getProfileSections(SAMPLE_PROFILE, 'bento'))
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [activeMobileTab, setActiveMobileTab] = useState<'sections' | 'editor' | 'preview'>('preview');
+  const [activeMobileTab, setActiveMobileTab] = useState<'sections' | 'editor' | 'preview'>(
+    'preview'
+  );
 
   // Load state from localStorage on initial render
   useEffect(() => {
@@ -317,13 +319,12 @@ export default function Home() {
     reader.readAsText(file);
   };
 
-  const activeUsername =
-    mode === 'profile' ? profileData.username : projectData.owner;
+  const activeUsername = mode === 'profile' ? profileData.username : projectData.owner;
   const activeTitle =
     mode === 'profile' ? profileData.name || profileData.username : projectData.repo;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
+    <div className="flex min-h-screen flex-col bg-[#090d16] font-sans text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-300">
       {/* Top Header Navbar */}
       <Header
         mode={mode}
@@ -343,47 +344,47 @@ export default function Home() {
       />
 
       {/* Mobile / Tablet View Switcher Tab Bar */}
-      <div className="lg:hidden flex items-center justify-around border-b border-[#1e293b] bg-[#0b101c] p-2">
+      <div className="flex items-center justify-around border-b border-[#1e293b] bg-[#0b101c] p-2 lg:hidden">
         <button
           onClick={() => setActiveMobileTab('sections')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-xs transition-colors ${
             activeMobileTab === 'sections'
-              ? 'bg-emerald-500 text-slate-950 font-bold'
+              ? 'bg-emerald-500 font-bold text-slate-950'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          <Layers className="w-3.5 h-3.5" />
+          <Layers className="h-3.5 w-3.5" />
           <span>1. Sections</span>
         </button>
         <button
           onClick={() => setActiveMobileTab('editor')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-xs transition-colors ${
             activeMobileTab === 'editor'
-              ? 'bg-emerald-500 text-slate-950 font-bold'
+              ? 'bg-emerald-500 font-bold text-slate-950'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          <FileCode className="w-3.5 h-3.5" />
+          <FileCode className="h-3.5 w-3.5" />
           <span>2. Editor</span>
         </button>
         <button
           onClick={() => setActiveMobileTab('preview')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-xs transition-colors ${
             activeMobileTab === 'preview'
-              ? 'bg-emerald-500 text-slate-950 font-bold'
+              ? 'bg-emerald-500 font-bold text-slate-950'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          <Eye className="w-3.5 h-3.5" />
+          <Eye className="h-3.5 w-3.5" />
           <span>3. Preview</span>
         </button>
       </div>
 
       {/* The 3-Pane Studio Layout */}
-      <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 min-h-[750px]">
+      <main className="grid min-h-[750px] w-full flex-1 grid-cols-1 lg:grid-cols-12">
         {/* Pane 1: Section Manager */}
         <div
-          className={`lg:col-span-3 xl:col-span-3 h-full overflow-hidden ${
+          className={`h-full overflow-hidden lg:col-span-3 xl:col-span-3 ${
             activeMobileTab === 'sections' ? 'block' : 'hidden lg:block'
           }`}
         >
@@ -403,9 +404,7 @@ export default function Home() {
             }
             onToggleGitHolo={handleToggleGitHolo}
             gitChronicleEnabled={
-              mode === 'profile'
-                ? profileData.gitChronicleEnabled
-                : projectData.gitChronicleEnabled
+              mode === 'profile' ? profileData.gitChronicleEnabled : projectData.gitChronicleEnabled
             }
             onToggleGitChronicle={handleToggleGitChronicle}
             activeUsername={activeUsername}
@@ -414,7 +413,7 @@ export default function Home() {
 
         {/* Pane 2: Markdown Editor */}
         <div
-          className={`lg:col-span-4 xl:col-span-4 h-full overflow-hidden ${
+          className={`h-full overflow-hidden lg:col-span-4 xl:col-span-4 ${
             activeMobileTab === 'editor' ? 'block' : 'hidden lg:block'
           }`}
         >
@@ -429,14 +428,11 @@ export default function Home() {
 
         {/* Pane 3: GitHub Markdown Preview */}
         <div
-          className={`lg:col-span-5 xl:col-span-5 h-full overflow-hidden ${
+          className={`h-full overflow-hidden lg:col-span-5 xl:col-span-5 ${
             activeMobileTab === 'preview' ? 'block' : 'hidden lg:block'
           }`}
         >
-          <PaneGitHubPreview
-            markdown={markdown}
-            repoOrUserTitle={activeTitle}
-          />
+          <PaneGitHubPreview markdown={markdown} repoOrUserTitle={activeTitle} />
         </div>
       </main>
 

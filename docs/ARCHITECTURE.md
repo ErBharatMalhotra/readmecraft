@@ -59,6 +59,7 @@ readmecraft/
 ## 🔄 Data Flow
 
 ### Initial Load
+
 ```
 1. page.tsx mounts
    │
@@ -73,6 +74,7 @@ readmecraft/
 ```
 
 ### User Types Username/Repo → Ingestion
+
 ```
 1. HeroIngestion: onSubmit(target, token)
    │
@@ -96,6 +98,7 @@ readmecraft/
 ```
 
 ### Section Toggle / Reorder / Preset Change
+
 ```
 1. PaneSectionManager: onToggleSection / onMoveSection / setProfilePreset
    │
@@ -109,6 +112,7 @@ readmecraft/
 ```
 
 ### Editor Change (Full Doc or Section)
+
 ```
 1. PaneMarkdownEditor: onChange / onUpdateSectionContent
    │
@@ -122,6 +126,7 @@ readmecraft/
 ```
 
 ### Export Actions
+
 ```
 Copy Markdown:
   1. ExportToolbar: handleCopy()
@@ -143,6 +148,7 @@ Import JSON:
 ```
 
 ### Autosave (Every State Change)
+
 ```
 1. page.tsx: useEffect([mode, profilePreset, projectPreset, profileData, projectData, sections])
    │
@@ -153,16 +159,16 @@ Import JSON:
 
 ## 🧩 Component Responsibilities
 
-| Component | Responsibilities | State Owned | Props Received |
-|-----------|------------------|-------------|----------------|
-| `page.tsx` | **Root orchestrator** — all state, ingestion, compilation, persistence | `mode`, `profilePreset`, `projectPreset`, `profileData`, `projectData`, `sections`, `markdown`, `isLoading` | — |
-| `Header` | Mode switch, import/export JSON, reset, ecosystem links | — | `mode`, `setMode`, `onReset`, `onExportJson`, `onImportJson` |
-| `HeroIngestion` | Username/repo input, token input, quick samples, loading state | `target`, `token`, `showTokenInput` (local) | `mode`, `onIngest`, `isLoading`, `activeUsername`, `activeRepo` |
-| `PaneSectionManager` | Section toggles, reorder, preset radio, custom section modal, ecosystem toggles | `showAddModal`, `customTitle`, `customContent` (local) | `mode`, `profilePreset`, `setProfilePreset`, `projectPreset`, `setProjectPreset`, `sections`, `onToggleSection`, `onMoveSection`, `onAddCustomSection`, `onRemoveSection`, `gitHoloEnabled`, `onToggleGitHolo`, `gitChronicleEnabled`, `onToggleGitChronicle`, `activeUsername` |
-| `PaneMarkdownEditor` | Full/Section mode, toolbar, section tabs, textarea, telemetry footer | `editorMode`, `activeSectionId`, `copiedSnippet` (local) | `markdown`, `onChangeMarkdown`, `sections`, `onUpdateSectionContent`, `activeUsername` |
-| `PaneGitHubPreview` | Rendered/Raw toggle, viewport toggle, GitHub chrome, markdown rendering | `viewMode`, `deviceWidth` (local) | `markdown`, `repoOrUserTitle` |
-| `ExportToolbar` | Copy (confetti+toast), Download, Quick-copy GitHolo/GitChronicle | `copied`, `toastMessage` (local) | `markdown`, `filename`, `activeUsername` |
-| `Footer` | Static ecosystem links, GitHub repo, license | — | — |
+| Component            | Responsibilities                                                                | State Owned                                                                                                 | Props Received                                                                                                                                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `page.tsx`           | **Root orchestrator** — all state, ingestion, compilation, persistence          | `mode`, `profilePreset`, `projectPreset`, `profileData`, `projectData`, `sections`, `markdown`, `isLoading` | —                                                                                                                                                                                                                                                                               |
+| `Header`             | Mode switch, import/export JSON, reset, ecosystem links                         | —                                                                                                           | `mode`, `setMode`, `onReset`, `onExportJson`, `onImportJson`                                                                                                                                                                                                                    |
+| `HeroIngestion`      | Username/repo input, token input, quick samples, loading state                  | `target`, `token`, `showTokenInput` (local)                                                                 | `mode`, `onIngest`, `isLoading`, `activeUsername`, `activeRepo`                                                                                                                                                                                                                 |
+| `PaneSectionManager` | Section toggles, reorder, preset radio, custom section modal, ecosystem toggles | `showAddModal`, `customTitle`, `customContent` (local)                                                      | `mode`, `profilePreset`, `setProfilePreset`, `projectPreset`, `setProjectPreset`, `sections`, `onToggleSection`, `onMoveSection`, `onAddCustomSection`, `onRemoveSection`, `gitHoloEnabled`, `onToggleGitHolo`, `gitChronicleEnabled`, `onToggleGitChronicle`, `activeUsername` |
+| `PaneMarkdownEditor` | Full/Section mode, toolbar, section tabs, textarea, telemetry footer            | `editorMode`, `activeSectionId`, `copiedSnippet` (local)                                                    | `markdown`, `onChangeMarkdown`, `sections`, `onUpdateSectionContent`, `activeUsername`                                                                                                                                                                                          |
+| `PaneGitHubPreview`  | Rendered/Raw toggle, viewport toggle, GitHub chrome, markdown rendering         | `viewMode`, `deviceWidth` (local)                                                                           | `markdown`, `repoOrUserTitle`                                                                                                                                                                                                                                                   |
+| `ExportToolbar`      | Copy (confetti+toast), Download, Quick-copy GitHolo/GitChronicle                | `copied`, `toastMessage` (local)                                                                            | `markdown`, `filename`, `activeUsername`                                                                                                                                                                                                                                        |
+| `Footer`             | Static ecosystem links, GitHub repo, license                                    | —                                                                                                           | —                                                                                                                                                                                                                                                                               |
 
 ---
 
@@ -171,6 +177,7 @@ Import JSON:
 ### `POST /api/ingest`
 
 **Request:**
+
 ```typescript
 {
   mode: 'profile' | 'project';
@@ -180,18 +187,20 @@ Import JSON:
 ```
 
 **Response (Success):**
+
 ```typescript
 {
   success: true;
-  data: ProfileData | ProjectData;  // Typed by mode
+  data: ProfileData | ProjectData; // Typed by mode
 }
 ```
 
 **Response (Error):**
+
 ```typescript
 {
   success: false;
-  error: string;            // Human-readable error message
+  error: string; // Human-readable error message
 }
 ```
 
@@ -296,20 +305,20 @@ interface ReadmeState {
 ```css
 :root {
   /* Surfaces */
-  --bg-chassis:     oklch(0.08 0.02 240);   /* #090d16 */
-  --bg-surface:     oklch(0.10 0.02 240);   /* #0e1526 */
-  --bg-card:        oklch(0.12 0.02 240);   /* #131c31 */
+  --bg-chassis: oklch(0.08 0.02 240); /* #090d16 */
+  --bg-surface: oklch(0.1 0.02 240); /* #0e1526 */
+  --bg-card: oklch(0.12 0.02 240); /* #131c31 */
 
   /* Borders */
-  --border-color:   oklch(0.20 0.02 240);   /* #1e293b */
+  --border-color: oklch(0.2 0.02 240); /* #1e293b */
 
   /* Accent */
-  --emerald-primary:oklch(0.55 0.15 160);   /* #10b981 */
-  --emerald-glow:   oklch(0.55 0.15 160 / 0.15);
+  --emerald-primary: oklch(0.55 0.15 160); /* #10b981 */
+  --emerald-glow: oklch(0.55 0.15 160 / 0.15);
 
   /* Text */
-  --text-primary:   oklch(0.95 0.01 240);   /* #f1f5f9 */
-  --text-muted:     oklch(0.55 0.01 240);   /* #94a3b8 */
+  --text-primary: oklch(0.95 0.01 240); /* #f1f5f9 */
+  --text-muted: oklch(0.55 0.01 240); /* #94a3b8 */
 }
 ```
 
@@ -323,6 +332,7 @@ interface ReadmeState {
 ### `fetchGitHubProfile(username, token?)`
 
 **Strategy:**
+
 1. `GET /users/{username}` → user profile
 2. `GET /users/{username}/repos?per_page=100&sort=updated` → all repos
 3. Aggregate languages from non-fork repos (count occurrences)
@@ -335,6 +345,7 @@ interface ReadmeState {
 ### `fetchGitHubProject(repoUrlOrSlug, token?)`
 
 **Strategy:**
+
 1. Parse `owner/repo` from URL or slug
 2. `GET /repos/{owner}/{repo}` → repo metadata
 3. `GET /repos/{owner}/{repo}/contents/package.json` → detect package manager, framework, scripts
@@ -343,13 +354,14 @@ interface ReadmeState {
 6. Fallback to `SAMPLE_PROJECT` on any error
 
 **Package Manager Detection:**
-| Signal | Detection |
-|--------|-----------|
-| `pnpm-lock.yaml` / `pnpm` in deps | `pnpm` |
-| `yarn.lock` / `yarn` in deps | `yarn` |
-| `bun.lockb` / `bun` in deps | `bun` |
-| `Cargo.toml` exists | `cargo` |
-| Default | `npm` |
+
+| Signal                            | Detection |
+| --------------------------------- | --------- |
+| `pnpm-lock.yaml` / `pnpm` in deps | `pnpm`    |
+| `yarn.lock` / `yarn` in deps      | `yarn`    |
+| `bun.lockb` / `bun` in deps       | `bun`     |
+| `Cargo.toml` exists               | `cargo`   |
+| Default                           | `npm`     |
 
 ---
 
@@ -361,8 +373,8 @@ interface ReadmeState {
 // Preset = Array of Section configs (content is template string with data interpolation)
 type PresetGenerator = (data: ProfileData | ProjectData, preset: PresetType) => Section[];
 
-function getProfileSections(data: ProfileData, preset: ProfilePreset): Section[]
-function getProjectSections(data: ProjectData, preset: ProjectPreset): Section[]
+function getProfileSections(data: ProfileData, preset: ProfilePreset): Section[];
+function getProjectSections(data: ProjectData, preset: ProjectPreset): Section[];
 ```
 
 ### Compilation Pipeline
@@ -370,9 +382,9 @@ function getProjectSections(data: ProjectData, preset: ProjectPreset): Section[]
 ```typescript
 function compileSectionsToMarkdown(sections: Section[]): string {
   return sections
-    .filter(s => s.enabled)
+    .filter((s) => s.enabled)
     .sort((a, b) => a.order - b.order)
-    .map(s => s.content.trim())
+    .map((s) => s.content.trim())
     .join('\n\n');
 }
 ```
@@ -384,31 +396,35 @@ Templates use template literals with `${data.field}` interpolation at generation
 
 ### Preset Definitions (6 Total)
 
-| Mode | Preset | Sections | Target |
-|------|--------|----------|--------|
-| Profile | Bento | 6 | Modern editorial cards |
-| Profile | Minimalist | 6 | Linear/Vercel aesthetic |
-| Profile | Titan | 6 | High-velocity OSS |
-| Project | Standard | 8 | General libraries/apps |
-| Project | API | 6 | Client SDKs |
-| Project | CLI | 6 | Command-line tools |
+| Mode    | Preset     | Sections | Target                  |
+| ------- | ---------- | -------- | ----------------------- |
+| Profile | Bento      | 6        | Modern editorial cards  |
+| Profile | Minimalist | 6        | Linear/Vercel aesthetic |
+| Profile | Titan      | 6        | High-velocity OSS       |
+| Project | Standard   | 8        | General libraries/apps  |
+| Project | API        | 6        | Client SDKs             |
+| Project | CLI        | 6        | Command-line tools      |
 
 ---
 
 ## 🌐 Ecosystem Embed Contracts
 
 ### GitHolo 3D Card
+
 ```markdown
 [![GitHolo 3D Card](https://githolo.vercel.app/api/og/{username})](https://githolo.bharatdn.com)
 ```
+
 - **OG Image Endpoint:** `https://githolo.vercel.app/api/og/{username}`
 - **Landing Page:** `https://githolo.bharatdn.com`
 - **Parameters:** `username` only (profile mode)
 
 ### GitChronicle Cadence Badge
+
 ```markdown
 [![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/{username}.svg)](https://gitchronicle.bharatdn.com)
 ```
+
 - **Badge Endpoint:** `https://gitchronicle-wheat.vercel.app/badge/{username}.svg`
 - **Landing Page:** `https://gitchronicle.bharatdn.com`
 - **Parameters:** `username` only (profile mode)
@@ -419,15 +435,16 @@ Templates use template literals with `${data.field}` interpolation at generation
 
 ## 📱 Responsive Breakpoints
 
-| Breakpoint | Layout | Pane Visibility |
-|------------|--------|-----------------|
-| `≥1024px` (lg) | 3-column grid | All 3 panes visible |
+| Breakpoint        | Layout         | Pane Visibility             |
+| ----------------- | -------------- | --------------------------- |
+| `≥1024px` (lg)    | 3-column grid  | All 3 panes visible         |
 | `768-1023px` (md) | Stacked + tabs | Single pane, bottom tab bar |
-| `<768px` (sm) | Stacked + tabs | Single pane, bottom tab bar |
+| `<768px` (sm)     | Stacked + tabs | Single pane, bottom tab bar |
 
 **CSS Grid (Desktop):**
+
 ```css
-grid-template-columns: 3fr 4fr 5fr;  /* Section Manager | Editor | Preview */
+grid-template-columns: 3fr 4fr 5fr; /* Section Manager | Editor | Preview */
 ```
 
 **Mobile Tab Bar:** Fixed bottom, 3 tabs (Sections/Editor/Preview), `activeMobileTab` state.
@@ -436,16 +453,17 @@ grid-template-columns: 3fr 4fr 5fr;  /* Section Manager | Editor | Preview */
 
 ## ⚡ Performance Characteristics
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Initial JS Bundle | <100KB gzipped | ~85KB |
-| Editor→Preview Latency | <16ms | ~8ms |
-| Ingestion (cached) | <200ms | ~150ms |
-| Ingestion (uncached) | <2s | ~1.5s |
-| localStorage Read/Write | <5ms | ~2ms |
-| Build Time | <30s | ~12s |
+| Metric                  | Target         | Current |
+| ----------------------- | -------------- | ------- |
+| Initial JS Bundle       | <100KB gzipped | ~85KB   |
+| Editor→Preview Latency  | <16ms          | ~8ms    |
+| Ingestion (cached)      | <200ms         | ~150ms  |
+| Ingestion (uncached)    | <2s            | ~1.5s   |
+| localStorage Read/Write | <5ms           | ~2ms    |
+| Build Time              | <30s           | ~12s    |
 
 **Optimizations in Place:**
+
 - `react-markdown` + plugins only in Preview pane (code-split via dynamic import in Phase 2)
 - `lucide-react` tree-shaken (only used icons bundled)
 - `framer-motion` only for confetti (lazy-loaded)
@@ -455,13 +473,13 @@ grid-template-columns: 3fr 4fr 5fr;  /* Section Manager | Editor | Preview */
 
 ## 🔒 Security Model
 
-| Threat | Mitigation |
-|--------|------------|
-| GitHub token leakage | Token never stored in localStorage; only in component state; HTTPS only |
-| XSS via markdown | `rehype-raw` allows raw HTML but GitHub sanitizes on their end; we trust user input |
-| CORS bypass | Server-side `/api/ingest` proxy for GitHub API |
-| Rate limit abuse | No automated loops; user-initiated only |
-| Supply chain | `package-lock.json` committed; exact versions; `npm audit` in CI |
+| Threat               | Mitigation                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| GitHub token leakage | Token never stored in localStorage; only in component state; HTTPS only             |
+| XSS via markdown     | `rehype-raw` allows raw HTML but GitHub sanitizes on their end; we trust user input |
+| CORS bypass          | Server-side `/api/ingest` proxy for GitHub API                                      |
+| Rate limit abuse     | No automated loops; user-initiated only                                             |
+| Supply chain         | `package-lock.json` committed; exact versions; `npm audit` in CI                    |
 
 ---
 
@@ -497,12 +515,12 @@ grid-template-columns: 3fr 4fr 5fr;  /* Section Manager | Editor | Preview */
 
 ## 🧪 Testing Strategy (Phase 2+)
 
-| Layer | Tool | Scope |
-|-------|------|-------|
-| Unit | Vitest | `generators.ts` snapshot tests, `github.ts` pure functions |
-| Integration | Vitest + MSW | `/api/ingest` with mocked GitHub API |
-| E2E | Playwright (Phase 3) | Full studio flows: ingest → edit → export |
-| Visual | Chromatic (Phase 3) | Preview pane regression |
+| Layer       | Tool                 | Scope                                                      |
+| ----------- | -------------------- | ---------------------------------------------------------- |
+| Unit        | Vitest               | `generators.ts` snapshot tests, `github.ts` pure functions |
+| Integration | Vitest + MSW         | `/api/ingest` with mocked GitHub API                       |
+| E2E         | Playwright (Phase 3) | Full studio flows: ingest → edit → export                  |
+| Visual      | Chromatic (Phase 3)  | Preview pane regression                                    |
 
 **Test Files Location:** `src/**/*.test.ts` (co-located)
 
@@ -550,18 +568,21 @@ npm run start        # Next.js production server
 ## 📝 Maintenance Notes
 
 ### Adding a New Profile Preset
+
 1. Add to `ProfilePreset` type in `src/types/readmecraft.ts`
 2. Add case in `getProfileSections()` in `src/lib/generators.ts`
 3. Add radio button in `PaneSectionManager.tsx`
 4. Update `docs/user/configuration.md`
 
 ### Adding a New Project Preset
+
 1. Add to `ProjectPreset` type in `src/types/readmecraft.ts`
 2. Add case in `getProjectSections()` in `src/lib/generators.ts`
 3. Add radio button in `PaneSectionManager.tsx`
 4. Update `docs/user/configuration.md`
 
 ### Adding a New Ecosystem Widget
+
 1. Add toggle to `ProfileData` / `ProjectData` in `src/types/readmecraft.ts`
 2. Add toggle UI in `PaneSectionManager.tsx`
 3. Add snippet generator in `PaneMarkdownEditor.tsx` (toolbar) + `ExportToolbar.tsx`
@@ -569,6 +590,7 @@ npm run start        # Next.js production server
 5. Document in `docs/knowledge/ecosystem-embeds.md`
 
 ### Modifying GitHub API Calls
+
 1. Update `lib/github.ts` (client) AND `app/api/ingest/route.ts` (server)
 2. Keep types in sync with `types/readmecraft.ts`
 3. Test with and without token

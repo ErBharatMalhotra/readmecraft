@@ -16,36 +16,36 @@ ReadmeCraft is a **dual-mode intelligent GitHub README Studio** that runs entire
 
 ## 📚 Key Documents & Their Purpose
 
-| File | Purpose | When to Read |
-|------|---------|--------------|
-| `ROADMAP.md` | Full product spec: vision, architecture, phases, non-goals | **Start here** — defines what to build and in what order |
-| `PROGRESS.md` | Step-by-step checklist with session batches | Read first on new session to know where to pick up |
-| `docs/DECISIONS.md` | Every design decision + rationale + alternatives | When ambiguous — prevents re-litigating settled choices |
-| `docs/ARCHITECTURE.md` | Technical reference: data flow, component map, APIs | When implementing new features or debugging |
-| `docs/knowledge/github-ingestion.md` | GitHub REST/GraphQL patterns, rate limits, fallbacks | When modifying ingestion pipeline |
-| `docs/knowledge/markdown-generation.md` | Template algorithms, section composition, sanitization | When editing generators or adding presets |
-| `docs/knowledge/ecosystem-embeds.md` | GitHolo/GitChronicle snippet formats, OG URLs | When updating ecosystem widgets |
-| `docs/user/getting-started.md` | User-facing onboarding | When updating user-facing behavior |
-| `docs/user/configuration.md` | Presets, sections, toggles reference | When adding configuration options |
+| File                                    | Purpose                                                    | When to Read                                             |
+| --------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------- |
+| `ROADMAP.md`                            | Full product spec: vision, architecture, phases, non-goals | **Start here** — defines what to build and in what order |
+| `PROGRESS.md`                           | Step-by-step checklist with session batches                | Read first on new session to know where to pick up       |
+| `docs/DECISIONS.md`                     | Every design decision + rationale + alternatives           | When ambiguous — prevents re-litigating settled choices  |
+| `docs/ARCHITECTURE.md`                  | Technical reference: data flow, component map, APIs        | When implementing new features or debugging              |
+| `docs/knowledge/github-ingestion.md`    | GitHub REST/GraphQL patterns, rate limits, fallbacks       | When modifying ingestion pipeline                        |
+| `docs/knowledge/markdown-generation.md` | Template algorithms, section composition, sanitization     | When editing generators or adding presets                |
+| `docs/knowledge/ecosystem-embeds.md`    | GitHolo/GitChronicle snippet formats, OG URLs              | When updating ecosystem widgets                          |
+| `docs/user/getting-started.md`          | User-facing onboarding                                     | When updating user-facing behavior                       |
+| `docs/user/configuration.md`            | Presets, sections, toggles reference                       | When adding configuration options                        |
 
 ---
 
 ## ⚙️ Tech Stack Summary
 
-| Category | Choice |
-|----------|--------|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript (strict mode) |
-| Runtime | React 19 |
-| Styling | Tailwind CSS v4 (@tailwindcss/postcss) |
-| Markdown | react-markdown + remark-gfm + rehype-raw + rehype-highlight |
-| GitHub API | @octokit/rest + @octokit/graphql |
-| Icons | lucide-react |
-| Animation | framer-motion |
-| Confetti | canvas-confetti |
-| Utils | clsx + tailwind-merge |
-| Package Manager | npm |
-| Deploy | Vercel |
+| Category        | Choice                                                      |
+| --------------- | ----------------------------------------------------------- |
+| Framework       | Next.js 16 (App Router)                                     |
+| Language        | TypeScript (strict mode)                                    |
+| Runtime         | React 19                                                    |
+| Styling         | Tailwind CSS v4 (@tailwindcss/postcss)                      |
+| Markdown        | react-markdown + remark-gfm + rehype-raw + rehype-highlight |
+| GitHub API      | @octokit/rest + @octokit/graphql                            |
+| Icons           | lucide-react                                                |
+| Animation       | framer-motion                                               |
+| Confetti        | canvas-confetti                                             |
+| Utils           | clsx + tailwind-merge                                       |
+| Package Manager | npm                                                         |
+| Deploy          | Vercel                                                      |
 
 ---
 
@@ -105,19 +105,21 @@ src/
 ## 🚀 Implementation Order
 
 ### Current Status: Phase 1 Complete ✅
+
 See `PROGRESS.md` for detailed checklist. Next batch starts at **Phase 2, Step 2.1**.
 
 ### Session Batches (3-7 steps each, independent modules → parallelize with subagents)
 
-| Session | Steps | Scope | Parallelizable |
-|---------|-------|-------|----------------|
-| **Batch 1** | 2.1-2.4 | Lint/Format, Unit Tests, Integration Tests, Rate Limit Handling | 2.2, 2.3, 2.4 independent |
-| **Batch 2** | 2.5-2.8 | Error Boundaries, Keyboard Shortcuts, Accessibility, SEO | 2.5, 2.6, 2.7, 2.8 independent |
-| **Batch 3** | 2.9-2.10 | Vercel Deploy + Domain, Analytics | Sequential |
-| **Batch 4** | 3.1-3.4 | GraphQL Query, Mono-repo Detection, CI/CD Badges, Contributor Graph | 3.1, 3.2, 3.3 independent |
-| **Batch 5** | 3.5-3.8 | Sponsors, Domain Verification, Light Mode, Command Palette | 3.5, 3.6, 3.7 independent |
+| Session     | Steps    | Scope                                                               | Parallelizable                 |
+| ----------- | -------- | ------------------------------------------------------------------- | ------------------------------ |
+| **Batch 1** | 2.1-2.4  | Lint/Format, Unit Tests, Integration Tests, Rate Limit Handling     | 2.2, 2.3, 2.4 independent      |
+| **Batch 2** | 2.5-2.8  | Error Boundaries, Keyboard Shortcuts, Accessibility, SEO            | 2.5, 2.6, 2.7, 2.8 independent |
+| **Batch 3** | 2.9-2.10 | Vercel Deploy + Domain, Analytics                                   | Sequential                     |
+| **Batch 4** | 3.1-3.4  | GraphQL Query, Mono-repo Detection, CI/CD Badges, Contributor Graph | 3.1, 3.2, 3.3 independent      |
+| **Batch 5** | 3.5-3.8  | Sponsors, Domain Verification, Light Mode, Command Palette          | 3.5, 3.6, 3.7 independent      |
 
 **Parallelism Guidance:** Steps marked "independent" above can run concurrently. Spawn subagents with:
+
 - Relevant `docs/knowledge/` guide
 - Types/interfaces from `src/types/readmecraft.ts`
 - Clear description of what to build and where
@@ -171,6 +173,7 @@ gets heavy mid-session, start a new session — pick up from the last commit.
 ```
 
 **Commands:**
+
 - `npm run build` — TypeScript + Next.js build (must pass)
 - `npm run lint` — ESLint (must pass)
 - No formatter configured yet — Step 2.1 adds Prettier
@@ -209,13 +212,13 @@ Docs are part of the definition of done. A feature without updated docs is not c
 
 ## ⚠️ Known Constraints & Gotchas
 
-| Constraint | Impact | Workaround |
-|------------|--------|------------|
-| GitHub API rate limit (60/hr unauth, 5000/hr with token) | Ingestion fails silently for popular users | Show token input, cache 5min, fallback to sample data |
-| No CORS on `api.github.com` from browser | Direct fetch fails in some contexts | `/api/ingest` route proxies server-side |
-| `package.json` detection only checks root | Mono-repos with nested packages missed | Step 3.2: tree inspection for workspaces |
-| `localStorage` 5MB limit | Large state (many custom sections) may quota | JSON export/import as backup, compress if needed |
-| Vercel hobby: 100GB bandwidth, 12s function timeout | Fine for static export, API route is fast | No long-running ops in API route |
+| Constraint                                               | Impact                                       | Workaround                                            |
+| -------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
+| GitHub API rate limit (60/hr unauth, 5000/hr with token) | Ingestion fails silently for popular users   | Show token input, cache 5min, fallback to sample data |
+| No CORS on `api.github.com` from browser                 | Direct fetch fails in some contexts          | `/api/ingest` route proxies server-side               |
+| `package.json` detection only checks root                | Mono-repos with nested packages missed       | Step 3.2: tree inspection for workspaces              |
+| `localStorage` 5MB limit                                 | Large state (many custom sections) may quota | JSON export/import as backup, compress if needed      |
+| Vercel hobby: 100GB bandwidth, 12s function timeout      | Fine for static export, API route is fast    | No long-running ops in API route                      |
 
 ---
 
@@ -227,20 +230,20 @@ Check PROGRESS.md for current status. After each step, update PROGRESS.md and co
 For ambiguous decisions, document in docs/DECISIONS.md and keep moving.
 Use subagents for parallel steps (see Session Batches table).
 Run npm run build && npm run lint after each step.
---> 
+-->
 
 ---
 
 ## 📞 Quick Reference: Key Files to Touch by Feature Area
 
-| Feature | Files to Modify |
-|---------|-----------------|
-| Add profile preset | `src/lib/generators.ts` (getProfileSections), `src/types/readmecraft.ts` (ProfilePreset), `src/components/PaneSectionManager.tsx` (radio group) |
-| Add project preset | `src/lib/generators.ts` (getProjectSections), `src/types/readmecraft.ts` (ProjectPreset), `src/components/PaneSectionManager.tsx` |
-| New section type | `src/lib/generators.ts` (add to preset array), `src/components/PaneSectionManager.tsx` (auto-included) |
-| GitHub API change | `src/lib/github.ts`, `src/app/api/ingest/route.ts` |
-| Editor toolbar button | `src/components/PaneMarkdownEditor.tsx` (insertSnippet calls) |
-| Export action | `src/components/ExportToolbar.tsx` |
-| Color/design token | `src/app/globals.css` (CSS vars), Tailwind config (none — v4 uses CSS vars) |
-| Preview styling | `src/app/globals.css` (`.markdown-body` rules) |
-| State persistence | `src/app/page.tsx` (localStorage effects) |
+| Feature               | Files to Modify                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add profile preset    | `src/lib/generators.ts` (getProfileSections), `src/types/readmecraft.ts` (ProfilePreset), `src/components/PaneSectionManager.tsx` (radio group) |
+| Add project preset    | `src/lib/generators.ts` (getProjectSections), `src/types/readmecraft.ts` (ProjectPreset), `src/components/PaneSectionManager.tsx`               |
+| New section type      | `src/lib/generators.ts` (add to preset array), `src/components/PaneSectionManager.tsx` (auto-included)                                          |
+| GitHub API change     | `src/lib/github.ts`, `src/app/api/ingest/route.ts`                                                                                              |
+| Editor toolbar button | `src/components/PaneMarkdownEditor.tsx` (insertSnippet calls)                                                                                   |
+| Export action         | `src/components/ExportToolbar.tsx`                                                                                                              |
+| Color/design token    | `src/app/globals.css` (CSS vars), Tailwind config (none — v4 uses CSS vars)                                                                     |
+| Preview styling       | `src/app/globals.css` (`.markdown-body` rules)                                                                                                  |
+| State persistence     | `src/app/page.tsx` (localStorage effects)                                                                                                       |

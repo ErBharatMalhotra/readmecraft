@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { fetchGitHubProfile, fetchGitHubProject } from '@/lib/github';
 
 export async function POST(req: NextRequest) {
@@ -18,6 +19,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, data: profileData });
     }
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to ingest GitHub data' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Failed to ingest GitHub data' },
+      { status: 500 }
+    );
   }
 }

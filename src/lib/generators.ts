@@ -1,4 +1,10 @@
-import { ProfileData, ProjectData, ProfilePreset, ProjectPreset, Section } from '@/types/readmecraft';
+import type {
+  ProfileData,
+  ProjectData,
+  ProfilePreset,
+  ProjectPreset,
+  Section,
+} from '@/types/readmecraft';
 
 export function getProfileSections(data: ProfileData, preset: ProfilePreset): Section[] {
   const username = data.username || 'ErBharatMalhotra';
@@ -52,7 +58,7 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-whea
         content: `### 🛠️ Core Stack
 
 \`\`\`yaml
-languages: [ ${data.languages.map(l => l.name).join(', ')} ]
+languages: [ ${data.languages.map((l) => l.name).join(', ')} ]
 frameworks: [ Next.js, React, Node.js, TailwindCSS ]
 infrastructure: [ Docker, Linux, CI/CD, Cloudflare ]
 architecture: [ Event-Driven, Microservices, Zero-Latency UX ]
@@ -65,7 +71,7 @@ architecture: [ Event-Driven, Microservices, Zero-Latency UX ]
         order: 5,
         content: `### 🚀 Selected Works
 
-${data.pinnedRepos.map(repo => `- **[${repo.name}](${repo.url})** — ${repo.description} \`★ ${repo.stargazersCount}\``).join('\n')}`,
+${data.pinnedRepos.map((repo) => `- **[${repo.name}](${repo.url})** — ${repo.description} \`★ ${repo.stargazersCount}\``).join('\n')}`,
       },
       {
         id: 'stats',
@@ -128,7 +134,7 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-whea
 
 | Repository | Focus & Impact | Primary Tech | Stars |
 | :--- | :--- | :--- | :--- |
-${data.pinnedRepos.map(r => `| **[${r.name}](${r.url})** | ${r.description} | \`${r.language}\` | ⭐ ${r.stargazersCount} |`).join('\n')}`,
+${data.pinnedRepos.map((r) => `| **[${r.name}](${r.url})** | ${r.description} | \`${r.language}\` | ⭐ ${r.stargazersCount} |`).join('\n')}`,
       },
       {
         id: 'skills',
@@ -138,7 +144,7 @@ ${data.pinnedRepos.map(r => `| **[${r.name}](${r.url})** | ${r.description} | \`
         content: `### ⚔️ Technology Arsenal
 
 <p align="left">
-${data.skills.map(s => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-090d16?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=10b981&labelColor=090d16" alt="${s}" />`).join(' ')}
+${data.skills.map((s) => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-090d16?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=10b981&labelColor=090d16" alt="${s}" />`).join(' ')}
 </p>`,
       },
       {
@@ -223,7 +229,7 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-whea
     </td>
     <td width="50%" valign="top">
       <h4>🔥 Top Languages (Real Repo Bytes)</h4>
-      ${data.languages.map(l => `- **${l.name}** \`${l.percentage}%\``).join('\n      ')}
+      ${data.languages.map((l) => `- **${l.name}** \`${l.percentage}%\``).join('\n      ')}
     </td>
   </tr>
 </table>`,
@@ -237,7 +243,7 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-whea
 
 <div align="center">
 
-${data.skills.map(s => `<img src="https://img.shields.io/badge/${encodeURIComponent(s)}-090d16?style=for-the-badge&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=10b981&labelColor=090d16" alt="${s}" />`).join(' ')}
+${data.skills.map((s) => `<img src="https://img.shields.io/badge/${encodeURIComponent(s)}-090d16?style=for-the-badge&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=10b981&labelColor=090d16" alt="${s}" />`).join(' ')}
 
 </div>`,
     },
@@ -250,9 +256,13 @@ ${data.skills.map(s => `<img src="https://img.shields.io/badge/${encodeURICompon
 
 <div align="center">
 
-${data.pinnedRepos.map(repo => `<a href="${repo.url}">
+${data.pinnedRepos
+  .map(
+    (repo) => `<a href="${repo.url}">
   <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=${username}&repo=${repo.name}&theme=tokyonight&hide_border=true&bg_color=090d16&title_color=10b981&icon_color=10b981&text_color=94a3b8" />
-</a>`).join('\n\n')}
+</a>`
+  )
+  .join('\n\n')}
 
 </div>`,
     },
@@ -272,7 +282,19 @@ ${data.pinnedRepos.map(repo => `<a href="${repo.url}">
 }
 
 export function getProjectSections(data: ProjectData, preset: ProjectPreset): Section[] {
-  const { owner, repo, title, description, license, stars, language, installCommand, runCommand, testCommand, packageManager } = data;
+  const {
+    owner,
+    repo,
+    title,
+    description,
+    license,
+    stars,
+    language,
+    installCommand,
+    runCommand,
+    testCommand,
+    packageManager,
+  } = data;
 
   if (preset === 'cli') {
     return [
@@ -311,7 +333,7 @@ ${repo} --help
         order: 3,
         content: `## 💎 Features
 
-${data.features.map(f => `- ${f}`).join('\n')}`,
+${data.features.map((f) => `- ${f}`).join('\n')}`,
       },
       {
         id: 'usage',
@@ -466,7 +488,7 @@ ${data.demoUrl ? `[**Explore Live Demo 🚀**](${data.demoUrl})` : ''}
       order: 2,
       content: `## ✨ Key Features
 
-${data.features.map(f => `- **${f}**`).join('\n')}`,
+${data.features.map((f) => `- **${f}**`).join('\n')}`,
     },
     {
       id: 'tech_stack',
@@ -477,7 +499,7 @@ ${data.features.map(f => `- **${f}**`).join('\n')}`,
 
 <div align="left">
 
-${data.techStack.map(t => `<img src="https://img.shields.io/badge/-${encodeURIComponent(t)}-090d16?style=flat-square&logoColor=10b981&labelColor=090d16" alt="${t}" />`).join(' ')}
+${data.techStack.map((t) => `<img src="https://img.shields.io/badge/-${encodeURIComponent(t)}-090d16?style=flat-square&logoColor=10b981&labelColor=090d16" alt="${t}" />`).join(' ')}
 
 </div>`,
     },
@@ -561,8 +583,8 @@ This project is licensed under the **${license}** License - see the [LICENSE](LI
 
 export function compileSectionsToMarkdown(sections: Section[]): string {
   return sections
-    .filter(s => s.enabled)
+    .filter((s) => s.enabled)
     .sort((a, b) => a.order - b.order)
-    .map(s => s.content.trim())
+    .map((s) => s.content.trim())
     .join('\n\n');
 }

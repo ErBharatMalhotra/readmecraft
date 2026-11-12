@@ -1,7 +1,8 @@
 # 📅 SPEC-DRIVEN EXECUTION PLAN: ReadmeCraft
+
 > **Subdomain Target:** `https://readme.bharatdn.com`  
 > **Repository:** `ErBharatMalhotra/readmecraft`  
-> **Sprint Duration:** 14 Days (Execution-Ready)  
+> **Sprint Duration:** 14 Days (Execution-Ready)
 
 ---
 
@@ -60,6 +61,6 @@
    Every user who generates a profile README gets the option to embed:
    - `[![GitHolo](https://githolo.vercel.app/api/og/username)](https://githolo.bharatdn.com)`
    - `[![GitChronicle](https://gitchronicle-wheat.vercel.app/badge/username.svg)](https://gitchronicle.bharatdn.com)`  
-   When this README is viewed on GitHub profiles by recruiters and developers, it funnels massive traffic to Bharat's other two projects!
+     When this README is viewed on GitHub profiles by recruiters and developers, it funnels massive traffic to Bharat's other two projects!
 2. **GitHolo & GitChronicle $\rightarrow$ ReadmeCraft:**  
    Both apps promote ReadmeCraft in navigation headers and footers.

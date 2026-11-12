@@ -26,6 +26,7 @@ If the user provides a description with their `/spec` invocation, infer the type
 **Record the current timestamp** — you'll report the total session duration at the end.
 
 For types B and C, read existing project docs first:
+
 - `CLAUDE.md` — project identity and conventions
 - `ROADMAP.md` — current state and plans
 - `docs/DECISIONS.md` — settled decisions and rationale
@@ -36,12 +37,14 @@ For types B and C, read existing project docs first:
 Before discussing vision, surface the constraints that will shape every decision. These are often more impactful than any option you'll present.
 
 **User constraints:**
+
 - Geographic, financial, legal restrictions (e.g., country-specific platform access, visa limitations)
 - Infrastructure they already own (servers, devices, hardware)
 - Subscriptions or services they already pay for (cloud plans, API subscriptions)
 - Time constraints, deadlines, team size
 
 **Operational context:**
+
 - Who operates this feature? Single person, small team, or fleet?
 - How is it deployed? Manual, CI/CD, self-update, app store?
 - How much control does the user have over deployment timing and ordering?
@@ -49,6 +52,7 @@ Before discussing vision, surface the constraints that will shape every decision
 - These answers directly affect decisions about backwards compatibility, transition paths, and migration complexity. Surface them early — a multi-phase migration plan is wasted effort if one person controls the deploy.
 
 **Prior art:**
+
 - Does the user have existing projects with relevant patterns? Check memory files and ask directly.
 - What worked well in those projects? What caused pain?
 - Are there specific libraries, tools, or patterns they've validated or rejected?
@@ -61,6 +65,7 @@ Do NOT proceed until constraints are surfaced. A constraint discovered in Step 6
 ## Step 2 — Vision, audience & naming
 
 Discuss and establish:
+
 - **Who is this for?** — specific target audience, not "everyone"
 - **What's the core belief?** — the friction or gap that motivates this work
 - **What's the one-sentence pitch?** — if you can't say it in one sentence, the vision is unclear
@@ -71,6 +76,7 @@ Do NOT proceed until the user has articulated who this is for and why it matters
 
 **Naming (greenfield projects):**
 Once vision is locked, name the project. A good name carries intent and makes the project feel real.
+
 - Suggest 5-7 options across different vibes (descriptive, metaphorical, cultural reference, short/typeable)
 - Let the user pick, riff, or propose their own
 - The name goes into all subsequent artifacts
@@ -80,6 +86,7 @@ Once vision is locked, name the project. A good name carries intent and makes th
 **Skip for major features in existing projects.**
 
 For greenfield and pivots:
+
 - Present 3-4 realistic options with pros/cons
 - **Check against constraints from Step 1** — eliminate options that conflict with hard constraints before presenting
 - Evaluate against: target audience, contributor accessibility, cross-platform needs, ecosystem maturity
@@ -95,12 +102,14 @@ This is the creative core. **Detect the product type and follow the appropriate 
 ### Track A — UI products (apps, websites, CLIs with rich output)
 
 **Design direction:**
+
 - Ask for inspiration — what existing products should this feel like?
 - Establish design priorities (e.g., readability, speed, simplicity)
 - Discuss layout: what are the major UI regions? What's the information hierarchy?
 - Color palette, typography defaults
 
 **Feature review:**
+
 - List all candidate features with importance level
 - Assess each against the target audience and design direction
 - Actively recommend cutting features that don't clearly earn their place
@@ -108,37 +117,44 @@ This is the creative core. **Detect the product type and follow the appropriate 
 - Organize into phases (MVP, high value, nice to have)
 
 **Interactions:**
+
 - Key user flows — how does the user accomplish the primary tasks?
 - Keyboard shortcuts, navigation model
 - What's the smallest set of interactions that covers the core use cases?
 
 **In-app discoverability:**
+
 - Ask: "How will users discover features within the app?"
 - Capture the answer (command palette, tooltips, --help, onboarding flow, etc.) and include it in the roadmap
 
 ### Track B — System products (daemons, bots, pipelines, APIs, backend services)
 
 **Interface model:**
+
 - How does the user interact with the system? (CLI commands, Telegram/Discord bot, API calls, web dashboard, log files, config files only)
 - What's the primary control plane? What's the monitoring plane?
 - If multiple interfaces, which is primary vs secondary?
 
 **Pipeline/flow design:**
+
 - What are the processing stages? What triggers each stage?
 - What data flows between stages? What format?
 - Sequential vs parallel vs event-driven — discuss tradeoffs for this specific system
 - Draw the pipeline before detailing individual stages
 
 **Feature review:**
+
 - Same as Track A: list all candidate features, assess, cut ruthlessly, organize into phases
 
 **Control & observability:**
+
 - How does the user start, stop, pause, configure the system?
 - What notifications/alerts does the user receive? Through what channel?
 - How does the user know the system is healthy? What metrics matter?
 - Runtime configuration — what can be changed without restarting?
 
 **Safety & failure modes:**
+
 - What can go wrong? List failure scenarios
 - What guardrails prevent bad outcomes?
 - What's the recovery path for each failure?
@@ -153,6 +169,7 @@ Pause and ask: **does the vision still hold?**
 The design work in Step 4 often reveals that the original vision was slightly off. Maybe the product isn't quite what the user initially described. Maybe the scope should be broader or narrower.
 
 This is the moment for pivots and reframing. Ask directly:
+
 - "Given what we've designed, is this still what you want to build?"
 - "Has the core concept shifted from what you initially described?"
 
@@ -165,25 +182,30 @@ Work through the technical design:
 **Empirical anchor:** If a technical decision rests on assumed data or user behavior, audit before committing (see Interaction guidelines).
 
 **Data flow:**
+
 - How does data move through the system? Draw the pipeline.
 - What are the key components and their responsibilities?
 - What's the boundary between layers (e.g., backend vs. frontend)?
 
 **Data model:**
+
 - What are the core types/interfaces?
 - Show concrete TypeScript/Rust/Python/etc. type definitions
 
 **Behavior & edge cases:**
+
 - Walk through key scenarios: what happens when X?
 - Error states — what can go wrong and how does the system handle it?
 - Performance — where are the bottlenecks? What guardrails are needed?
 - First-run experience — what happens on first launch?
 
 **Key technical decisions:**
+
 - Present options for each non-obvious architectural choice
 - Document the decision and rationale
 
 **Lifecycle (for any decision involving keys, tokens, secrets, credentials, or certificates):**
+
 - How is it created/provisioned?
 - Where is it stored? Who has access?
 - How is it rotated? What's the rotation path without downtime?
@@ -192,6 +214,7 @@ Work through the technical design:
 - Don't wait for the user to ask about rotation — it's a standard design question for anything with a secret. If the design doesn't have a rotation story, flag it.
 
 **Developer UX (for admin UIs, CLIs, scripts, and internal tools):**
+
 - Internal tools deserve the same UX thinking as user-facing products. Developers are users too.
 - Proactively ask about: file/input persistence across sessions, progress indicators for slow operations, validation feedback before expensive actions, error recovery without restarting the workflow.
 - A clunky internal tool gets used wrong. A polished one prevents mistakes.
@@ -209,11 +232,13 @@ Discuss what's needed beyond the code:
 - **Updates** — how do users get new versions?
 
 **Cost model:**
+
 - What does it cost monthly to run this system? List all line items (hosting, APIs, subscriptions, services).
 - Is this acceptable? If not, what changes would reduce cost?
 - Are there existing subscriptions or infrastructure that could replace paid options?
 
 **Constraint reconciliation — CRITICAL:**
+
 - Review every decision from Steps 3-6 against the operational realities just discussed.
 - Do deployment constraints conflict with stack choices?
 - Do cost realities conflict with API or service choices?
@@ -404,6 +429,7 @@ This self-audit catches ~80% of the issues that would otherwise surface during i
 ### Session summary
 
 End the session by reporting:
+
 - **Duration** — time elapsed from Step 0 to now
 - **Decisions made** — count of decisions documented in DECISIONS.md
 - **Artifacts produced** — list of files created or updated
@@ -426,6 +452,7 @@ End the session by reporting:
 ## Arguments
 
 The skill receives an optional description. Examples:
+
 - `/spec` — starts with "What are we designing?"
 - `/spec a CLI tool for managing dotfiles across machines`
 - `/spec new notification system for the existing app`

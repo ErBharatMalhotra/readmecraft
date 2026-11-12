@@ -1,4 +1,4 @@
-import { ProfileData, ProjectData } from '@/types/readmecraft';
+import type { ProfileData, ProjectData } from '@/types/readmecraft';
 
 export const SAMPLE_PROFILE: ProfileData = {
   username: 'ErBharatMalhotra',
@@ -42,7 +42,20 @@ export const SAMPLE_PROFILE: ProfileData = {
       language: 'TypeScript',
     },
   ],
-  skills: ['TypeScript', 'React', 'Next.js', 'Node.js', 'Rust', 'Go', 'Python', 'TailwindCSS', 'PostgreSQL', 'Docker', 'GraphQL', 'WebGL'],
+  skills: [
+    'TypeScript',
+    'React',
+    'Next.js',
+    'Node.js',
+    'Rust',
+    'Go',
+    'Python',
+    'TailwindCSS',
+    'PostgreSQL',
+    'Docker',
+    'GraphQL',
+    'WebGL',
+  ],
   gitHoloEnabled: true,
   gitChronicleEnabled: true,
   visitorBadgeEnabled: true,
@@ -55,7 +68,8 @@ export const SAMPLE_PROJECT: ProjectData = {
   owner: 'ErBharatMalhotra',
   repo: 'readmecraft',
   title: 'ReadmeCraft',
-  description: 'The next-generation intelligent GitHub README Studio for Developer Profiles and Repositories with instant auto-detection and ecosystem interlinking.',
+  description:
+    'The next-generation intelligent GitHub README Studio for Developer Profiles and Repositories with instant auto-detection and ecosystem interlinking.',
   license: 'MIT',
   defaultBranch: 'main',
   stars: 1205,
@@ -107,7 +121,10 @@ export async function fetchGitHubProfile(username: string, token?: string): Prom
     const userData = await userRes.json();
 
     // Fetch user repos to determine top languages and pinned-like repos
-    const reposRes = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, { headers });
+    const reposRes = await fetch(
+      `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
+      { headers }
+    );
     let repos = [];
     if (reposRes.ok) {
       repos = await reposRes.json();
@@ -184,7 +201,7 @@ export async function fetchGitHubProfile(username: string, token?: string): Prom
       following: userData.following,
       languages: finalLanguages,
       pinnedRepos: finalPinned,
-      skills: finalLanguages.map(l => l.name).concat(['Git', 'Docker', 'REST APIs', 'CI/CD']),
+      skills: finalLanguages.map((l) => l.name).concat(['Git', 'Docker', 'REST APIs', 'CI/CD']),
       gitHoloEnabled: true,
       gitChronicleEnabled: true,
       visitorBadgeEnabled: true,
@@ -202,7 +219,10 @@ export async function fetchGitHubProfile(username: string, token?: string): Prom
   }
 }
 
-export async function fetchGitHubProject(repoUrlOrSlug: string, token?: string): Promise<ProjectData> {
+export async function fetchGitHubProject(
+  repoUrlOrSlug: string,
+  token?: string
+): Promise<ProjectData> {
   if (!repoUrlOrSlug || repoUrlOrSlug.trim() === '') {
     return SAMPLE_PROJECT;
   }
@@ -241,7 +261,10 @@ export async function fetchGitHubProject(repoUrlOrSlug: string, token?: string):
     let framework = repoData.language || 'TypeScript';
 
     try {
-      const contentRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/package.json`, { headers });
+      const contentRes = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/contents/package.json`,
+        { headers }
+      );
       if (contentRes.ok) {
         const pkgFile = await contentRes.json();
         const pkgContent = JSON.parse(Buffer.from(pkgFile.content, 'base64').toString('utf8'));
@@ -267,7 +290,10 @@ export async function fetchGitHubProject(repoUrlOrSlug: string, token?: string):
         else if (pkgContent.dependencies?.express) framework = 'Express.js';
       } else {
         // Check Cargo.toml
-        const cargoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/Cargo.toml`, { headers });
+        const cargoRes = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/contents/Cargo.toml`,
+          { headers }
+        );
         if (cargoRes.ok) {
           packageManager = 'cargo';
           installCommand = 'cargo build';
@@ -312,7 +338,10 @@ export async function fetchGitHubProject(repoUrlOrSlug: string, token?: string):
       gitChronicleEnabled: true,
     };
   } catch (error) {
-    console.warn('Failed to fetch real GitHub repository, using intelligent sample fallback:', error);
+    console.warn(
+      'Failed to fetch real GitHub repository, using intelligent sample fallback:',
+      error
+    );
     return SAMPLE_PROJECT;
   }
 }

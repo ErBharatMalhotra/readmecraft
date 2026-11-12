@@ -7,6 +7,7 @@
 ## 🎯 Overview
 
 ReadmeCraft ingests GitHub data via two pipelines:
+
 1. **Profile Ingestion** — Username → user profile + repo list → computed stats
 2. **Project Ingestion** — Repo URL/slug → repo metadata + package.json/Cargo.toml inspection
 
@@ -17,6 +18,7 @@ Both use `@octokit/rest` (REST API v3) with optional GraphQL for future optimiza
 ## 🔑 Authentication & Rate Limits
 
 ### Token Handling
+
 ```typescript
 // Token passed from UI (optional)
 const headers: Record<string, string> = {
@@ -28,13 +30,15 @@ if (token) {
 ```
 
 ### Rate Limit Tiers
-| Auth Status | Limit | Window | Headers |
-|-------------|-------|--------|---------|
-| Unauthenticated | 60 req/hr | Per IP | `x-ratelimit-limit`, `x-ratelimit-remaining`, `x-ratelimit-reset` |
-| Authenticated (PAT) | 5,000 req/hr | Per token | Same headers |
-| GitHub App | 15,000 req/hr | Per installation | Same headers |
+
+| Auth Status         | Limit         | Window           | Headers                                                           |
+| ------------------- | ------------- | ---------------- | ----------------------------------------------------------------- |
+| Unauthenticated     | 60 req/hr     | Per IP           | `x-ratelimit-limit`, `x-ratelimit-remaining`, `x-ratelimit-reset` |
+| Authenticated (PAT) | 5,000 req/hr  | Per token        | Same headers                                                      |
+| GitHub App          | 15,000 req/hr | Per installation | Same headers                                                      |
 
 ### Rate Limit Response Handling
+
 ```typescript
 // Check headers after every request
 const remaining = parseInt(res.headers.get('x-ratelimit-remaining') || '0');
@@ -47,6 +51,7 @@ if (remaining === 0) {
 ```
 
 **Current v1 Strategy:** No proactive handling — falls back to sample data silently. Phase 2.4 adds:
+
 - 5-minute in-memory cache keyed by `mode:target`
 - Remaining requests display in HeroIngestion
 - Graceful "using cached data" indicator
@@ -56,6 +61,7 @@ if (remaining === 0) {
 ## 👤 Profile Ingestion (`fetchGitHubProfile`)
 
 ### API Calls Sequence
+
 ```typescript
 // 1. User profile
 GET /users/{username}
@@ -67,12 +73,13 @@ GET /users/{username}/repos?per_page=100&sort=updated&type=owner
 ```
 
 ### Language Calculation Algorithm
+
 ```typescript
 // Current v1: Count-based (repo count per language)
 const langCounts: Record<string, number> = {};
 let totalLangCount = 0;
 
-repos.forEach(repo => {
+repos.forEach((repo) => {
   if (repo.language && !repo.fork) {
     langCounts[repo.language] = (langCounts[repo.language] || 0) + 1;
     totalLangCount++;
@@ -90,19 +97,20 @@ const languages = sortedLangs.map(([name, count]) => ({
 }));
 ```
 
-**Limitation:** Uses repo *count*, not *bytes*. GitHub's Linguist data requires per-repo `GET /repos/{owner}/{repo}/languages` — 100 calls = rate limit death.
+**Limitation:** Uses repo _count_, not _bytes_. GitHub's Linguist data requires per-repo `GET /repos/{owner}/{repo}/languages` — 100 calls = rate limit death.
 
 **Phase 3.1 Fix:** GraphQL query with `languages(first: 10) { edges { size, node { name, color } } }` per repo, aggregated client-side.
 
 ### Pinned Repos Selection
+
 ```typescript
 // Top 3 non-fork repos by stargazers_count
 const sortedRepos = repos
-  .filter(r => !r.fork)
+  .filter((r) => !r.fork)
   .sort((a, b) => b.stargazers_count - a.stargazers_count)
   .slice(0, 3);
 
-const pinnedRepos = sortedRepos.map(r => ({
+const pinnedRepos = sortedRepos.map((r) => ({
   name: r.name,
   description: r.description || 'No description provided.',
   url: r.html_url,
@@ -112,7 +120,9 @@ const pinnedRepos = sortedRepos.map(r => ({
 ```
 
 ### Fallback Data (`SAMPLE_PROFILE`)
+
 Used on: 404, rate limit, network error, CORS failure.
+
 ```typescript
 // Intelligent fallback preserves username but uses sample data
 return {
@@ -127,6 +137,7 @@ return {
 ## 📦 Project Ingestion (`fetchGitHubProject`)
 
 ### Input Parsing
+
 ```typescript
 // Accepts: "owner/repo" OR "https://github.com/owner/repo" OR "github.com/owner/repo"
 let cleanSlug = repoUrlOrSlug.trim();
@@ -138,21 +149,23 @@ const [owner, repo] = cleanSlug.split('/');
 ```
 
 ### API Calls Sequence
+
 ```typescript
 // 1. Repo metadata
-GET /repos/{owner}/{repo}
+GET / repos / { owner } / { repo };
 // → { name, description, license, default_branch, stargazers_count, forks_count, open_issues_count, language, homepage }
 
 // 2. package.json (if exists)
-GET /repos/{owner}/{repo}/contents/package.json
+GET / repos / { owner } / { repo } / contents / package.json;
 // → { content: base64, encoding: 'base64' }
 
 // 3. Cargo.toml (fallback)
-GET /repos/{owner}/{repo}/contents/Cargo.toml
+GET / repos / { owner } / { repo } / contents / Cargo.toml;
 // → { content: base64, encoding: 'base64' }
 ```
 
 ### Package.json Inspection
+
 ```typescript
 const pkgContent = JSON.parse(Buffer.from(pkgFile.content, 'base64').toString('utf8'));
 
@@ -188,6 +201,7 @@ else if (pkgContent.dependencies?.express) framework = 'Express.js';
 ```
 
 ### Cargo.toml Detection
+
 ```typescript
 // If package.json fails, try Cargo.toml
 const cargoRes = await fetch(`/repos/${owner}/${repo}/contents/Cargo.toml`);
@@ -201,6 +215,7 @@ if (cargoRes.ok) {
 ```
 
 ### Fallback Data (`SAMPLE_PROJECT`)
+
 Used on: 404, rate limit, network error, CORS failure, invalid slug.
 
 ---
@@ -208,16 +223,18 @@ Used on: 404, rate limit, network error, CORS failure, invalid slug.
 ## 🔄 Server-Side Proxy (`/api/ingest`)
 
 ### Purpose
+
 - Avoid CORS issues calling `api.github.com` directly from browser
 - Optional: Inject server-side token for higher rate limits
 - Optional: Cache responses (Phase 2.4)
 
 ### Implementation
+
 ```typescript
 // src/app/api/ingest/route.ts
 export async function POST(req: NextRequest) {
   const { mode, target, token } = await req.json();
-  
+
   if (mode === 'project') {
     const data = await fetchGitHubProject(target, token);
     return NextResponse.json({ success: true, data });
@@ -229,7 +246,9 @@ export async function POST(req: NextRequest) {
 ```
 
 ### Client Fallback
+
 If `/api/ingest` fails (Vercel cold start, timeout, etc.), client calls `lib/github.ts` directly:
+
 ```typescript
 // In page.tsx handleIngest()
 try {
@@ -246,31 +265,32 @@ try {
 
 ## 📊 Data Transformation Summary
 
-| Source | Transform | Output Field |
-|--------|-----------|--------------|
-| `user.login` | Direct | `username` |
-| `user.name` \|\| `user.login` | Coalesce | `name` |
-| `user.bio` \|\| default | Coalesce | `bio` |
-| `user.avatar_url` | Direct | `avatarUrl` |
-| `user.company` | Direct | `company` |
-| `user.location` | Direct | `location` |
-| `user.blog` | Direct | `website` |
-| `user.twitter_username` | Direct | `twitter` |
-| `user.html_url` | Direct | `githubUrl` |
-| `user.public_repos` | Direct | `publicRepos` |
-| `user.followers` | Direct | `followers` |
-| `user.following` | Direct | `following` |
-| Repo list → language aggregation | Count + percentage | `languages[]` |
-| Repo list → top 3 by stars | Sort + slice | `pinnedRepos[]` |
-| `repo.license.spdx_id` | Direct | `license` |
-| `repo.default_branch` | Direct | `defaultBranch` |
-| `package.json` scripts/fields | Heuristic detection | `packageManager`, `installCommand`, `runCommand`, `testCommand`, `framework` |
+| Source                           | Transform           | Output Field                                                                 |
+| -------------------------------- | ------------------- | ---------------------------------------------------------------------------- |
+| `user.login`                     | Direct              | `username`                                                                   |
+| `user.name` \|\| `user.login`    | Coalesce            | `name`                                                                       |
+| `user.bio` \|\| default          | Coalesce            | `bio`                                                                        |
+| `user.avatar_url`                | Direct              | `avatarUrl`                                                                  |
+| `user.company`                   | Direct              | `company`                                                                    |
+| `user.location`                  | Direct              | `location`                                                                   |
+| `user.blog`                      | Direct              | `website`                                                                    |
+| `user.twitter_username`          | Direct              | `twitter`                                                                    |
+| `user.html_url`                  | Direct              | `githubUrl`                                                                  |
+| `user.public_repos`              | Direct              | `publicRepos`                                                                |
+| `user.followers`                 | Direct              | `followers`                                                                  |
+| `user.following`                 | Direct              | `following`                                                                  |
+| Repo list → language aggregation | Count + percentage  | `languages[]`                                                                |
+| Repo list → top 3 by stars       | Sort + slice        | `pinnedRepos[]`                                                              |
+| `repo.license.spdx_id`           | Direct              | `license`                                                                    |
+| `repo.default_branch`            | Direct              | `defaultBranch`                                                              |
+| `package.json` scripts/fields    | Heuristic detection | `packageManager`, `installCommand`, `runCommand`, `testCommand`, `framework` |
 
 ---
 
 ## 🧪 Testing Patterns
 
 ### Mock GitHub API (MSW)
+
 ```typescript
 // tests/mocks/github.ts
 import { http, HttpResponse } from 'msw';
@@ -285,14 +305,28 @@ export const handlers = [
       // ... rest of profile
     });
   }),
-  
+
   http.get('https://api.github.com/users/:username/repos', () => {
     return HttpResponse.json([
-      { name: 'repo1', language: 'TypeScript', stargazers_count: 100, fork: false, html_url: '...', description: 'Desc' },
-      { name: 'repo2', language: 'Rust', stargazers_count: 50, fork: false, html_url: '...', description: 'Desc' },
+      {
+        name: 'repo1',
+        language: 'TypeScript',
+        stargazers_count: 100,
+        fork: false,
+        html_url: '...',
+        description: 'Desc',
+      },
+      {
+        name: 'repo2',
+        language: 'Rust',
+        stargazers_count: 50,
+        fork: false,
+        html_url: '...',
+        description: 'Desc',
+      },
     ]);
   }),
-  
+
   http.get('https://api.github.com/repos/:owner/:repo', ({ params }) => {
     return HttpResponse.json({
       name: params.repo,
@@ -310,6 +344,7 @@ export const handlers = [
 ```
 
 ### Test Cases to Cover
+
 - ✅ Successful profile fetch with real data
 - ✅ Successful project fetch with package.json
 - ✅ Successful project fetch with Cargo.toml

@@ -56,6 +56,7 @@ Do NOT ask questions. Read the plan files in this directory and execute the comp
 ---
 
 ## ⚡ GIT RULES ENFORCED:
+
 - **Author Name:** `ErBharatMalhotra`
 - **Author Email:** `mr.bharatmalhotra@gmail.com`
 - **No Co-Authors / AI trailers:** Enforced via `commit.trailer=false`

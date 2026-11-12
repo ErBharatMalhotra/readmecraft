@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Section } from '@/types/readmecraft';
+import type { Section } from '@/types/readmecraft';
 import {
   Code,
   Heading1,
@@ -59,7 +59,10 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
 
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + prefix.length + (selectedText.length || 4));
+      textarea.setSelectionRange(
+        start + prefix.length,
+        start + prefix.length + (selectedText.length || 4)
+      );
     }, 10);
   };
 
@@ -68,22 +71,22 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
   const charCount = markdown.length;
 
   return (
-    <div className="flex flex-col h-full bg-[#080d1a] border-r border-[#1e293b]">
+    <div className="flex h-full flex-col border-r border-[#1e293b] bg-[#080d1a]">
       {/* Pane Title Bar & Mode Toggle */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1e293b] bg-[#0b101c]">
+      <div className="flex items-center justify-between border-b border-[#1e293b] bg-[#0b101c] px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <FileCode className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-200 font-mono">
+          <FileCode className="h-4 w-4 text-emerald-400" />
+          <span className="font-mono text-xs font-bold tracking-wider text-slate-200 uppercase">
             2. Markdown Studio
           </span>
         </div>
 
-        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0e1526] border border-[#1e293b]">
+        <div className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] p-0.5">
           <button
             onClick={() => setEditorMode('full')}
-            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
+            className={`rounded px-2.5 py-1 font-mono text-[11px] transition-colors ${
               editorMode === 'full'
-                ? 'bg-emerald-500 text-slate-950 font-bold'
+                ? 'bg-emerald-500 font-bold text-slate-950'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -91,9 +94,9 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
           </button>
           <button
             onClick={() => setEditorMode('section')}
-            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
+            className={`rounded px-2.5 py-1 font-mono text-[11px] transition-colors ${
               editorMode === 'section'
-                ? 'bg-emerald-500 text-slate-950 font-bold'
+                ? 'bg-emerald-500 font-bold text-slate-950'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -103,62 +106,60 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
       </div>
 
       {/* Quick Formatting Toolbar */}
-      <div className="flex items-center flex-wrap gap-1 px-3 py-2 border-b border-[#1e293b] bg-[#090d16]">
+      <div className="flex flex-wrap items-center gap-1 border-b border-[#1e293b] bg-[#090d16] px-3 py-2">
         <button
           onClick={() => insertSnippet('# ', '')}
           title="Heading 1"
-          className="p-1.5 rounded hover:bg-[#131c31] text-slate-400 hover:text-white transition-colors"
+          className="rounded p-1.5 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white"
         >
-          <Heading1 className="w-3.5 h-3.5" />
+          <Heading1 className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => insertSnippet('## ', '')}
           title="Heading 2"
-          className="p-1.5 rounded hover:bg-[#131c31] text-slate-400 hover:text-white transition-colors"
+          className="rounded p-1.5 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white"
         >
-          <Heading2 className="w-3.5 h-3.5" />
+          <Heading2 className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => insertSnippet('**', '**')}
           title="Bold"
-          className="p-1.5 rounded hover:bg-[#131c31] text-slate-400 hover:text-white transition-colors"
+          className="rounded p-1.5 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white"
         >
-          <Bold className="w-3.5 h-3.5" />
+          <Bold className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => insertSnippet('*', '*')}
           title="Italic"
-          className="p-1.5 rounded hover:bg-[#131c31] text-slate-400 hover:text-white transition-colors"
+          className="rounded p-1.5 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white"
         >
-          <Italic className="w-3.5 h-3.5" />
+          <Italic className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => insertSnippet('```typescript\n', '\n```')}
           title="Code Block"
-          className="p-1.5 rounded hover:bg-[#131c31] text-slate-400 hover:text-white transition-colors"
+          className="rounded p-1.5 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white"
         >
-          <Code className="w-3.5 h-3.5" />
+          <Code className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => insertSnippet('- ', '')}
           title="List Item"
-          className="p-1.5 rounded hover:bg-[#131c31] text-slate-400 hover:text-white transition-colors"
+          className="rounded p-1.5 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white"
         >
-          <List className="w-3.5 h-3.5" />
+          <List className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() =>
-            insertSnippet(
-              '| Column 1 | Column 2 |\n| :--- | :--- |\n| Value 1 | Value 2 |\n'
-            )
+            insertSnippet('| Column 1 | Column 2 |\n| :--- | :--- |\n| Value 1 | Value 2 |\n')
           }
           title="Table Template"
-          className="p-1.5 rounded hover:bg-[#131c31] text-slate-400 hover:text-white transition-colors"
+          className="rounded p-1.5 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white"
         >
-          <Table className="w-3.5 h-3.5" />
+          <Table className="h-3.5 w-3.5" />
         </button>
 
-        <span className="w-px h-4 bg-[#1e293b] mx-1" />
+        <span className="mx-1 h-4 w-px bg-[#1e293b]" />
 
         {/* Quick Insert Ecosystem Snippets */}
         <button
@@ -167,10 +168,10 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
               `[![GitHolo 3D Card](https://githolo.vercel.app/api/og/${activeUsername})](https://githolo.bharatdn.com)\n`
             )
           }
-          className="px-2 py-1 rounded bg-[#0e1526] hover:bg-[#131c31] border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[10px] font-mono flex items-center gap-1 transition-colors"
+          className="flex items-center gap-1 rounded border border-emerald-500/30 bg-[#0e1526] px-2 py-1 font-mono text-[10px] text-emerald-400 transition-colors hover:bg-[#131c31] hover:text-emerald-300"
           title="Insert GitHolo 3D Card snippet"
         >
-          <Box className="w-3 h-3" />
+          <Box className="h-3 w-3" />
           <span>+ GitHolo</span>
         </button>
 
@@ -180,24 +181,24 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
               `[![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/${activeUsername}.svg)](https://gitchronicle.bharatdn.com)\n`
             )
           }
-          className="px-2 py-1 rounded bg-[#0e1526] hover:bg-[#131c31] border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[10px] font-mono flex items-center gap-1 transition-colors"
+          className="flex items-center gap-1 rounded border border-emerald-500/30 bg-[#0e1526] px-2 py-1 font-mono text-[10px] text-emerald-400 transition-colors hover:bg-[#131c31] hover:text-emerald-300"
           title="Insert GitChronicle Cadence badge snippet"
         >
-          <Shield className="w-3 h-3" />
+          <Shield className="h-3 w-3" />
           <span>+ GitChronicle</span>
         </button>
       </div>
 
       {/* Section Selector Tab (If in Section Mode) */}
       {editorMode === 'section' && (
-        <div className="flex items-center gap-1 px-3 py-2 border-b border-[#1e293b] overflow-x-auto bg-[#0a0f1d]">
+        <div className="flex items-center gap-1 overflow-x-auto border-b border-[#1e293b] bg-[#0a0f1d] px-3 py-2">
           {sections.map((sec) => (
             <button
               key={sec.id}
               onClick={() => setActiveSectionId(sec.id)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-mono whitespace-nowrap transition-colors ${
+              className={`rounded-lg px-2.5 py-1 font-mono text-xs whitespace-nowrap transition-colors ${
                 activeSectionId === sec.id
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
+                  ? 'border border-emerald-500/40 bg-emerald-500/20 font-bold text-emerald-300'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -208,7 +209,7 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
       )}
 
       {/* Monospace Raw Markdown Editor Textarea */}
-      <div className="flex-1 relative flex">
+      <div className="relative flex flex-1">
         <textarea
           id="readme-editor"
           value={editorMode === 'full' ? markdown : activeSection?.content || ''}
@@ -220,13 +221,13 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
             }
           }}
           spellCheck={false}
-          className="w-full h-full p-4 bg-transparent text-slate-100 font-mono text-xs md:text-sm leading-relaxed resize-none focus:outline-none selection:bg-emerald-500/30"
+          className="h-full w-full resize-none bg-transparent p-4 font-mono text-xs leading-relaxed text-slate-100 selection:bg-emerald-500/30 focus:outline-none md:text-sm"
           placeholder="# Start typing your GitHub README markdown here..."
         />
       </div>
 
       {/* Editor Footer Telemetry Bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-t border-[#1e293b] bg-[#0b101c] text-[11px] font-mono text-slate-400">
+      <div className="flex items-center justify-between border-t border-[#1e293b] bg-[#0b101c] px-4 py-2 font-mono text-[11px] text-slate-400">
         <div className="flex items-center gap-3">
           <span>{linesCount} lines</span>
           <span>•</span>
@@ -235,7 +236,7 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
           <span>{charCount} chars</span>
         </div>
         <div className="flex items-center gap-1 text-emerald-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
           <span>Live Synced</span>
         </div>
       </div>
