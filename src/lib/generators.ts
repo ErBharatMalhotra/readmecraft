@@ -285,10 +285,11 @@ ${data.pinnedRepos
 
 <div align="center">
 
-![Public Repos](https://img.shields.io/badge/Public_Repos-${data.publicRepos}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16)
-![Followers](https://img.shields.io/badge/Followers-${data.followers}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16)
-![Following](https://img.shields.io/badge/Following-${data.following}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16)
-${data.topLanguagesEnabled && data.languages.length > 0 ? `\n![Top Language](https://img.shields.io/badge/Top_Language-${data.languages[0].name}-${data.languages[0].color || '10b981'}?style=for-the-badge&logo=${data.languages[0].name.toLowerCase()}&logoColor=white&labelColor=090d16)` : ''}
+![Public Repos](https://readme.bharatdn.com/api/badges?username=${username}&type=repos)
+![Followers](https://readme.bharatdn.com/api/badges?username=${username}&type=followers)
+![Following](https://readme.bharatdn.com/api/badges?username=${username}&type=following)
+${data.topLanguagesEnabled && data.languages.length > 0 ? `\n![Top Language](https://readme.bharatdn.com/api/badges?username=${username}&type=language)` : ''}
+${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges?username=${username}&type=streak)` : ''}
 
 </div>
 
@@ -299,7 +300,7 @@ ${data.topLanguagesEnabled && data.languages.length > 0 ? `\n![Top Language](htt
 - **Followers:** ${data.followers}
 - **Following:** ${data.following}
 ${data.topLanguagesEnabled && data.languages.length > 0 ? `- **Top Language:** ${data.languages[0].name} (${data.languages[0].percentage}%)` : ''}
-${data.githubStreakEnabled ? `- **Streak Tracking:** Enabled (configure at [github-readme-streak-stats](https://github.com/ErBharatMalhotra/github-readme-streak-stats))` : ''}
+${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badges API](https://readme.bharatdn.com/api/badges?username=${username}&type=streak)` : ''}
 
 </details>`,
     },
