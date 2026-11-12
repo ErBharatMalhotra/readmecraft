@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
           </div>
           <p className="max-w-md text-xs leading-relaxed text-slate-400">
             The next-generation intelligent dual-mode GitHub README Studio. Zero-typing profile
-            ingestion, real repo-byte language detection, and modern anti-slop layouts.
+            ingestion, real repo-byte language detection, and modern high-taste layouts.
           </p>
           <div className="font-mono text-xs text-slate-500">
             Architected by{' '}
@@ -111,7 +111,7 @@ export const Footer: React.FC = () => {
             </li>
             <li>
               <span className="font-mono text-[11px] text-slate-500">
-                OKLCH Geometry • Zero AI Slop
+                OKLCH Geometry • High-Taste Design
               </span>
             </li>
           </ul>
