@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Globe,
 } from 'lucide-react';
+import { AuthButton } from '@/components/AuthButton';
 
 interface HeaderProps {
   mode: AppMode;
@@ -86,6 +87,9 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Ecosystem Links & Utilities */}
         <div className="flex items-center gap-2">
+          {/* GitHub Auth Button */}
+          <AuthButton />
+
           {/* BharatDN Ecosystem Quick Links */}
           <div className="hidden items-center gap-1.5 rounded-lg border border-[#1e293b] bg-[#0e1526]/80 px-3 py-1 text-xs text-slate-400 xl:flex">
             <span className="font-mono text-[11px] tracking-wider text-slate-500 uppercase">
