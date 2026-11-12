@@ -547,6 +547,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
       order: 6,
       content: `## 🌐 Ecosystem Cross-Pollination
 
+<div align="center">
+
+${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.vercel.app/api/og/${owner}/${repo})](https://githolo.bharatdn.com)` : ''}
+
+${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/${owner}/${repo}.svg)](https://gitchronicle.bharatdn.com)` : ''}
+
+</div>
+
 Discover companion developer tools by [Bharat Malhotra](https://bharatdn.com):
 
 - 🌌 **[GitHolo](https://githolo.bharatdn.com):** 3D Interactive WebGL Holographic Cards for GitHub profiles and repositories.
