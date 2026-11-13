@@ -44,11 +44,6 @@ export const Header: React.FC<HeaderProps> = ({
   const [starring, setStarring] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Debug: Log auth state changes
-  React.useEffect(() => {
-    console.log('[Header] Auth state:', { status, session: session ? 'exists' : 'null', user: session?.user?.login });
-  }, [status, session]);
-
   const handleStar = async () => {
     if (!session || starring) return;
     setStarring(true);

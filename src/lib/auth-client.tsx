@@ -32,9 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchSession = async () => {
     try {
       const res = await fetch('/api/auth/session', { credentials: 'include' });
-      console.log('[Auth] Session response status:', res.status);
       const data = await res.json();
-      console.log('[Auth] Session data:', data);
       if (data && data.user) {
         setSession(data);
         setStatus('authenticated');
@@ -42,8 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setStatus('unauthenticated');
       }
-    } catch (err) {
-      console.error('[Auth] Session fetch error:', err);
+    } catch {
       setSession(null);
       setStatus('unauthenticated');
     }
