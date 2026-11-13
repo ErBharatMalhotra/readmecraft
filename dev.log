@@ -1,0 +1,150 @@
+
+> readmecraft@1.0.0 dev
+> next dev
+
+▲ Next.js 16.4.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.29.8:3000
+✓ Ready in 694ms
+✓ Running next.config took 30ms
+
+React does not recognize the `vAlign` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `valign` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+ GET / 200 in 892ms (next.js: 425ms, application-code: 467ms)
+GraphQL API rate limited or failed, falling back to robust mock telemetry: Error [HttpError]: API rate limit exceeded for 49.43.131.188. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting
+    at <unknown> (HttpError: API rate limit exceeded for 49.43.131.188. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting)
+    at async fetcher (src\lib\github-api.ts:374:22)
+    at async fetchWithDeduplication (src\lib\github-api.ts:345:20)
+    at async GET (src\app\api\badges\route.ts:662:52)
+  372 |       const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+  373 |
+> 374 |       const result = await graphqlClient<{ user: ProfileDataRaw }>(UNIFIED_PROFILE_QUERY, {
+      |                      ^
+  375 |         username,
+  376 |         from,
+  377 |         to, {
+  status: 403,
+  request: {
+    method: 'POST',
+    url: 'https://api.github.com/graphql',
+    headers: {
+      accept: 'application/vnd.github.v3+json',
+      'user-agent': 'octokit-graphql.js/0.0.0-development Node.js/24',
+      'content-type': 'application/json; charset=utf-8'
+    },
+    body: [Object: null prototype] {
+      query: '\n' +
+        '  query($username: String!, $from: DateTime!, $to: DateTime!) {\n' +
+        '    user(login: $username) {\n' +
+        '      login\n' +
+        '      name\n' +
+        '      bio\n' +
+        '      avatarUrl\n' +
+        '      company\n' +
+        '      location\n' +
+        '      websiteUrl\n' +
+        '      twitterUsername\n' +
+        '      url\n' +
+        '      repositories(privacy: PUBLIC) {\n' +
+        '        totalCount\n' +
+        '      }\n' +
+        '      followers {\n' +
+        '        totalCount\n' +
+        '      }\n' +
+        '      following {\n' +
+        '        totalCount\n' +
+        '      }\n' +
+        '      contributionsCollection(from: $from, to: $to) {\n' +
+        '        contributionCalendar {\n' +
+        '          totalContributions\n' +
+        '          weeks {\n' +
+        '            contributionDays {\n' +
+        '              contributionCount\n' +
+        '              date\n' +
+        '            }\n' +
+        '          }\n' +
+        '        }\n' +
+        '      }\n' +
+        '      reposList: repositories(first: 100, privacy: PUBLIC, orderBy: {field: UPDATED_AT, direction: DESC}) {\n' +
+        '        nodes {\n' +
+        '          name\n' +
+        '          description\n' +
+        '          url\n' +
+        '          stargazerCount\n' +
+        '          primaryLanguage {\n' +
+        '            name\n' +
+        '            color\n' +
+        '          }\n' +
+        '          forkCount\n' +
+        '          isFork\n' +
+        '          languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {\n' +
+        '            nodes {\n' +
+        '              name\n' +
+        '              size\n' +
+        '              color\n' +
+        '            }\n' +
+        '          }\n' +
+        '        }\n' +
+        '      }\n' +
+        '      pinnedItems(first: 6, types: REPOSITORY) {\n' +
+        '        nodes {\n' +
+        '          ... on Repository {\n' +
+        '            name\n' +
+        '            description\n' +
+        '            url\n' +
+        '            stargazerCount\n' +
+        '            primaryLanguage {\n' +
+        '              name\n' +
+        '              color\n' +
+        '            }\n' +
+        '          }\n' +
+        '        }\n' +
+        '      }\n' +
+        '    }\n' +
+        '  }\n',
+      variables: [Object]
+    }
+  },
+  response: {
+    url: 'https://api.github.com/graphql',
+    status: 403,
+    headers: {
+      'access-control-allow-origin': '*',
+      'access-control-expose-headers': 'ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-RateLimit-Used, X-RateLimit-Resource, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, Deprecation, Sunset',
+      'content-length': '279',
+      'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'",
+      'content-type': 'application/json; charset=utf-8',
+      date: 'Thu, 12 Nov 2026 16:35:44 GMT',
+      'referrer-policy': 'origin-when-cross-origin, strict-origin-when-cross-origin',
+      server: 'Varnish',
+      'strict-transport-security': 'max-age=31536000; includeSubdomains; preload',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'deny',
+      'x-github-edge-region': 'centralindia',
+      'x-github-media-type': 'github.v3; format=json',
+      'x-github-request-id': '381A:211820:F0D36:169171:6AF5EAE0',
+      'x-ratelimit-limit': '0',
+      'x-ratelimit-remaining': '0',
+      'x-ratelimit-reset': '1794504944',
+      'x-ratelimit-resource': 'graphql',
+      'x-ratelimit-used': '0',
+      'x-xss-protection': '1; mode=block'
+    },
+    data: {
+      message: "API rate limit exceeded for 49.43.131.188. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)",
+      documentation_url: 'https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting'
+    }
+  }
+}
+ GET /api/badges?username=ErBharatMalhotra&type=trophy 200 in 499ms (next.js: 134ms, application-code: 365ms)
+[31m[auth][error][0m MissingSecret: Please define a `secret`. Read more at https://errors.authjs.dev#missingsecret
+    at assertConfig (D:\new idea\ReadmeCraft\.next\dev\server\chunks\node_modules_@auth_core_16e_2oydh-dgt._.js:3881:16)
+    at Auth (D:\new idea\ReadmeCraft\.next\dev\server\chunks\node_modules_@auth_core_16e_2oydh-dgt._.js:310:204)
+ POST /api/ingest 200 in 91ms (next.js: 60ms, application-code: 31ms)
+[31m[auth][error][0m MissingSecret: Please define a `secret`. Read more at https://errors.authjs.dev#missingsecret
+    at assertConfig (D:\new idea\ReadmeCraft\.next\dev\server\chunks\node_modules_@auth_core_16e_2oydh-dgt._.js:3881:16)
+    at Auth (D:\new idea\ReadmeCraft\.next\dev\server\chunks\node_modules_@auth_core_16e_2oydh-dgt._.js:310:204)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async AppRouteRouteModule.renderToResponse (D:\new idea\ReadmeCraft\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:25953)
+    at async AppRouteRouteModule.executeRequest (D:\new idea\ReadmeCraft\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:30505)
+ GET /api/auth/signin/github 500 in 847ms (next.js: 834ms, application-code: 14ms)
+✓ Compiled in 72ms

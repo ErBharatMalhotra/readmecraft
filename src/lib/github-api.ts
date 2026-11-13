@@ -125,10 +125,9 @@ const UNIFIED_PROFILE_QUERY = `
           }
           forkCount
           isFork
-          languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
+          languages(first: 10) {
             nodes {
               name
-              size
               color
             }
           }
@@ -174,10 +173,9 @@ const UNIFIED_REPO_QUERY = `
         spdxId
       }
       homepageUrl
-      languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
+      languages(first: 10) {
         nodes {
           name
-          size
           color
         }
       }
@@ -243,7 +241,7 @@ export interface ProfileDataRaw {
       primaryLanguage: { name: string; color: string } | null;
       forkCount: number;
       isFork: boolean;
-      languages: { nodes: Array<{ name: string; size: number; color: string }> };
+      languages: { nodes: Array<{ name: string; size?: number; color: string }> };
     }>;
   };
   pinnedItems?: {
@@ -268,7 +266,7 @@ export interface RepoDataRaw {
   defaultBranchRef: { name: string } | null;
   licenseInfo: { spdxId: string } | null;
   homepageUrl: string | null;
-  languages: { nodes: Array<{ name: string; size: number; color: string }> };
+  languages: { nodes: Array<{ name: string; size?: number; color: string }> };
   repositoryTopics: { nodes: Array<{ topic: { name: string } }> };
 }
 

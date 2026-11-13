@@ -1,10 +1,34 @@
 'use client';
 
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { GitBranch, LogOut, User } from 'lucide-react';
 
 export function AuthButton() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
+  const router = useRouter();
+
+  const handleSignIn = async () => {
+    // Call our custom signin route which returns the GitHub OAuth URL
+    const res = await fetch('/api/auth/signin/github');
+    const html = await res.text();
+    
+    // Extract the redirect URL from the HTML meta refresh
+    const match = html.match(/content="0;url=([^"]+)"/);
+    if (match) {
+      window.location.href = match[1];
+    } else {
+      // Fallback: direct navigation
+      window.location.href = '/api/auth/signin/github';
+    }
+  };
+
+  const handleSignOut = async () => {
+    await fetch('/api/auth/signout', { method: 'POST' });
+    // Refresh session to update UI
+    await update();
+    router.refresh();
+  };
 
   if (status === 'loading') {
     return (
@@ -18,7 +42,7 @@ export function AuthButton() {
   if (!session) {
     return (
       <button
-        onClick={() => signIn('github', { callbackUrl: '/' })}
+        onClick={handleSignIn}
         className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-all hover:bg-emerald-500/20 hover:border-emerald-500 hover:shadow-[0_0_12px_rgba(16,185,129,0.2)]"
         title="Sign in with GitHub to use your personal API token (5,000 req/hr)"
       >
@@ -42,7 +66,7 @@ export function AuthButton() {
         </span>
       </div>
       <button
-        onClick={() => signOut({ callbackUrl: '/' })}
+        onClick={handleSignOut}
         className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-400 transition-all hover:bg-rose-500/20 hover:border-rose-500 hover:shadow-[0_0_12px_rgba(244,63,94,0.2)]"
         title="Sign out"
       >

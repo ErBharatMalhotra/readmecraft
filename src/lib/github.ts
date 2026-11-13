@@ -145,12 +145,24 @@ function calculateLanguages(repos: any[]): Array<{ name: string; percentage: num
 }
 
 function calculateLanguagesFromRepoData(languages: any[]): Array<{ name: string; percentage: number; color: string }> {
-  const totalSize = languages.reduce((sum, l) => sum + l.size, 0);
-  if (totalSize === 0) return [];
+  // Check if sizes are available (from REST API fallback)
+  const hasSizes = languages.some(l => l.size !== undefined && l.size !== null);
   
-  return languages.map((l) => ({
+  if (hasSizes) {
+    const totalSize = languages.reduce((sum, l) => sum + (l.size || 0), 0);
+    if (totalSize === 0) return [];
+    
+    return languages.map((l) => ({
+      name: l.name,
+      percentage: Number(((l.size / totalSize) * 100).toFixed(1)),
+      color: l.color || LANG_COLORS[l.name] || '#8b5cf6',
+    }));
+  }
+  
+  // Fallback: equal distribution or by count
+  return languages.map((l, i) => ({
     name: l.name,
-    percentage: Number(((l.size / totalSize) * 100).toFixed(1)),
+    percentage: Number((100 / languages.length).toFixed(1)),
     color: l.color || LANG_COLORS[l.name] || '#8b5cf6',
   }));
 }

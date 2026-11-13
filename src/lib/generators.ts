@@ -370,7 +370,95 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🐍 Contribution Snake
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=snake" alt="Contribution Snake" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=snake&v=13" alt="Contribution Snake" />
+</div>`,
+    },
+    {
+      id: 'skill_radar',
+      title: 'Skill Radar Chart',
+      enabled: data.githubStatsEnabled,
+      order: 12,
+      content: `### 🎯 Skill Radar
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=skill-radar" alt="Skill Radar Chart" />
+</div>`,
+    },
+    {
+      id: 'language_race',
+      title: 'Language Evolution Race',
+      enabled: data.githubStatsEnabled,
+      order: 13,
+      content: `### 🏁 Language Evolution Race
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=language-race" alt="Language Race" />
+</div>`,
+    },
+    {
+      id: 'repo_constellation',
+      title: 'Repo Constellation',
+      enabled: data.githubStatsEnabled,
+      order: 14,
+      content: `### 🌌 Repository Constellation
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=repo-constellation" alt="Repo Constellation" />
+</div>`,
+    },
+    {
+      id: 'code_pulse',
+      title: 'Code Pulse / Heartbeat',
+      enabled: data.githubStatsEnabled,
+      order: 15,
+      content: `### 💓 Code Pulse
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=code-pulse" alt="Code Pulse" />
+</div>`,
+    },
+    {
+      id: 'contribution_mountain',
+      title: '3D Contribution Mountain',
+      enabled: data.githubStatsEnabled,
+      order: 16,
+      content: `### 🏔️ Contribution Mountain (Isometric)
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=contribution-mountain" alt="Contribution Mountain" />
+</div>`,
+    },
+    {
+      id: 'tech_galaxy',
+      title: 'Tech Stack Galaxy',
+      enabled: data.githubStatsEnabled,
+      order: 17,
+      content: `### 🌌 Tech Stack Galaxy
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=tech-galaxy" alt="Tech Stack Galaxy" />
+</div>`,
+    },
+    {
+      id: 'contribution_flow',
+      title: 'Contribution Flow (Sankey)',
+      enabled: data.githubStatsEnabled,
+      order: 18,
+      content: `### 🌊 Contribution Flow
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=contribution-flow" alt="Contribution Flow" />
+</div>`,
+    },
+    {
+      id: 'code_time_heatmap',
+      title: 'Code Time Heatmap',
+      enabled: data.githubStatsEnabled,
+      order: 19,
+      content: `### 🕐 Code Time Heatmap
+
+<div align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=code-time-heatmap" alt="Code Time Heatmap" />
 </div>`,
     },
   ];
