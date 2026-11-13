@@ -1,0 +1,53 @@
+name: 'ReadmeCraft Auto-Update'
+
+on:
+  schedule:
+    # Run daily at 02:00 UTC (adjust as needed)
+    - cron: '0 2 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      theme:
+        description: 'Badge theme'
+        type: choice
+        required: false
+        default: 'tokyonight'
+        options:
+          - tokyonight
+          - dracula
+          - nord
+          - github
+          - gruvbox
+          - rosePine
+          - catppuccin
+          - synthwave
+          - default
+      badges:
+        description: 'Comma-separated badges'
+        required: false
+        default: 'composite,snake,heatmap,trophy,activity'
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    name: Update Profile README
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Run ReadmeCraft Auto-Update
+        uses: ./
+        with:
+          username: ${{ github.repository_owner }}
+          repository: ${{ github.event.repository.name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          theme: ${{ github.event.inputs.theme || 'tokyonight' }}
+          badges: ${{ github.event.inputs.badges || 'composite,snake,heatmap,trophy,activity' }}
+          commit-message: '🎨 Update profile README via ReadmeCraft'
+          branch: main

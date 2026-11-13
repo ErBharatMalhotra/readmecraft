@@ -1,11 +1,11 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { GitBranch, LogOut, User } from 'lucide-react';
 
 export function AuthButton() {
-  const { data: session, status, update } = useSession();
+  const { session, status, update, signOut } = useAuth();
   const router = useRouter();
 
   const handleSignIn = async () => {
@@ -24,9 +24,7 @@ export function AuthButton() {
   };
 
   const handleSignOut = async () => {
-    await fetch('/api/auth/signout', { method: 'POST' });
-    // Refresh session to update UI
-    await update();
+    await signOut();
     router.refresh();
   };
 

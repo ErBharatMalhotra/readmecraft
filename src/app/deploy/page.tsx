@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-client';
 
 export default function DeployPage() {
+  const { session, status } = useAuth();
   const [step, setStep] = useState<'idle' | 'installing' | 'selecting' | 'done' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([
@@ -12,11 +14,27 @@ export default function DeployPage() {
     'contribution-flow', 'code-time-heatmap'
   ]);
   const [theme, setTheme] = useState<string>('tokyonight');
+  const [username, setUsername] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  // Get username from session
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      setUsername((session.user as any).login || '');
+    } else if (status === 'unauthenticated') {
+      setUsername('');
+    }
+    setLoading(false);
+  }, [session, status]);
 
   const handleDeploy = () => {
+    if (!username) {
+      setError('Please sign in with GitHub first');
+      return;
+    }
     // Save config to localStorage for callback
     const config = {
-      username: 'ErBharatMalhotra',
+      username,
       template: 'bento',
       badges: selectedBadges,
       theme: theme,
@@ -25,7 +43,7 @@ export default function DeployPage() {
     
     // Redirect to install endpoint with badges
     const badgesParam = selectedBadges.join(',');
-    window.location.href = `/api/auth/github-app/install?username=ErBharatMalhotra&theme=${theme}&badges=${badgesParam}`;
+    window.location.href = `/api/auth/github-app/install?username=${username}&theme=${theme}&badges=${badgesParam}`;
   };
 
   const handleRetry = () => {
@@ -63,7 +81,7 @@ export default function DeployPage() {
             Your profile README has been updated with all selected badges.
           </p>
           <a
-            href="https://github.com/ErBharatMalhotra/ErBharatMalhotra"
+            href={`https://github.com/${username}/${username}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block px-6 py-3 bg-[#10b981] text-white rounded-lg font-medium hover:bg-[#059669] transition-colors"
@@ -96,13 +114,47 @@ export default function DeployPage() {
     );
   }
 
+  // Loading state while fetching session
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-4">
+        <div className="bg-[#0b101c] border border-[#1e293b] rounded-2xl p-8 max-w-2xl w-full text-center">
+          <div className="text-4xl mb-4 animate-spin">⏳</div>
+          <h1 className="text-2xl font-bold text-[#f1f5f9] mb-2">Loading...</h1>
+          <p className="text-[#94a3b8]">Checking your GitHub session</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not authenticated - show sign in prompt
+  if (!username) {
+    return (
+      <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-4">
+        <div className="bg-[#0b101c] border border-[#1e293b] rounded-2xl p-8 max-w-2xl w-full text-center">
+          <div className="text-4xl mb-4">🔐</div>
+          <h1 className="text-2xl font-bold text-[#f1f5f9] mb-2">Sign in to Deploy</h1>
+          <p className="text-[#94a3b8] mb-6">
+            Please sign in with GitHub to deploy your profile README.
+          </p>
+          <a
+            href="/api/auth/signin/github"
+            className="inline-block px-6 py-3 bg-[#10b981] text-white rounded-lg font-medium hover:bg-[#059669] transition-colors"
+          >
+            Sign in with GitHub
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-4">
       <div className="bg-[#0b101c] border border-[#1e293b] rounded-2xl p-8 max-w-2xl w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[#f1f5f9] mb-2">🚀 Deploy to GitHub Profile</h1>
           <p className="text-[#94a3b8]">
-            One-click deploy your customized README to <code className="text-[#10b981] bg-[#161b22] px-1.5 py-0.5 rounded text-sm">ErBharatMalhotra/ErBharatMalhotra</code>
+            One-click deploy your customized README to <code className="text-[#10b981] bg-[#161b22] px-1.5 py-0.5 rounded text-sm">{username}/{username}</code>
           </p>
         </div>
 
@@ -184,7 +236,7 @@ export default function DeployPage() {
           </h4>
           <ol className="text-sm text-[#94a3b8] space-y-1 list-decimal list-inside">
             <li>You'll be redirected to GitHub to install <strong>ReadmeCraft Deploy</strong></li>
-            <li>Select <strong>"Only select repositories"</strong> → choose <code className="bg-[#090d16] px-1 rounded">ErBharatMalhotra/ErBharatMalhotra</code></li>
+            <li>Select <strong>"Only select repositories"</strong> → choose <code className="bg-[#090d16] px-1 rounded">{username}/{username}</code></li>
             <li>Click <strong>Install</strong> → you'll return here with success message</li>
           </ol>
         </div>

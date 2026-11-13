@@ -1,0 +1,76 @@
+name: 'ReadmeCraft Auto-Update'
+description: 'Auto-update README badges via ReadmeCraft API'
+author: 'ErBharatMalhotra'
+branding:
+  icon: 'git-commit'
+  color: 'green'
+
+inputs:
+  username:
+    description: 'GitHub username (repository owner)'
+    required: true
+  repository:
+    description: 'Repository name (defaults to username for profile README)'
+    required: false
+  token:
+    description: 'GitHub token with repo write access'
+    required: true
+  theme:
+    description: 'Badge theme (tokyonight, dracula, nord, github, gruvbox, rosePine, catppuccin, synthwave, default)'
+    required: false
+    default: 'tokyonight'
+  badges:
+    description: 'Comma-separated list of badges to include'
+    required: false
+    default: 'composite,snake,heatmap,trophy,activity'
+  commit-message:
+    description: 'Custom commit message'
+    required: false
+    default: '🎨 Update profile README via ReadmeCraft'
+  branch:
+    description: 'Target branch'
+    required: false
+    default: 'main'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+      shell: bash
+      working-directory: ${{ github.action_path }}
+
+    - name: Generate README
+      id: generate
+      run: node generate-readme.js
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        USERNAME: ${{ inputs.username }}
+        REPOSITORY: ${{ inputs.repository || inputs.username }}
+        THEME: ${{ inputs.theme }}
+        BADGES: ${{ inputs.badges }}
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        BRANCH: ${{ inputs.branch }}
+
+    - name: Commit and Push
+      if: steps.generate.outputs.changed == 'true'
+      run: |
+        git config user.name "ReadmeCraft Bot"
+        git config user.email "bot@readmecraft.app"
+        git add README.md
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push origin ${{ env.BRANCH }}
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        BRANCH: ${{ inputs.branch }}
+        GITHUB_TOKEN: ${{ inputs.token }}

@@ -202,12 +202,250 @@ function rect(x: number, y: number, w: number, h: number, fill: string, rx = 0, 
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}"${strokeAttr} />`;
 }
 
-function text(x: number, y: number, content: string, cls: string): string {
-  return `<text x="${x}" y="${y}" class="${cls}">${content}</text>`;
-}
-
 function translate(x: number, y: number, children: string): string {
   return `<g transform="translate(${x}, ${y})">${children}</g>`;
+}
+
+// ============================================================================
+// TEXT HANDLING SYSTEM - Prevents overflow, clipping, overlapping
+// ============================================================================
+
+// Font metrics (approximate char widths for JetBrains Mono / Verdana at different sizes)
+const FONT_METRICS = {
+  mono: { 9: 5.5, 10: 6, 11: 6.6, 12: 7.2, 14: 8.4, 16: 9.6, 18: 10.8, 20: 12, 22: 13.2, 24: 14.4, 28: 16.8 },
+  display: { 14: 8.5, 16: 9.7, 18: 10.9, 20: 12.1, 24: 14.5, 30: 18.2 },
+  ui: { 11: 6.5 },
+} as const;
+
+type FontFamily = keyof typeof FONT_METRICS;
+
+/**
+ * Estimate text width in pixels for given font family and size
+ */
+function estimateTextWidth(text: string, fontSize: number, fontFamily: FontFamily = 'mono'): number {
+  const metrics = FONT_METRICS[fontFamily];
+  // Use the closest available font size metric, fallback to 12
+  const availableSizes = Object.keys(metrics).map(Number);
+  const closestSize = availableSizes.reduce((prev, curr) => 
+    Math.abs(curr - fontSize) < Math.abs(prev - fontSize) ? curr : prev
+  );
+  const charWidth = metrics[closestSize as keyof typeof metrics];
+  return text.length * charWidth;
+}
+
+/**
+ * Estimate text height (line height) for given font size
+ */
+function estimateTextHeight(fontSize: number, lineHeightMultiplier = 1.3): number {
+  return Math.ceil(fontSize * lineHeightMultiplier);
+}
+
+/**
+ * Truncate text with ellipsis to fit within maxWidth
+ */
+function truncateText(text: string, maxWidth: number, fontSize: number, fontFamily: FontFamily = 'mono'): string {
+  const ellipsis = '…';
+  const ellipsisWidth = estimateTextWidth(ellipsis, fontSize, fontFamily);
+  const availableWidth = maxWidth - ellipsisWidth;
+  
+  if (estimateTextWidth(text, fontSize, fontFamily) <= maxWidth) {
+    return text;
+  }
+  
+  // Binary search for max characters that fit
+  let low = 0;
+  let high = text.length;
+  let result = '';
+  
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const candidate = text.slice(0, mid) + ellipsis;
+    if (estimateTextWidth(candidate, fontSize, fontFamily) <= maxWidth) {
+      result = candidate;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+  
+  return result || ellipsis;
+}
+
+/**
+ * Wrap text to fit within maxWidth, returning array of lines
+ */
+function wrapText(text: string, maxWidth: number, fontSize: number, fontFamily: FontFamily = 'mono', maxLines = 3): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+  
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    if (estimateTextWidth(testLine, fontSize, fontFamily) <= maxWidth) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        // Single word too long - truncate it
+        lines.push(truncateText(word, maxWidth, fontSize, fontFamily));
+        currentLine = '';
+      }
+    }
+    
+    if (lines.length >= maxLines) break;
+  }
+  
+  if (currentLine && lines.length < maxLines) {
+    lines.push(currentLine);
+  }
+  
+  // If we have more content than maxLines, truncate last line
+  if (lines.length === maxLines && currentLine) {
+    const lastLine = lines[maxLines - 1];
+    const remaining = `${lastLine} ${currentLine}`;
+    lines[maxLines - 1] = truncateText(remaining, maxWidth, fontSize, fontFamily);
+  }
+  
+  return lines;
+}
+
+/**
+ * Safe text element with automatic truncation/wrapping
+ */
+interface SafeTextOptions {
+  x: number;
+  y: number;
+  content: string;
+  cls: string;
+  maxWidth?: number;
+  maxLines?: number;
+  fontSize?: number;
+  fontFamily?: FontFamily;
+  textAnchor?: 'start' | 'middle' | 'end';
+  truncate?: boolean; // if true, truncate single line; if false, wrap
+}
+
+function safeText(options: SafeTextOptions): string {
+  const {
+    x, y, content, cls, maxWidth, maxLines = 1, fontSize = 12, 
+    fontFamily = 'mono', textAnchor = 'start', truncate = true
+  } = options;
+  
+  if (!maxWidth || estimateTextWidth(content, fontSize, fontFamily) <= maxWidth) {
+    // Fits in single line
+    const anchorAttr = textAnchor !== 'start' ? ` text-anchor="${textAnchor}"` : '';
+    return `<text x="${x}" y="${y}" class="${cls}"${anchorAttr}>${content}</text>`;
+  }
+  
+  if (truncate || maxLines === 1) {
+    // Single line truncation
+    const truncated = truncateText(content, maxWidth, fontSize, fontFamily);
+    const anchorAttr = textAnchor !== 'start' ? ` text-anchor="${textAnchor}"` : '';
+    return `<text x="${x}" y="${y}" class="${cls}"${anchorAttr}>${truncated}</text>`;
+  }
+  
+  // Multi-line wrapping
+  const lines = wrapText(content, maxWidth, fontSize, fontFamily, maxLines);
+  const lineHeight = estimateTextHeight(fontSize);
+  
+  return lines.map((line, i) => {
+    const lineY = y + i * lineHeight;
+    const anchorAttr = textAnchor !== 'start' ? ` text-anchor="${textAnchor}"` : '';
+    return `<text x="${x}" y="${lineY}" class="${cls}"${anchorAttr}>${line}</text>`;
+  }).join('');
+}
+
+/**
+ * Calculate required width for a text label + value pair (for badges)
+ */
+function calculateBadgeWidth(label: string, value: string, labelFontSize = 11, valueFontSize = 11, padding = 20): number {
+  const labelWidth = estimateTextWidth(label, labelFontSize, 'ui') + 10;
+  const valueWidth = estimateTextWidth(value, valueFontSize, 'ui') + 10;
+  return labelWidth + valueWidth + padding;
+}
+
+/**
+ * Safe rectangle bounds checker - ensures content fits within container
+ */
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+function ensureFitsInBounds(textContent: string, bounds: Bounds, fontSize: number, fontFamily: FontFamily = 'mono', padding = 8): {
+  fits: boolean;
+  truncatedText: string;
+  lines: string[];
+} {
+  const maxWidth = bounds.width - padding * 2;
+  const maxHeight = bounds.height - padding * 2;
+  const lineHeight = estimateTextHeight(fontSize);
+  const maxLines = Math.max(1, Math.floor(maxHeight / lineHeight));
+  
+  const lines = wrapText(textContent, maxWidth, fontSize, fontFamily, maxLines);
+  const truncatedText = lines.join(' ');
+  const fits = lines.length <= maxLines && lines.every(l => estimateTextWidth(l, fontSize, fontFamily) <= maxWidth);
+  
+  return { fits, truncatedText, lines };
+}
+
+/**
+ * Create a safe text block that auto-sizes and positions within bounds
+ */
+interface TextBlockOptions {
+  bounds: Bounds;
+  content: string;
+  cls: string;
+  fontSize?: number;
+  fontFamily?: FontFamily;
+  align?: 'left' | 'center' | 'right';
+  verticalAlign?: 'top' | 'middle' | 'bottom';
+  lineHeightMultiplier?: number;
+  maxLines?: number;
+}
+
+function createTextBlock(options: TextBlockOptions): string {
+  const {
+    bounds, content, cls, fontSize = 12, fontFamily = 'mono', 
+    align = 'left', verticalAlign = 'top', lineHeightMultiplier = 1.3, maxLines = 10
+  } = options;
+  
+  const padding = 4;
+  const maxWidth = bounds.width - padding * 2;
+  const maxHeight = bounds.height - padding * 2;
+  const lineHeight = Math.ceil(fontSize * lineHeightMultiplier);
+  const actualMaxLines = Math.min(maxLines, Math.max(1, Math.floor(maxHeight / lineHeight)));
+  
+  const lines = wrapText(content, maxWidth, fontSize, fontFamily, actualMaxLines);
+  const totalHeight = lines.length * lineHeight;
+  
+  let startY: number;
+  switch (verticalAlign) {
+    case 'middle': startY = bounds.y + (bounds.height - totalHeight) / 2 + fontSize * 0.7; break;
+    case 'bottom': startY = bounds.y + bounds.height - padding - (lines.length - 1) * lineHeight; break;
+    default: startY = bounds.y + padding + fontSize * 0.7;
+  }
+  
+  let xOffset: number;
+  switch (align) {
+    case 'center': xOffset = bounds.x + bounds.width / 2; break;
+    case 'right': xOffset = bounds.x + bounds.width - padding; break;
+    default: xOffset = bounds.x + padding;
+  }
+  
+  const anchor = align === 'center' ? 'middle' : align === 'right' ? 'end' : 'start';
+  
+  return lines.map((line, i) => 
+    `<text x="${xOffset}" y="${startY + i * lineHeight}" class="${cls}" text-anchor="${anchor}">${line}</text>`
+  ).join('');
+}
+
+function text(x: number, y: number, content: string, cls: string): string {
+  return `<text x="${x}" y="${y}" class="${cls}">${content}</text>`;
 }
 
 // ============================================================================
@@ -267,6 +505,8 @@ function generateTrophySvg(username: string, reposCount: number, followersCount:
   const cardW = 148;
   const gap = 18;
   const startX = (width - (cardW * 3 + gap * 2)) / 2;
+  const cardPadding = 12;
+  const maxValueWidth = cardW - cardPadding * 2;
 
   const cards = [
     { icon: '⭐', label: 'OPEN SOURCE', value: `${reposCount.toLocaleString()} Repos`, accent: c.emerald },
@@ -275,7 +515,12 @@ function generateTrophySvg(username: string, reposCount: number, followersCount:
   ];
 
   let inner = '';
-  inner += text(width / 2, 30, `🏆 ${username}'s Developer Trophies`, 'badge-title');
+  // Safe title with truncation
+  const titleText = `🏆 ${username}'s Developer Trophies`;
+  inner += safeText({
+    x: width / 2, y: 30, content: titleText, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle'
+  });
 
   cards.forEach((card, i) => {
     const x = startX + i * (cardW + gap);
@@ -283,8 +528,14 @@ function generateTrophySvg(username: string, reposCount: number, followersCount:
     inner += translate(x, y, `
       ${rect(0, 0, cardW, 70, c.bgElevated, RADIUS.md, c.borderLight)}
       <text x="${cardW / 2}" y="24" text-anchor="middle" font-size="22">${card.icon}</text>
-      <text x="${cardW / 2}" y="42" text-anchor="middle" class="label">${card.label}</text>
-      <text x="${cardW / 2}" y="58" text-anchor="middle" class="value-sm" fill="${card.accent}">${card.value}</text>
+      ${safeText({
+        x: cardW / 2, y: 42, content: card.label, cls: 'label',
+        maxWidth: maxValueWidth, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+      })}
+      ${safeText({
+        x: cardW / 2, y: 58, content: card.value, cls: 'value-sm',
+        maxWidth: maxValueWidth, fontSize: 12, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+      })}
     `);
   });
 
@@ -311,7 +562,10 @@ function generateActivityGraphSvg(username: string, theme: Theme): string {
   const areaPath = path + ` L ${points[points.length - 1].x} ${margin.top + chartH} L ${points[0].x} ${margin.top + chartH} Z`;
 
   let inner = '';
-  inner += text(width / 2, 28, `📈 ${username}'s Commit Activity (30 Days)`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 28, content: `📈 ${username}'s Commit Activity (30 Days)`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   inner += translate(margin.left, margin.top, `
     ${rect(0, 0, chartW, chartH, c.bgElevated, RADIUS.sm, c.border)}
@@ -328,10 +582,16 @@ function generateActivityGraphSvg(username: string, theme: Theme): string {
 
   ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach((day, i) => {
     const x = margin.left + (i / 6) * chartW;
-    inner += text(x, height - 12, day, 'muted');
+    inner += safeText({
+      x, y: height - 12, content: day, cls: 'muted',
+      maxWidth: chartW / 7, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+    });
   });
 
-  inner += `<text x="12" y="${height / 2}" class="muted" text-anchor="middle" transform="rotate(-90, 12, ${height / 2})">Commits</text>`;
+  inner += safeText({
+    x: 12, y: height / 2, content: 'Commits', cls: 'muted',
+    maxWidth: margin.left - 16, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+  });
 
   return createSvg(width, height, `${username}'s Commit Activity`, inner, theme);
 }
@@ -355,9 +615,14 @@ function generateVisitorCardSvg(username: string, followers: number, repos: numb
   const cardW = 148;
   const gap = 18;
   const startX = (width - (cardW * 3 + gap * 2)) / 2;
+  const cardPadding = 12;
+  const maxValueWidth = cardW - cardPadding * 2;
 
   let inner = '';
-  inner += text(width / 2, 30, `👀 ${username}'s Visitor Analytics`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: `👀 ${username}'s Visitor Analytics`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle'
+  });
 
   cards.forEach((card, i) => {
     const x = startX + i * (cardW + gap);
@@ -365,9 +630,18 @@ function generateVisitorCardSvg(username: string, followers: number, repos: numb
     inner += translate(x, y, `
       ${rect(0, 0, cardW, 80, c.bgElevated, RADIUS.md, c.borderLight)}
       <text x="${cardW / 2}" y="22" text-anchor="middle" font-size="20">${card.icon}</text>
-      <text x="${cardW / 2}" y="42" text-anchor="middle" class="label">${card.label}</text>
-      <text x="${cardW / 2}" y="62" text-anchor="middle" class="value">${card.value}</text>
-      <text x="${cardW / 2}" y="76" text-anchor="middle" class="muted" fill="${c.emerald}">${card.trend}</text>
+      ${safeText({
+        x: cardW / 2, y: 42, content: card.label, cls: 'label',
+        maxWidth: maxValueWidth, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+      })}
+      ${safeText({
+        x: cardW / 2, y: 62, content: card.value, cls: 'value',
+        maxWidth: maxValueWidth, fontSize: 14, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+      })}
+      ${safeText({
+        x: cardW / 2, y: 76, content: card.trend, cls: 'muted',
+        maxWidth: maxValueWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+      })}
     `);
   });
 
@@ -375,9 +649,9 @@ function generateVisitorCardSvg(username: string, followers: number, repos: numb
 }
 
 // ============================================================================
-// 4. CONTRIBUTION HEATMAP (GitHub-style)
+// 4. CONTRIBUTION HEATMAP (GitHub-style) - WITH VIEWER TIMEZONE HIGHLIGHT
 // ============================================================================
-function generateHeatmapSvg(username: string, calendar: any, theme: Theme): string {
+function generateHeatmapSvg(username: string, calendar: any, theme: Theme, viewer?: ViewerContext): string {
   const c = C(theme);
   const width = 820;
   const height = 160;
@@ -390,17 +664,30 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme): stri
   const allDays = weeks.flatMap((w: any) => w.contributionDays);
   const maxCount = Math.max(...allDays.map((d: any) => d.contributionCount), 1);
 
-  const getColor = (count: number) => {
+  const getColor = (count: number, isCurrentHour = false) => {
     if (count === 0) return c.bgElevated;
-    if (count <= maxCount * 0.2) return '#0e4429';
-    if (count <= maxCount * 0.4) return '#006d32';
-    if (count <= maxCount * 0.6) return '#26a641';
-    if (count <= maxCount * 0.8) return '#39d353';
-    return '#5ee87a';
+    if (count <= maxCount * 0.2) return isCurrentHour ? '#1a5c35' : '#0e4429';
+    if (count <= maxCount * 0.4) return isCurrentHour ? '#0a8a3f' : '#006d32';
+    if (count <= maxCount * 0.6) return isCurrentHour ? '#34c652' : '#26a641';
+    if (count <= maxCount * 0.8) return isCurrentHour ? '#4fd160' : '#39d353';
+    return isCurrentHour ? '#6ff08a' : '#5ee87a';
   };
 
   let inner = '';
-  inner += text(30, 24, `🗓️ ${username}'s Contribution Calendar`, 'badge-title');
+  inner += safeText({
+    x: 30, y: 24, content: `🗓️ ${username}'s Contribution Calendar`, cls: 'badge-title',
+    maxWidth: width - 80, fontSize: 14, fontFamily: 'display', truncate: true
+  });
+  const viewerHour = viewer ? getViewerHour(viewer.timezone) : -1;
+  const viewerWeekday = viewer ? getViewerWeekday(viewer.timezone) : -1;
+  if (viewer && viewerHour >= 0) {
+    const greeting = getTimeGreeting(viewerHour);
+    const tz = viewer.timezone || 'UTC';
+    inner += safeText({
+      x: width - 30, y: 24, content: `${greeting.emoji} ${greeting.text} • ${tz} • ${viewerHour.toString().padStart(2, '0')}:00`, cls: 'muted',
+      maxWidth: width / 2, fontSize: 10, fontFamily: 'mono', textAnchor: 'end', truncate: true
+    });
+  }
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   weeks.forEach((week: any, weekIndex: number) => {
@@ -408,34 +695,71 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme): stri
       const date = new Date(week.contributionDays[0].date);
       if (date.getDate() <= 7) {
         const x = startX + weekIndex * (cellSize + cellGap);
-        inner += text(x + cellSize / 2, startY - 8, months[date.getMonth()], 'muted');
+        inner += safeText({ x: x + cellSize / 2, y: startY - 8, content: months[date.getMonth()], cls: 'muted',
+          maxWidth: cellSize * 4, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
       }
     }
   });
 
+  // Get current hour for highlighting (if viewer provided)
+  const currentHour = viewerHour;
+
   weeks.forEach((week: any, weekIndex: number) => {
     week.contributionDays.forEach((day: any, dayIndex: number) => {
-      const color = getColor(day.contributionCount);
+      const count = day.contributionCount;
+      const isCurrentHour = (dayIndex === currentHour);
+      const color = getColor(count, isCurrentHour);
       const x = startX + weekIndex * (cellSize + cellGap);
       const y = startY + dayIndex * (cellSize + cellGap);
-      inner += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${color}" />`;
+      
+      if (isCurrentHour && count > 0) {
+        // Highlight current hour with pulsing ring
+        inner += `<g>
+          <rect x="${x - 1}" y="${y - 1}" width="${cellSize + 2}" height="${cellSize + 2}" rx="3" fill="none" stroke="${c.gold}" stroke-width="1.5">
+            <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+            <animate attributeName="stroke-width" values="1;2.5;1" dur="1.5s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${color}" />
+        </g>`;
+      } else {
+        inner += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${color}" />`;
+      }
     });
   });
 
   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((label, i) => {
     const y = startY + i * (cellSize + cellGap) + cellSize / 2 + 3;
-    inner += text(startX - 10, y, label, 'muted');
+    // Highlight current day label
+    if (viewer && viewerWeekday >= 0 && i === viewerWeekday) {
+      inner += `<text x="${startX - 10}" y="${y}" class="label" font-size="9" fill="${c.gold}" font-weight="bold">${label}</text>`;
+    } else {
+      inner += safeText({
+        x: startX - 10, y, content: label, cls: 'muted',
+        maxWidth: startX - 14, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
+      });
+    }
   });
 
   const legendY = height - 15;
   inner += translate(startX, legendY, `
-    <text x="0" y="5" class="muted" font-size="9">Less</text>
+    ${safeText({ x: 0, y: 5, content: 'Less', cls: 'muted', maxWidth: 30, fontSize: 9, fontFamily: 'mono', truncate: true })}
     ${[0, 1, 2, 3, 4, 5].map(i => rect(35 + i * 14, -3, 10, 10, getColor(i === 0 ? 0 : maxCount * i / 5), 2)).join('')}
-    <text x="110" y="5" class="muted" font-size="9">More</text>
+    ${safeText({ x: 110, y: 5, content: 'More', cls: 'muted', maxWidth: 30, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true })}
   `);
 
+  if (viewer && currentHour >= 0) {
+    const tz = viewer.timezone || 'UTC';
+    inner += safeText({
+      x: startX, y: height - 5, content: `◼ Current hour (${currentHour}:00 ${tz}) highlighted in gold`, cls: 'muted',
+      maxWidth: width - startX - 20, fontSize: 8, fontFamily: 'mono', truncate: true
+    });
+  }
+
   const total = calendar?.totalContributions || allDays.reduce((s: number, d: any) => s + d.contributionCount, 0);
-  inner += text(width - 30, 24, `${total.toLocaleString()} contributions in ${new Date().getFullYear()}`, 'muted');
+  inner += safeText({
+    x: width - 30, y: 24, content: `${total.toLocaleString()} contributions in ${new Date().getFullYear()}`, cls: 'muted',
+    maxWidth: width / 2, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
+  });
 
   return createSvg(width, height, `${username}'s Contribution Calendar`, inner, theme);
 }
@@ -474,8 +798,14 @@ function generateSnakeSvg(username: string, calendar: any, theme: Theme): string
   const total = calendar?.totalContributions ?? cells.reduce((s, cell) => s + cell.count, 0);
 
   let inner = '';
-  inner += text(24, 26, `🐍 ${username}'s Contribution Snake`, 'badge-title');
-  inner += `<text x="${width - 24}" y="26" class="muted" text-anchor="end">${activeCount} active days • ${total.toLocaleString()} contributions</text>`;
+  inner += safeText({
+    x: 24, y: 26, content: `🐍 ${username}'s Contribution Snake`, cls: 'badge-title',
+    maxWidth: width - 100, fontSize: 16, fontFamily: 'display', truncate: true
+  });
+  inner += safeText({
+    x: width - 24, y: 26, content: `${activeCount} active days • ${total.toLocaleString()} contributions`, cls: 'muted',
+    maxWidth: width / 2 - 30, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
+  });
 
   const cellX = (col: number) => startX + col * pitch;
   const cellY = (row: number) => startY + row * pitch;
@@ -616,7 +946,10 @@ function generateSnakeSvg(username: string, calendar: any, theme: Theme): string
   // Row labels
   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((label, i) => {
     const y = startY + i * pitch + cellSize / 2 + 3;
-    inner += `<text x="${startX - 8}" y="${y}" class="muted" text-anchor="end">${label}</text>`;
+    inner += safeText({
+      x: startX - 8, y, content: label, cls: 'muted',
+      maxWidth: startX - 12, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
+    });
   });
 
   // Month labels
@@ -627,7 +960,10 @@ function generateSnakeSvg(username: string, calendar: any, theme: Theme): string
       const date = new Date(first.date);
       if (date.getDate() <= 7) {
         const x = startX + wi * pitch + cellSize / 2;
-        inner += `<text x="${x}" y="${startY - 9}" class="muted" text-anchor="middle">${months[date.getMonth()]}</text>`;
+        inner += safeText({
+          x, y: startY - 9, content: months[date.getMonth()], cls: 'muted',
+          maxWidth: pitch * 2, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+        });
       }
     }
   });
@@ -686,7 +1022,10 @@ function generateTypingSvg(username: string, bio?: string, theme?: Theme): strin
   const phraseDuration = 3;
 
   let inner = '';
-  inner += text(width / 2, height / 2 - 8, '', 'typing-text');
+  inner += safeText({
+    x: width / 2, y: height / 2 - 8, content: '', cls: 'typing-text',
+    maxWidth: width - 40, fontSize: 18, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+  });
 
   phrases.forEach((phrase, i) => {
     const start = i * phraseDuration;
@@ -726,7 +1065,10 @@ function generateStarHistorySvg(username: string, repos: any[], theme: Theme): s
   const maxStars = Math.max(...dataPoints.map(d => d.stars));
 
   let inner = '';
-  inner += text(width / 2, 28, `⭐ ${username}'s Star History`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 28, content: `⭐ ${username}'s Star History`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   inner += translate(margin.left, margin.top, `
     ${rect(0, 0, chartW, chartH, c.bgElevated, RADIUS.sm, c.border)}
@@ -750,12 +1092,15 @@ function generateStarHistorySvg(username: string, repos: any[], theme: Theme): s
       const x = (i / 11) * chartW;
       const y = chartH - (d.stars / maxStars) * chartH;
       return `<circle cx="${x}" cy="${y}" r="4" fill="${c.gold}" stroke="${c.bg}" stroke-width="2"/>
-        <text x="${x}" y="${y - 12}" text-anchor="middle" class="muted" font-size="9">${d.stars.toLocaleString()}</text>
-        <text x="${x}" y="${chartH + 18}" text-anchor="middle" class="muted" font-size="9">${d.month}</text>`;
+        ${safeText({ x, y: y - 12, content: d.stars.toLocaleString(), cls: 'muted',
+          maxWidth: chartW / 12, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
+        ${safeText({ x, y: chartH + 18, content: d.month, cls: 'muted',
+          maxWidth: chartW / 12, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}`;
     }).join('')}
   `);
 
-  inner += text(width / 2, height - 8, `Total: ${totalStars.toLocaleString()} stars across ${repos.length} repos`, 'muted');
+  inner += safeText({ x: width / 2, y: height - 8, content: `Total: ${totalStars.toLocaleString()} stars across ${repos.length} repos`, cls: 'muted',
+    maxWidth: width - 40, fontSize: 11, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
 
   return createSvg(width, height, `${username}'s Star History`, inner, theme);
 }
@@ -774,10 +1119,18 @@ function generateRepoCardSvg(repo: any, theme: Theme): string {
   const language = repo.primaryLanguage?.name || 'Unknown';
   const languageColor = repo.primaryLanguage?.color || c.emerald;
   const topics = (repo.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || []).slice(0, 5);
+  const padding = 30;
+  const contentWidth = width - padding * 2;
 
   let inner = '';
-  inner += text(30, 30, name, 'badge-title');
-  inner += text(30, 50, desc, 'label-lg');
+  inner += safeText({
+    x: padding, y: 30, content: name, cls: 'badge-title',
+    maxWidth: contentWidth, fontSize: 16, fontFamily: 'display', truncate: true
+  });
+  inner += safeText({
+    x: padding, y: 50, content: desc, cls: 'label-lg',
+    maxWidth: contentWidth, fontSize: 12, fontFamily: 'mono', truncate: true, maxLines: 2
+  });
 
   const stats = [
     { icon: '⭐', value: stars.toLocaleString(), label: 'Stars' },
@@ -785,20 +1138,24 @@ function generateRepoCardSvg(repo: any, theme: Theme): string {
     { icon: '🔤', value: language, label: 'Language', color: languageColor },
   ];
   stats.forEach((stat, i) => {
-    const x = 30 + i * 140;
+    const x = padding + i * 140;
+    const statWidth = 130;
     inner += translate(x, 75, `
-      <text x="0" y="0" class="label">${stat.icon} ${stat.value}</text>
-      <text x="0" y="16" class="muted" font-size="9">${stat.label}</text>
+      ${safeText({ x: 0, y: 0, content: `${stat.icon} ${stat.value}`, cls: 'label',
+        maxWidth: statWidth, fontSize: 11, fontFamily: 'mono', truncate: true })}
+      ${safeText({ x: 0, y: 16, content: stat.label, cls: 'muted',
+        maxWidth: statWidth, fontSize: 9, fontFamily: 'mono', truncate: true })}
     `);
   });
 
   if (topics.length > 0) {
-    let topicX = 30;
+    let topicX = padding;
     topics.forEach((topic: string) => {
       const w = topic.length * 7 + 16;
       inner += translate(topicX, 115, `
         ${rect(0, 0, w, 22, c.bgElevated, RADIUS.sm, c.borderLight)}
-        <text x="${w / 2}" y="15" text-anchor="middle" class="muted" font-size="9">#${topic}</text>
+        ${safeText({ x: w / 2, y: 15, content: `#${topic}`, cls: 'muted',
+          maxWidth: w - 8, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
       `);
       topicX += w + 8;
     });
@@ -823,7 +1180,10 @@ function generateLanguageDonutSvg(languages: any[], theme: Theme): string {
   const sorted = [...languages].sort((a, b) => (b.percentage || 0) - (a.percentage || 0)).slice(0, 6);
 
   let inner = '';
-  inner += text(width / 2, 30, 'Language Breakdown', 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: 'Language Breakdown', cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   let currentAngle = -90;
   sorted.forEach((lang, i) => {
@@ -845,17 +1205,25 @@ function generateLanguageDonutSvg(languages: any[], theme: Theme): string {
     </path>`;
 
     const legendY = 180 + i * 22;
+    const legendText = `${lang.name} ${lang.percentage.toFixed(1)}%`;
     inner += translate(60, legendY, `
       ${rect(0, 0, 14, 14, color, RADIUS.sm)}
-      <text x="22" y="11" class="label-lg">${lang.name} <tspan class="value-sm">${lang.percentage.toFixed(1)}%</tspan></text>
+      ${safeText({ x: 22, y: 11, content: legendText, cls: 'label-lg',
+        maxWidth: width - 100, fontSize: 11, fontFamily: 'mono', truncate: true })}
     `);
 
     currentAngle = endAngle;
   });
 
-  inner += `<text x="${centerX}" y="${centerY - 4}" text-anchor="middle" class="value" font-size="24">${total.toFixed(0)}%</text>`;
+  inner += safeText({
+    x: centerX, y: centerY - 4, content: `${total.toFixed(0)}%`, cls: 'value',
+    maxWidth: radius * 1.5, fontSize: 24, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+  });
 
-  inner += `<text x="${centerX}" y="${centerY + 20}" text-anchor="middle" class="muted" font-size="11">Languages</text>`;
+  inner += safeText({
+    x: centerX, y: centerY + 20, content: 'Languages', cls: 'muted',
+    maxWidth: radius * 1.5, fontSize: 11, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+  });
 
   return createSvg(width, height, 'Language Breakdown', inner, theme);
 }
@@ -870,19 +1238,23 @@ function generateSkillBubblesSvg(skills: string[], theme: Theme): string {
   const displaySkills = skills.slice(0, 15);
 
   let inner = '';
-  inner += text(width / 2, 30, 'Tech Stack', 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: 'Tech Stack', cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   displaySkills.forEach((skill, i) => {
     const angle = (i / displaySkills.length) * Math.PI * 2;
     const radius = 70 + (i % 3) * 30;
     const x = width / 2 + radius * Math.cos(angle);
     const y = height / 2 + radius * Math.sin(angle);
-    const w = skill.length * 8 + 24;
+    const w = Math.min(skill.length * 8 + 24, 180);
     const delay = i * 0.1;
 
     inner += translate(x - w / 2, y - 18, `
       ${rect(0, 0, w, 36, c.bgElevated, RADIUS.lg, c.borderLight, 1)}
-      <text x="${w / 2}" y="22" text-anchor="middle" class="label-lg">${skill}</text>
+      ${safeText({ x: w / 2, y: 22, content: skill, cls: 'label-lg',
+        maxWidth: w - 8, fontSize: 11, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
       <animate attributeName="opacity" values="0;1" dur="0.6s" begin="${delay}s" fill="freeze"/>
     `);
   });
@@ -900,13 +1272,20 @@ function generateAsciiBannerSvg(text_content: string, theme: Theme): string {
   const lines = text_content.split('\n');
   const charWidth = 8;
   const lineHeight = 18;
+  const maxContentWidth = width - 40;
 
   let inner = '';
-  inner += text(width / 2, 20, 'ASCII Banner', 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 20, content: 'ASCII Banner', cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   lines.forEach((line, i) => {
-    const x = (width - line.length * charWidth) / 2;
-    inner += `<text x="${x}" y="${50 + i * lineHeight}" class="ascii" fill="${c.emerald}" font-family="${FONTS.mono}" font-size="12" letter-spacing="1px">${line}</text>`;
+    const x = Math.max(20, (width - line.length * charWidth) / 2);
+    inner += safeText({
+      x, y: 50 + i * lineHeight, content: line, cls: 'ascii',
+      maxWidth: maxContentWidth, fontSize: 12, fontFamily: 'mono', truncate: true
+    });
   });
 
   return createSvg(width, height, 'ASCII Banner', inner + styleBlock(
@@ -928,7 +1307,10 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
   const startY = 50;
 
   let inner = '';
-  inner += text(width / 2, 28, `🔥 ${username}'s Streak: ${streak} Days`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 28, content: `🔥 ${username}'s Streak: ${streak} Days`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   weeks.slice(-7).forEach((week: any, weekIndex: number) => {
     week.contributionDays.forEach((day: any, dayIndex: number) => {
@@ -941,10 +1323,16 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
   });
 
   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((label, i) => {
-    inner += text(startX - 8, startY + i * (cellSize + cellGap) + cellSize / 2 + 3, label, 'muted');
+    inner += safeText({
+      x: startX - 8, y: startY + i * (cellSize + cellGap) + cellSize / 2 + 3, content: label, cls: 'muted',
+      maxWidth: startX - 12, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
+    });
   });
 
-  inner += text(width / 2, height - 20, 'Last 7 weeks • Green = active day', 'muted');
+  inner += safeText({
+    x: width / 2, y: height - 20, content: 'Last 7 weeks • Green = active day', cls: 'muted',
+    maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+  });
 
   return createSvg(width, height, `${username}'s Streak Calendar`, inner, theme);
 }
@@ -976,7 +1364,10 @@ function generateSkillRadarSvg(skills: Array<{ name: string; level: number; cate
   const angleStep = (Math.PI * 2) / count;
 
   let inner = '';
-  inner += text(width / 2, 30, 'Skill Radar', 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: 'Skill Radar', cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   // Grid lines (polygons)
   for (let l = 1; l <= levels; l++) {
@@ -1036,18 +1427,22 @@ function generateSkillRadarSvg(skills: Array<{ name: string; level: number; cate
       <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${i * 0.1}s" fill="freeze"/>
     </circle>`;
 
-    // Label
-    inner += `<text x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dx="${dx}" class="label" font-size="10">
-      <tspan fill="${c.textPrimary}" font-weight="bold">${skill.name}</tspan>
-      <tspan fill="${c.textMuted}" font-size="9"> ${skill.level}%</tspan>
-    </text>`;
+    // Label - safe with truncation
+    const maxLabelWidth = 80;
+    inner += safeText({
+      x: labelX, y: labelY, content: `${skill.name} ${skill.level}%`, cls: 'label',
+      maxWidth: maxLabelWidth, fontSize: 10, fontFamily: 'mono', textAnchor, truncate: true
+    });
   });
 
   // Level markers
   for (let l = 1; l <= levels; l++) {
     const radius = (l / levels) * maxRadius;
     const y = centerY - radius;
-    inner += `<text x="${centerX - 5}" y="${y + 4}" text-anchor="end" class="muted" font-size="8">${Math.round((l / levels) * 100)}%</text>`;
+    inner += safeText({
+      x: centerX - 5, y: y + 4, content: `${Math.round((l / levels) * 100)}%`, cls: 'muted',
+      maxWidth: 40, fontSize: 8, fontFamily: 'mono', textAnchor: 'end', truncate: true
+    });
     inner += `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="${c.borderLight}" stroke-width="0.5" opacity="0.3"/>`;
   }
 
@@ -1079,7 +1474,10 @@ function generateLanguageRaceSvg(username: string, languages: Array<{ name: stri
   const maxPct = Math.max(...sortedLangs.map(l => l.percentage));
 
   let inner = '';
-  inner += text(width / 2, 30, `📈 ${username}'s Language Evolution`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: `📈 ${username}'s Language Evolution`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   inner += translate(margin.left, margin.top, `
     ${sortedLangs.map((lang, i) => {
@@ -1090,7 +1488,8 @@ function generateLanguageRaceSvg(username: string, languages: Array<{ name: stri
       return `
         <g transform="translate(0, ${y})">
           <!-- Label -->
-          <text x="-10" y="${barH / 2 + 5}" text-anchor="end" class="label" font-size="11">${lang.name}</text>
+          ${safeText({ x: -10, y: barH / 2 + 5, content: lang.name, cls: 'label',
+            maxWidth: margin.left - 20, fontSize: 11, fontFamily: 'mono', textAnchor: 'end', truncate: true })}
           
           <!-- Background track -->
           <rect x="0" y="0" width="${chartW}" height="${barH}" rx="${barH/2}" fill="${c.bgElevated}" stroke="${c.borderLight}" stroke-width="0.5"/>
@@ -1101,7 +1500,8 @@ function generateLanguageRaceSvg(username: string, languages: Array<{ name: stri
           </rect>
           
           <!-- Percentage label (animated count-up) -->
-          <text x="${targetWidth + 8}" y="${barH / 2 + 5}" class="value-sm" font-size="11">${lang.percentage.toFixed(1)}%</text>
+          ${safeText({ x: targetWidth + 8, y: barH / 2 + 5, content: `${lang.percentage.toFixed(1)}%`, cls: 'value-sm',
+            maxWidth: 60, fontSize: 11, fontFamily: 'mono', truncate: true })}
           
           <!-- Shimmer effect -->
           <rect x="0" y="0" width="${targetWidth}" height="${barH}" rx="${barH/2}" fill="url(#shimmer-${i})" opacity="0.3">
@@ -1151,7 +1551,10 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
   });
 
   let inner = '';
-  inner += text(width / 2, 30, `🌌 ${username}'s Repo Constellation`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: `🌌 ${username}'s Repo Constellation`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   // Connections (lines to center - gravity)
   displayRepos.forEach((repo, i) => {
@@ -1164,6 +1567,7 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
   // Repo nodes
   displayRepos.forEach((repo, i) => {
     const size = Math.max(12, Math.min(40, 12 + Math.log10(repo.stars + 1) * 8));
+    const maxNameWidth = size * 4;
     
     inner += `<g transform="translate(${repo.x}, ${repo.y})">
       <!-- Orbit ring -->
@@ -1178,12 +1582,12 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
       </circle>
       
       <!-- Star count -->
-      <text x="0" y="4" text-anchor="middle" class="value-sm" font-size="${Math.max(8, size * 0.4)}">⭐ ${repo.stars.toLocaleString()}</text>
+      ${safeText({ x: 0, y: 4, content: `⭐ ${repo.stars.toLocaleString()}`, cls: 'value-sm',
+        maxWidth: size * 2, fontSize: Math.max(8, size * 0.4), fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
       
       <!-- Repo name (on hover area) -->
-      <text x="0" y="${-size - 6}" text-anchor="middle" class="label" font-size="9" opacity="0">${repo.name}
-        <set attributeName="opacity" to="1" begin="mouseover" end="mouseout"/>
-      </text>
+      ${safeText({ x: 0, y: -size - 6, content: repo.name, cls: 'label',
+        maxWidth: maxNameWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
     </g>`;
   });
 
@@ -1192,17 +1596,19 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
     <circle r="25" fill="${c.emerald}" stroke="${c.bg}" stroke-width="3">
       <animate attributeName="r" values="22;28;22" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </circle>
-    <text x="0" y="4" text-anchor="middle" class="value" font-size="14" fill="${c.bg}">${username}</text>
-    <text x="0" y="22" text-anchor="middle" class="muted" font-size="9">${displayRepos.length} Repos</text>
+    ${safeText({ x: 0, y: 4, content: username, cls: 'value',
+      maxWidth: 45, fontSize: 14, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
+    ${safeText({ x: 0, y: 22, content: `${displayRepos.length} Repos`, cls: 'muted',
+      maxWidth: 45, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
   </g>`;
 
   return createSvg(width, height, `${username}'s Repo Constellation`, inner, theme);
 }
 
 // ============================================================================
-// 16. CODE PULSE / HEARTBEAT (Real-time Activity Pulse)
+// 16. CODE PULSE / HEARTBEAT (Real-time Activity Pulse) - WITH VIEWER AWARENESS
 // ============================================================================
-function generateCodePulseSvg(username: string, stats: any, theme: Theme): string {
+function generateCodePulseSvg(username: string, stats: any, theme: Theme, viewer?: ViewerContext): string {
   const c = C(theme);
   const width = 400;
   const height = 200;
@@ -1213,8 +1619,29 @@ function generateCodePulseSvg(username: string, stats: any, theme: Theme): strin
   const streak = stats.streak || 42;
   const repos = stats.publicRepos || 56;
 
+  // Viewer-aware greeting
+  const viewerHour = viewer ? getViewerHour(viewer.timezone) : -1;
+  let greetingText = 'Code Pulse';
+  let greetingEmoji = '💓';
+  if (viewer && viewerHour >= 0) {
+    const greeting = getTimeGreeting(viewerHour);
+    greetingText = greeting.text;
+    greetingEmoji = greeting.emoji;
+  }
+
   let inner = '';
-  inner += text(width / 2, 30, `💓 ${username}'s Code Pulse`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: `${greetingEmoji} ${username}'s ${greetingText}`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
+  if (viewer && viewerHour >= 0) {
+    const location = viewer.city || viewer.region || viewer.country || 'Unknown';
+    const tz = viewer.timezone || 'UTC';
+    inner += safeText({
+      x: width / 2, y: 48, content: `Viewer: ${location} • ${tz} • ${viewerHour.toString().padStart(2, '0')}:00`, cls: 'muted',
+      maxWidth: width - 40, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+    });
+  }
 
   // Pulse rings
   for (let i = 0; i < 4; i++) {
@@ -1243,14 +1670,22 @@ function generateCodePulseSvg(username: string, stats: any, theme: Theme): strin
     const x = centerX + stat.dist * Math.cos(stat.angle);
     const y = centerY + stat.dist * Math.sin(stat.angle);
     const delay = i * 0.2;
+    const statRadius = 35;
+    const maxStatWidth = statRadius * 2 - 8;
 
     inner += `<g transform="translate(${x}, ${y})" opacity="0">
       <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${0.8 + delay}s" fill="freeze"/>
       <animate attributeName="transform" values="translate(${centerX}, ${centerY});translate(${x}, ${y})" dur="0.6s" begin="${0.8 + delay}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
       
-      <circle r="35" fill="${c.bgElevated}" stroke="${c.border}" stroke-width="1" rx="8"/>
-      <text x="0" y="-8" text-anchor="middle" class="value" font-size="16">${stat.icon} ${stat.value}</text>
-      <text x="0" y="10" text-anchor="middle" class="muted" font-size="9">${stat.label}</text>
+      <circle r="${statRadius}" fill="${c.bgElevated}" stroke="${c.border}" stroke-width="1" rx="8"/>
+      ${safeText({
+        x: 0, y: -8, content: `${stat.icon} ${stat.value}`, cls: 'value',
+        maxWidth: maxStatWidth, fontSize: 14, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+      })}
+      ${safeText({
+        x: 0, y: 10, content: stat.label, cls: 'muted',
+        maxWidth: maxStatWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+      })}
     </g>`;
   });
 
@@ -1303,7 +1738,10 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
   const startY = height - 50;
 
   let inner = '';
-  inner += text(width / 2, 30, `🏔️ ${username}'s Contribution Mountain`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: `🏔️ ${username}'s Contribution Mountain`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   // Draw from back to front for proper layering
   for (let r = rows - 1; r >= 0; r--) {
@@ -1372,7 +1810,8 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((label, i) => {
     const x = startX + i * (cellW / 2) - 20;
     const y = startY - i * (cellH / 2) + 10;
-    inner += `<text x="${x}" y="${y}" text-anchor="end" class="muted" font-size="8">${label}</text>`;
+    inner += safeText({ x, y, content: label, cls: 'muted',
+      maxWidth: 40, fontSize: 8, fontFamily: 'mono', textAnchor: 'end', truncate: true });
   });
 
   // Legend
@@ -1386,7 +1825,8 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
     const x = 30;
     const y = 60 + i * 20;
     inner += `<rect x="${x}" y="${y}" width="14" height="10" rx="2" fill="${item.color}"/>`;
-    inner += `<text x="${x + 20}" y="${y + 7}" class="muted" font-size="9">${item.label} contributions</text>`;
+    inner += safeText({ x: x + 20, y: y + 7, content: `${item.label} contributions`, cls: 'muted',
+      maxWidth: 100, fontSize: 9, fontFamily: 'mono', truncate: true });
   });
 
   return createSvg(width, height, `${username}'s Contribution Mountain`, inner, theme);
@@ -1412,7 +1852,10 @@ function generateTechGalaxySvg(skills: string[], theme: Theme): string {
   const skillCount = Math.min(displaySkills.length, 15);
 
   let inner = '';
-  inner += text(width / 2, 30, '🌌 Tech Stack Galaxy', 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 30, content: '🌌 Tech Stack Galaxy', cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   // Orbit rings
   for (let ring = 1; ring <= 3; ring++) {
@@ -1447,9 +1890,8 @@ function generateTechGalaxySvg(skills: string[], theme: Theme): string {
         <circle r="${size * 0.5}" fill="${color}"/>
         
         <!-- Label -->
-        <text x="${size + 6}" y="4" class="label" font-size="8" fill="${color}">${skill}
-          <set attributeName="opacity" to="1" begin="mouseover" end="mouseout"/>
-        </text>
+        ${safeText({ x: size + 6, y: 4, content: skill, cls: 'label',
+          maxWidth: 80, fontSize: 8, fontFamily: 'mono', truncate: true })}
       </g>
     </g>`;
   });
@@ -1460,7 +1902,8 @@ function generateTechGalaxySvg(skills: string[], theme: Theme): string {
       <animate attributeName="r" values="18;25;18" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </circle>
     <text x="0" y="5" text-anchor="middle" class="value" font-size="12" fill="${c.emerald}">★</text>
-    <text x="0" y="22" text-anchor="middle" class="muted" font-size="9">${skillCount} Technologies</text>
+    ${safeText({ x: 0, y: 22, content: `${skillCount} Technologies`, cls: 'muted',
+      maxWidth: 100, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
   </g>`;
 
   return createSvg(width, height, 'Tech Stack Galaxy', inner, theme);
@@ -1491,7 +1934,10 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
   ];
 
   let inner = '';
-  inner += text(width / 2, 28, `🌊 ${username}'s Contribution Flow`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 28, content: `🌊 ${username}'s Contribution Flow`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   inner += translate(margin.left, margin.top, `
     <!-- Time nodes (left) -->
@@ -1503,7 +1949,8 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
           <rect x="-140" y="-20" width="130" height="40" rx="6" fill="${c.bgElevated}" stroke="${c.emerald}" stroke-width="1">
             <animate attributeName="x" values="-200;-140" dur="0.6s" begin="${i * 0.1}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
           </rect>
-          <text x="-75" y="7" text-anchor="middle" class="label" font-size="10">${cat}</text>
+          ${safeText({ x: -75, y: 7, content: cat, cls: 'label',
+            maxWidth: 120, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
           <text x="-75" y="22" text-anchor="middle" class="value-sm" font-size="10">🌅</text>
         </g>
       `;
@@ -1518,7 +1965,8 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
           <rect x="-70" y="-20" width="140" height="40" rx="6" fill="${c.bgElevated}" stroke="${c.gold}" stroke-width="1">
             <animate attributeName="x" values="${chartW + 100};-70" dur="0.6s" begin="${0.5 + i * 0.1}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
           </rect>
-          <text x="0" y="7" text-anchor="middle" class="label" font-size="10">${cat}</text>
+          ${safeText({ x: 0, y: 7, content: cat, cls: 'label',
+            maxWidth: 130, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
           <text x="0" y="22" text-anchor="middle" class="value-sm" font-size="10">⚡</text>
         </g>
       `;
@@ -1533,7 +1981,8 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
           <rect x="0" y="-20" width="130" height="40" rx="6" fill="${c.bgElevated}" stroke="${c.red}" stroke-width="1">
             <animate attributeName="x" values="${chartW + 200};0" dur="0.6s" begin="${1 + i * 0.1}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
           </rect>
-          <text x="65" y="7" text-anchor="middle" class="label" font-size="9">${cat}</text>
+          ${safeText({ x: 65, y: 7, content: cat, cls: 'label',
+            maxWidth: 120, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
           <text x="65" y="22" text-anchor="middle" class="value-sm" font-size="9">📦</text>
         </g>
       `;
@@ -1587,20 +2036,25 @@ function generateCodeTimeHeatmapSvg(username: string, theme: Theme): string {
   };
 
   let inner = '';
-  inner += text(width / 2, 28, `🕐 ${username}'s Code Time Heatmap`, 'badge-title');
+  inner += safeText({
+    x: width / 2, y: 28, content: `🕐 ${username}'s Code Time Heatmap`, cls: 'badge-title',
+    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
 
   // Hour labels (top)
   hours.forEach((hour, i) => {
     if (hour % 3 === 0) {
       const x = startX + i * (cellSize + cellGap) + cellSize / 2;
-      inner += `<text x="${x}" y="${startY - 8}" text-anchor="middle" class="muted" font-size="8">${hour}:00</text>`;
+      inner += safeText({ x, y: startY - 8, content: `${hour}:00`, cls: 'muted',
+        maxWidth: cellSize * 3, fontSize: 8, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
     }
   });
 
   // Heatmap cells
   days.forEach((day, dayIdx) => {
     // Day label
-    inner += `<text x="${startX - 12}" y="${startY + dayIdx * (cellSize + cellGap) + cellSize / 2 + 4}" text-anchor="end" class="label" font-size="10">${day}</text>`;
+    inner += safeText({ x: startX - 12, y: startY + dayIdx * (cellSize + cellGap) + cellSize / 2 + 4, content: day, cls: 'label',
+      maxWidth: startX - 16, fontSize: 10, fontFamily: 'mono', textAnchor: 'end', truncate: true });
     
     hours.forEach((hour, hourIdx) => {
       const intensity = getIntensity(dayIdx, hour);
@@ -1634,17 +2088,19 @@ function generateCodeTimeHeatmapSvg(username: string, theme: Theme): string {
     const x = width - 100;
     const y = 60 + i * 24;
     inner += `<rect x="${x}" y="${y}" width="16" height="16" rx="3" fill="${item.color}"/>`;
-    inner += `<text x="${x + 22}" y="${y + 11}" class="muted" font-size="9">${item.label} activity</text>`;
+    inner += safeText({ x: x + 22, y: y + 11, content: `${item.label} activity`, cls: 'muted',
+      maxWidth: 70, fontSize: 9, fontFamily: 'mono', truncate: true });
   });
 
   // Stats
-  inner += `<text x="${width / 2}" y="${height - 15}" text-anchor="middle" class="muted" font-size="9">Green = coding intensity • Gold pulse = peak hours</text>`;
+  inner += safeText({ x: width / 2, y: height - 15, content: 'Green = coding intensity • Gold pulse = peak hours', cls: 'muted',
+    maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
 
   return createSvg(width, height, `${username}'s Code Time Heatmap`, inner, theme);
 }
 
 // ============================================================================
-// COMPOSITE CARD GENERATOR (NEW - One embed for everything)
+// COMPOSITE CARD GENERATOR (NEW - One embed for everything) - SAFE TEXT VERSION
 // ============================================================================
 function generateCompositeSvg(
   username: string,
@@ -1667,94 +2123,88 @@ function generateCompositeSvg(
   const height = headerH + cardH * 2 + gap + 40;
   const startX = 20;
   const startY = headerH + 20;
+  const panelPadding = 16;
+  const panelContentWidth = cardW - panelPadding * 2;
+  const halfPanelW = (cardW - panelPadding * 2 - 10) / 2; // Two columns with 10px gap
 
   let inner = '';
   
-  // Header
-  inner += text(width / 2, 35, `🐍 ${username}'s GitHub Pulse`, 'badge-title');
-  inner += `<text x="${width - 20}" y="35" class="muted" text-anchor="end" font-size="11">${new Date().getFullYear()} • ${stats.totalContributions.toLocaleString()} contributions</text>`;
+  // Header - safe title
+  inner += safeText({
+    x: width / 2, y: 35, content: `🐍 ${username}'s GitHub Pulse`, cls: 'badge-title',
+    maxWidth: width - 80, fontSize: 16, fontFamily: 'display', textAnchor: 'middle'
+  });
+  
+  // Header subtitle - safe
+  inner += safeText({
+    x: width - 20, y: 35, content: `${new Date().getFullYear()} • ${stats.totalContributions.toLocaleString()} contributions`, cls: 'muted',
+    maxWidth: width / 2 - 30, fontSize: 11, fontFamily: 'mono', textAnchor: 'end', truncate: true
+  });
   
   // Divider
   inner += `<line x1="20" y1="50" x2="${width - 20}" y2="50" stroke="${c.border}" stroke-width="1" opacity="0.5"/>`;
 
-  // Helper to draw a panel background
+  // Helper to draw a panel background with safe title
   const panel = (x: number, y: number, w: number, h: number, title: string, icon: string, content: string) => `
     <g transform="translate(${x}, ${y})">
       ${rect(0, 0, w, h, c.bgElevated, RADIUS.md, c.border)}
-      <text x="16" y="28" class="badge-title" font-size="14">${icon} ${title}</text>
-      <line x1="16" y1="34" x2="${w - 16}" y2="34" stroke="${c.border}" stroke-width="1" opacity="0.3"/>
+      ${safeText({
+        x: panelPadding, y: 28, content: `${icon} ${title}`, cls: 'badge-title',
+        maxWidth: w - panelPadding * 2, fontSize: 14, fontFamily: 'display', truncate: true
+      })}
+      <line x1="${panelPadding}" y1="34" x2="${w - panelPadding}" y2="34" stroke="${c.border}" stroke-width="1" opacity="0.3"/>
       <g transform="translate(0, 40)">${content}</g>
     </g>
   `;
 
+  // Helper for safe stat rows (2-column layout)
+  const statRow = (col: number, row: number, value: string, label: string, valueColor?: string, valueFontSize = 24) => {
+    const x = panelPadding + col * (halfPanelW + 10);
+    const y = row * 55;
+    const colorAttr = valueColor ? ` fill="${valueColor}"` : '';
+    return `
+      ${safeText({
+        x, y: y + 16, content: value, cls: 'value',
+        maxWidth: halfPanelW, fontSize: valueFontSize, fontFamily: 'mono', truncate: true
+      })}
+      ${safeText({
+        x, y: y + 34, content: label, cls: 'muted',
+        maxWidth: halfPanelW, fontSize: 10, fontFamily: 'mono', truncate: true
+      })}
+    `;
+  };
+
+  const totalStars = reposData.reduce((s, r) => s + (r.stargazerCount || 0), 0);
+
   // ===== PANEL 1: STATS (top-left) =====
   const statsContent = `
-    <g transform="translate(16, 0)">
-      <text x="0" y="16" class="value" font-size="28">${stats.publicRepos.toLocaleString()}</text>
-      <text x="0" y="34" class="muted" font-size="10">Public Repositories</text>
-    </g>
-    <g transform="translate(16, 55)">
-      <text x="0" y="16" class="value" font-size="28">${stats.followers.toLocaleString()}</text>
-      <text x="0" y="34" class="muted" font-size="10">Followers</text>
-    </g>
-    <g transform="translate(190, 0)">
-      <text x="0" y="16" class="value" font-size="28">${stats.topLanguage}</text>
-      <text x="0" y="34" class="muted" font-size="10">Top Language</text>
-    </g>
-    <g transform="translate(190, 55)">
-      <text x="0" y="16" class="value" font-size="28">${stats.streak}</text>
-      <text x="0" y="34" class="muted" font-size="10">Day Streak</text>
-    </g>
-    <g transform="translate(16, 110)">
-      <text x="0" y="16" class="value" font-size="28">${stats.totalContributions.toLocaleString()}</text>
-      <text x="0" y="34" class="muted" font-size="10">Total Contributions</text>
-    </g>
-    <g transform="translate(190, 110)">
-      <text x="0" y="16" class="value" font-size="28">${reposData.reduce((s, r) => s + (r.stargazerCount || 0), 0).toLocaleString()}</text>
-      <text x="0" y="34" class="muted" font-size="10">Total Stars</text>
-    </g>
+    ${statRow(0, 0, stats.publicRepos.toLocaleString(), 'Public Repositories')}
+    ${statRow(1, 0, stats.followers.toLocaleString(), 'Followers')}
+    ${statRow(0, 1, stats.topLanguage, 'Top Language', c.emerald, 20)}
+    ${statRow(1, 1, String(stats.streak), 'Day Streak', c.gold)}
+    ${statRow(0, 2, stats.totalContributions.toLocaleString(), 'Total Contributions', c.emerald)}
+    ${statRow(1, 2, totalStars.toLocaleString(), 'Total Stars', c.gold)}
   `;
   inner += panel(startX, startY, cardW, cardH, 'Stats', '📊', statsContent);
 
   // ===== PANEL 2: TROPHIES (top-right) =====
-  const starsCount = reposData.reduce((s, r) => s + (r.stargazerCount || 0), 0);
   const trophiesContent = `
-    <g transform="translate(16, 0)">
-      <text x="0" y="16" class="value" font-size="24" fill="${c.emerald}">${userData.public_repos.toLocaleString()}</text>
-      <text x="0" y="34" class="muted" font-size="10">Repositories</text>
-    </g>
-    <g transform="translate(16, 55)">
-      <text x="0" y="16" class="value" font-size="24" fill="${c.gold}">${userData.followers.toLocaleString()}</text>
-      <text x="0" y="34" class="muted" font-size="10">Followers</text>
-    </g>
-    <g transform="translate(16, 110)">
-      <text x="0" y="16" class="value" font-size="24" fill="${c.red}">${starsCount.toLocaleString()}</text>
-      <text x="0" y="34" class="muted" font-size="10">Stars Earned</text>
-    </g>
-    <g transform="translate(190, 0)">
-      <text x="0" y="16" class="value" font-size="24" fill="${c.emerald}">★</text>
-      <text x="0" y="34" class="muted" font-size="10">Starstruck</text>
-    </g>
-    <g transform="translate(190, 55)">
-      <text x="0" y="16" class="value" font-size="24" fill="${c.gold}">🔥</text>
-      <text x="0" y="34" class="muted" font-size="10">Streak</text>
-    </g>
-    <g transform="translate(190, 110)">
-      <text x="0" y="16" class="value" font-size="24" fill="${c.red}">💬</text>
-      <text x="0" y="34" class="muted" font-size="10">Pull Requests</text>
-    </g>
+    ${statRow(0, 0, userData.public_repos.toLocaleString(), 'Repositories', c.emerald, 22)}
+    ${statRow(1, 0, '★', 'Starstruck', c.emerald, 22)}
+    ${statRow(0, 1, userData.followers.toLocaleString(), 'Followers', c.gold, 22)}
+    ${statRow(1, 1, '🔥', 'Streak', c.gold, 22)}
+    ${statRow(0, 2, totalStars.toLocaleString(), 'Stars Earned', c.red, 22)}
+    ${statRow(1, 2, '💬', 'Pull Requests', c.red, 22)}
   `;
   inner += panel(startX + cardW + gap, startY, cardW, cardH, 'Trophies', '🏆', trophiesContent);
 
   // ===== PANEL 3: SNAKE (bottom-left) =====
-  // Mini snake - just the grid with a small animated snake
   const snakeGridSize = 8;
   const snakeCellSize = 8;
   const snakeGap = 1;
-  const snakeStartX = 16;
+  const snakeStartX = panelPadding;
   const snakeStartY = 0;
   
-  // Get contribution data for mini snake
   const weeks = calendar?.weeks || [];
   const maxCols = Math.min(24, weeks.length);
   const recentWeeks = weeks.slice(-maxCols);
@@ -1773,10 +2223,8 @@ function generateCompositeSvg(
     });
   });
 
-  // Simple snake animation path through active cells
   let snakeAnim = '';
   if (activeDays.length > 0) {
-    // Serpentine path
     const route: {col: number, row: number}[] = [];
     for (let r = 0; r < 7; r++) {
       const colsInRow = activeDays.filter(d => d.row === r).sort((a, b) => a.col - b.col);
@@ -1788,13 +2236,11 @@ function generateCompositeSvg(
       const cellCenterX = (col: number) => snakeStartX + col * (snakeCellSize + snakeGap) + snakeCellSize / 2;
       const cellCenterY = (row: number) => snakeStartY + row * (snakeCellSize + snakeGap) + snakeCellSize / 2;
       
-      // Build keyframes for mini snake
       const dur = Math.max(8, route.length * 0.2);
       let keyframes = `@keyframes mini-snake{`;
       const homeX = cellCenterX(route[0].col) - 15;
       const homeY = cellCenterY(route[0].row);
       
-      // Hold at start
       keyframes += `0%{transform:translate(${homeX}px,${homeY}px)}`;
       
       route.forEach((cell, i) => {
@@ -1802,7 +2248,6 @@ function generateCompositeSvg(
         keyframes += `${pct.toFixed(1)}%{transform:translate(${cellCenterX(cell.col)}px,${cellCenterY(cell.row)}px)}`;
       });
       
-      // Return home
       keyframes += `100%{transform:translate(${homeX}px,${homeY}px)}}`;
       snakeAnim = `<style>${keyframes}</style>`;
       
@@ -1815,17 +2260,19 @@ function generateCompositeSvg(
   const snakeContent = `
     ${snakeGrid}
     ${snakeAnim}
-    <text x="${cardW / 2}" y="${cardH - 20}" text-anchor="middle" class="muted" font-size="9">${activeDays.length} active days</text>
+    ${safeText({
+      x: cardW / 2, y: cardH - 20, content: `${activeDays.length} active days`, cls: 'muted',
+      maxWidth: panelContentWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+    })}
   `;
   inner += panel(startX, startY + cardH + gap, cardW, cardH, 'Snake', '🐍', snakeContent);
 
   // ===== PANEL 4: HEATMAP (bottom-right) =====
-  // Mini heatmap - compact version
   const hmCellSize = 6;
   const hmGap = 1;
-  const hmStartX = 16;
+  const hmStartX = panelPadding;
   const hmStartY = 0;
-  const hmWeeks = weeks.slice(-16); // Last 16 weeks
+  const hmWeeks = weeks.slice(-16);
   
   let hmGrid = '';
   hmWeeks.forEach((week: any, col: number) => {
@@ -1843,11 +2290,153 @@ function generateCompositeSvg(
   
   const heatmapContent = `
     ${hmGrid}
-    <text x="${cardW / 2}" y="${cardH - 20}" text-anchor="middle" class="muted" font-size="9">${totalContributions.toLocaleString()} contributions this year</text>
+    ${safeText({
+      x: cardW / 2, y: cardH - 20, content: `${totalContributions.toLocaleString()} contributions this year`, cls: 'muted',
+      maxWidth: panelContentWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+    })}
   `;
   inner += panel(startX + cardW + gap, startY + cardH + gap, cardW, cardH, 'Heatmap', '📅', heatmapContent);
 
   return createSvg(width, height, `${username}'s GitHub Pulse`, inner, theme);
+}
+
+// ============================================================================
+// VIEWER DETECTION & TIMEZONE HELPERS
+// ============================================================================
+interface ViewerContext {
+  ip?: string;
+  country?: string;
+  region?: string;
+  city?: string;
+  timezone?: string;
+  latitude?: string;
+  longitude?: string;
+  isVercelEdge: boolean;
+}
+
+function extractViewerContext(req: NextRequest): ViewerContext {
+  const headers = req.headers;
+  
+  // Vercel Edge headers
+  const vercelIp = headers.get('x-vercel-ip') || headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const vercelCountry = headers.get('x-vercel-ip-country');
+  const vercelRegion = headers.get('x-vercel-ip-country-region');
+  const vercelCity = headers.get('x-vercel-ip-city');
+  const vercelTimezone = headers.get('x-vercel-ip-timezone');
+  const vercelLat = headers.get('x-vercel-ip-latitude');
+  const vercelLon = headers.get('x-vercel-ip-longitude');
+  
+  // Cloudflare headers (if proxied through CF)
+  const cfCountry = headers.get('cf-ipcountry');
+  const cfRegion = headers.get('cf-region');
+  const cfCity = headers.get('cf-ipcity');
+  const cfTimezone = headers.get('cf-timezone');
+  const cfLat = headers.get('cf-iplatitude');
+  const cfLon = headers.get('cf-iplongitude');
+  
+  // Determine best available values
+  const country = vercelCountry || cfCountry || 'US';
+  const region = vercelRegion || cfRegion || '';
+  const city = vercelCity || cfCity || '';
+  const timezone = vercelTimezone || cfTimezone || guessTimezoneFromCountry(country);
+  const ip = vercelIp || '';
+  const latitude = vercelLat || cfLat || '';
+  const longitude = vercelLon || cfLon || '';
+  
+  return {
+    ip,
+    country,
+    region,
+    city,
+    timezone,
+    latitude,
+    longitude,
+    isVercelEdge: !!(vercelIp || vercelCountry),
+  };
+}
+
+// Guess timezone from country code (fallback)
+function guessTimezoneFromCountry(country: string): string {
+  const tzMap: Record<string, string> = {
+    'US': 'America/New_York',
+    'GB': 'Europe/London',
+    'DE': 'Europe/Berlin',
+    'FR': 'Europe/Paris',
+    'JP': 'Asia/Tokyo',
+    'CN': 'Asia/Shanghai',
+    'IN': 'Asia/Kolkata',
+    'AU': 'Australia/Sydney',
+    'CA': 'America/Toronto',
+    'BR': 'America/Sao_Paulo',
+    'KR': 'Asia/Seoul',
+    'SG': 'Asia/Singapore',
+    'NL': 'Europe/Amsterdam',
+    'ES': 'Europe/Madrid',
+    'IT': 'Europe/Rome',
+    'MX': 'America/Mexico_City',
+    'RU': 'Europe/Moscow',
+    'ZA': 'Africa/Johannesburg',
+  };
+  return tzMap[country.toUpperCase()] || 'UTC';
+}
+
+// Get current hour in viewer's timezone
+function getViewerHour(timezone: string | undefined): number {
+  const tz = timezone || 'UTC';
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      hour: 'numeric',
+      hour12: false,
+    });
+    return parseInt(formatter.format(now), 10);
+  } catch {
+    return new Date().getUTCHours(); // Fallback to UTC
+  }
+}
+
+// Get current weekday (0-6, Sunday=0) in viewer's timezone
+function getViewerWeekday(timezone: string | undefined): number {
+  const tz = timezone || 'UTC';
+  try {
+    const now = new Date();
+    // Use formatToParts to get weekday as number
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      weekday: 'short', // Returns 'Mon', 'Tue', etc.
+    });
+    const parts = formatter.formatToParts(now);
+    const weekdayStr = parts.find(p => p.type === 'weekday')?.value || '';
+    const weekdayMap: Record<string, number> = {
+      'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6,
+    };
+    return weekdayMap[weekdayStr] ?? new Date().getUTCDay();
+  } catch {
+    return new Date().getUTCDay();
+  }
+}
+
+// Get greeting based on viewer's local time
+function getTimeGreeting(hour: number): { text: string; emoji: string } {
+  if (hour >= 5 && hour < 12) return { text: 'Good morning', emoji: '🌅' };
+  if (hour >= 12 && hour < 17) return { text: 'Good afternoon', emoji: '☀️' };
+  if (hour >= 17 && hour < 22) return { text: 'Good evening', emoji: '🌆' };
+  return { text: 'Good night', emoji: '🌙' };
+}
+
+// Highlight current hour in heatmap data
+function highlightCurrentHour(heatmapData: number[][], timezone: string): number[][] {
+  const viewerHour = getViewerHour(timezone);
+  const highlighted = heatmapData.map(row => [...row]);
+  // Mark current hour column (0-23) with a special flag
+  // We'll use negative values to indicate "current hour" for styling
+  for (let day = 0; day < 7; day++) {
+    if (highlighted[day] && highlighted[day][viewerHour] !== undefined) {
+      highlighted[day][viewerHour] = -Math.abs(highlighted[day][viewerHour]) - 100; // Flag as current hour
+    }
+  }
+  return highlighted;
 }
 
 // ============================================================================
@@ -1890,6 +2479,11 @@ export async function GET(req: NextRequest) {
     if (!username) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });
     }
+
+    // Extract viewer context from edge headers (Vercel, Cloudflare)
+    const viewer = extractViewerContext(req);
+    const viewerHour = getViewerHour(viewer.timezone);
+    const greeting = getTimeGreeting(viewerHour);
 
     // Fetch profile data with caching and ETag support
     const { data: profileData, etag, fromCache } = await fetchProfileData(username, { token, userToken });
@@ -1948,7 +2542,7 @@ export async function GET(req: NextRequest) {
     else if (type === 'trophy') badgeSvg = generateTrophySvg(username, userData.public_repos, userData.followers, reposData.reduce((s, r) => s + (r.stargazerCount || 0), 0), theme);
     else if (type === 'activity') badgeSvg = generateActivityGraphSvg(username, theme);
     else if (type === 'visitor') badgeSvg = generateVisitorCardSvg(username, userData.followers, userData.public_repos, stats.totalContributions, theme);
-    else if (type === 'heatmap') badgeSvg = generateHeatmapSvg(username, demoCalendar, theme);
+    else if (type === 'heatmap') badgeSvg = generateHeatmapSvg(username, demoCalendar, theme, viewer);
     else if (type === 'snake') badgeSvg = generateSnakeSvg(username, demoCalendar, theme);
     else if (type === 'typing') badgeSvg = generateTypingSvg(username, userData.bio, theme);
     else if (type === 'star-history') badgeSvg = generateStarHistorySvg(username, reposData, theme);
@@ -1973,7 +2567,7 @@ export async function GET(req: NextRequest) {
     ], theme);
     else if (type === 'language-race') badgeSvg = generateLanguageRaceSvg(username, languagesData, theme);
     else if (type === 'repo-constellation') badgeSvg = generateRepoConstellationSvg(username, reposData, theme);
-    else if (type === 'code-pulse') badgeSvg = generateCodePulseSvg(username, stats, theme);
+    else if (type === 'code-pulse') badgeSvg = generateCodePulseSvg(username, stats, theme, viewer);
     else if (type === 'contribution-mountain') badgeSvg = generateContributionMountainSvg(username, demoCalendar, theme);
     else if (type === 'tech-galaxy') badgeSvg = generateTechGalaxySvg(['TypeScript', 'React', 'Next.js', 'Node.js', 'Rust', 'Go', 'Python', 'PostgreSQL', 'Docker', 'GraphQL', 'TailwindCSS', 'Kubernetes', 'AWS', 'Redis', 'WebGL'], theme);
     else if (type === 'contribution-flow') badgeSvg = generateContributionFlowSvg(username, reposData, theme);
@@ -2021,6 +2615,9 @@ export async function GET(req: NextRequest) {
         'Content-Type': 'image/svg+xml',
         'ETag': etag,
         'Cache-Control': 'public, max-age=21600, stale-while-revalidate=21600', // 6 hours
+        'X-Viewer-Country': viewer.country || 'unknown',
+        'X-Viewer-Timezone': viewer.timezone || 'unknown',
+        'X-Viewer-Hour': String(getViewerHour(viewer.timezone)),
       },
     });
   } catch (error: any) {

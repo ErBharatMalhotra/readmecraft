@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { AppMode } from '@/types/readmecraft';
+import Link from 'next/link';
 import {
   Sparkles,
   Terminal,
@@ -14,9 +15,10 @@ import {
   Star,
   Menu,
   X,
+  Rocket,
 } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-client';
 
 interface HeaderProps {
   mode: AppMode;
@@ -37,10 +39,15 @@ export const Header: React.FC<HeaderProps> = ({
   onImportJson,
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const { data: session, status } = useSession();
+  const { session, status } = useAuth();
   const [starred, setStarred] = useState<boolean>(false);
   const [starring, setStarring] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Debug: Log auth state changes
+  React.useEffect(() => {
+    console.log('[Header] Auth state:', { status, session: session ? 'exists' : 'null', user: session?.user?.login });
+  }, [status, session]);
 
   const handleStar = async () => {
     if (!session || starring) return;
@@ -86,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Center: Mode Switcher + Star Button */}
+        {/* Center: Mode Switcher + Star Button + Deploy */}
         <div className="flex flex-col items-center gap-3 md:flex-row md:items-center w-full md:w-auto">
           {/* Dual Mode Switcher */}
           <div className="flex items-center rounded-xl border border-[#1e293b] bg-[#0e1526] p-1 shadow-inner">
@@ -132,6 +139,18 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
           )}
+
+          {/* Deploy Button - only when authenticated */}
+          {status === 'authenticated' && session && (
+            <Link
+              href="/deploy"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-bold text-slate-950 transition-all hover:from-emerald-400 hover:to-emerald-500 hover:shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+              title="Deploy your README to GitHub Profile"
+            >
+              <Rocket className="h-4 w-4" />
+              <span className="hidden sm:inline">Deploy</span>
+            </Link>
+          )}
         </div>
 
         {/* Right: Auth + Overflow Menu */}
@@ -150,6 +169,17 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Desktop: Overflow Menu */}
           <div className={`flex items-center gap-1 ${mobileMenuOpen ? 'md:hidden' : 'hidden md:flex'}`}>
+            {/* Deploy Link in Overflow Menu (for mobile/small screens) */}
+            {status === 'authenticated' && session && (
+              <Link
+                href="/deploy"
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20 hover:border-emerald-500 hover:shadow-[0_0_8px_rgba(16,185,129,0.2)]"
+              >
+                <Rocket className="h-3.5 w-3.5" />
+                <span>Deploy</span>
+              </Link>
+            )}
+
             {/* Ecosystem Links */}
             <div className="relative group">
               <button className="flex items-center gap-1.5 rounded-lg border border-[#1e293b] bg-[#0e1526] px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white">
@@ -213,6 +243,16 @@ export const Header: React.FC<HeaderProps> = ({
         {mobileMenuOpen && (
           <div className="md:hidden w-full border-t border-[#1e293b] pt-4 mt-4">
             <div className="space-y-2">
+              {status === 'authenticated' && session && (
+                <Link
+                  href="/deploy"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 w-full rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-sm font-bold text-slate-950"
+                >
+                  <Rocket className="h-4 w-4" />
+                  <span>Deploy to GitHub Profile</span>
+                </Link>
+              )}
               <div className="rounded-lg border border-[#1e293b] bg-[#0e1526] p-2">
                 <p className="font-mono text-xs text-slate-500 uppercase mb-2">Ecosystem</p>
                 <a href="https://githolo.bharatdn.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400">
