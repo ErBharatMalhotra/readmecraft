@@ -3,7 +3,7 @@
 > **Production:** `https://readme.bharatdn.com`
 > **Ecosystem:** `githolo.bharatdn.com` · `gitchronicle.bharatdn.com`
 > **Repository:** `ErBharatMalhotra/readmecraft`
-> **License:** MIT
+> **License:** AGPL-3.0
 > **Author:** Bharat Malhotra (`ErBharatMalhotra`)
 
 ---
@@ -401,121 +401,8 @@ src/
 
 ---
 
-## 🛡️ Protecting Your Open Source Work
-
-You asked how to prevent others from copying your code and claiming it as theirs. Here's a practical strategy:
-
-### 1. **License with Teeth (Choose Wisely)**
-
-| License | Protection Level | Best For |
-|---------|------------------|----------|
-| **MIT** | ⚠️ Minimal — allows commercial use, modification, private forks | Maximum adoption |
-| **Apache 2.0** | ✅ Patent grant, requires attribution | Enterprise-friendly |
-| **GPL v3** | ✅ **Strong** — derivatives must be open source | Preventing proprietary forks |
-| **AGPL v3** | ✅ **Strongest** — covers SaaS/network use | Cloud-hosted tools |
-| **BSL / SSPL** | ✅ Source available, restricts commercial SaaS | Business models |
-
-**Recommendation for ReadmeCraft:** **AGPL v3** or **GPL v3** — forces anyone hosting a modified version as a service to share their changes.
-
-### 2. **Trademark Your Brand**
-
-- Register **ReadmeCraft** as a trademark (word mark + logo)
-- Add `TRADEMARK.md` stating: "ReadmeCraft™ is a trademark of Bharat Malhotra"
-- Prevents others from using your name/logo for their fork
-
-### 3. **Signed Commits + Provenance**
-
-```bash
-# Enable git commit signing
-git config --global commit.gpgsign true
-git config --global user.signingkey <KEY_ID>
-
-# Every commit shows "Verified" on GitHub
-# Proves authorship cryptographically
-```
-
-### 4. **Supply Chain Attestation (SLSA)**
-
-```yaml
-# .github/workflows/release.yml
-- uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
-```
-Generates **provenance attestations** — cryptographic proof of build source.
-
-### 5. **Dependabot + CodeQL + Secret Scanning**
-
-```yaml
-# .github/dependabot.yml + codeql-analysis.yml
-# Catches vulnerabilities + prevents secret leaks in forks
-```
-
-### 6. **Release Assets with Checksums**
-
-```bash
-# On every release
-sha256sum dist/* > SHA256SUMS
-gpg --clearsign SHA256SUMS
-# Users verify: gpg --verify SHA256SUMS.asc && sha256sum -c SHA256SUMS
-```
-
-### 7. **Commercial License Option (Dual Licensing)**
-
-```
-README.md:
-## License
-This project is licensed under AGPL-3.0.
-For commercial/private use without open-sourcing your modifications,
-contact bharat@bharatdn.com for a commercial license.
-```
-
-### 8. **What You CAN'T Prevent**
-
-| Myth | Reality |
-|------|---------|
-| "No one can copy my code" | ❌ Git is designed for forking |
-| "License stops theft" | ❌ Only enforceable in court (expensive) |
-| "Obfuscation helps" | ❌ JS is always readable; minification ≠ protection |
-
-### 9. **What ACTUALLY Works**
-
-| Strategy | Effort | Effectiveness |
-|----------|--------|---------------|
-| **AGPL/GPL** | Low | High — legal obligation to share changes |
-| **Trademark** | Medium | High — protects brand identity |
-| **Build community** | High | Highest — users prefer original |
-| **Move fast** | High | High — forks lag behind |
-| **Hosted SaaS** | High | Highest — code never leaves your server |
-
-### 10. **My Recommendation for You**
-
-```markdown
-# Add to your README.md
-
-## ⚖️ License
-
-**AGPL-3.0** — This project is licensed under the GNU Affero General Public License v3.0.
-
-> **What this means:** If you modify ReadmeCraft and offer it as a service (SaaS, hosted tool, API), 
-> you MUST provide your modified source code to users under the same license.
-> 
-> For commercial/private use without open-sourcing changes, 
-> [contact for a commercial license](mailto:bharat@bharatdn.com).
-
-## 🛡️ Trademark
-
-**ReadmeCraft™** and the **ReadmeCraft logo** are trademarks of Bharat Malhotra.
-Unauthorized use in derivative works, forks, or competing services is prohibited.
-
-## ✅ Verification
-
-All releases are signed and include SLSA provenance attestations.
-Verify with: `gpg --verify SHA256SUMS.asc && sha256sum -c SHA256SUMS`
-```
-
----
-
 ## 📜 License
 
 **AGPL-3.0** © Bharat Malhotra (`ErBharatMalhotra`)
 
-> **Note:** This project was previously MIT. Changed to AGPL-3.0 to protect against commercial forks that don't contribute back. If you need a commercial license for private/proprietary use, contact `bharat@bharatdn.com`.
+> **Note:** This project is licensed under AGPL-3.0. If you modify ReadmeCraft and offer it as a service (SaaS, hosted tool, API), you MUST provide your modified source code to users under the same license. For commercial/private use without open-sourcing changes, contact `bharat@bharatdn.com`.
