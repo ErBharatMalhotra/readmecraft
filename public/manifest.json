@@ -1,0 +1,59 @@
+{
+  "name": "ReadmeCraft",
+  "short_name": "ReadmeCraft",
+  "description": "Intelligent Dual-Mode GitHub README Studio for Developer Profiles & Repositories",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-readmecraft.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-readmecraft.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-readmecraft.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["developer", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Create Profile README",
+      "short_name": "Profile",
+      "description": "Create a GitHub Profile README",
+      "url": "/?mode=profile",
+      "icons": [{ "src": "/icon-readmecraft.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Create Project README",
+      "short_name": "Project",
+      "description": "Create a Repository/Project README",
+      "url": "/?mode=project",
+      "icons": [{ "src": "/icon-readmecraft.svg", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "web",
+      "url": "https://githolo.bharatdn.com"
+    },
+    {
+      "platform": "web",
+      "url": "https://gitchronicle.bharatdn.com"
+    }
+  ],
+  "prefer_related_applications": false
+}

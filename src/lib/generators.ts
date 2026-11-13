@@ -32,9 +32,9 @@ export function getProfileSections(data: ProfileData, preset: ProfilePreset): Se
 
 <div align="center">
 
-${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.vercel.app/api/og/${username})](https://githolo.bharatdn.com)` : ''}
+${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.bharatdn.com/api/og/${username})](https://githolo.bharatdn.com)` : ''}
 
-${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/${username}.svg)](https://gitchronicle.bharatdn.com)` : ''}
+${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bharatdn.com/badge/${username}.svg)](https://gitchronicle.bharatdn.com)` : ''}
 
 </div>`,
       },
@@ -126,9 +126,9 @@ ${data.pinnedRepos.map((repo) => `- **[${repo.name}](${repo.url})** — ${repo.d
 
 <div align="center">
 
-${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.vercel.app/api/og/${username})](https://githolo.bharatdn.com)` : ''}
+${data.gitHoloEnabled ? `[![GitHolo 3D Card](https://githolo.bharatdn.com/api/og/${username})](https://githolo.bharatdn.com)` : ''}
 
-${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/${username}.svg)](https://gitchronicle.bharatdn.com)` : ''}
+${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bharatdn.com/badge/${username}.svg)](https://gitchronicle.bharatdn.com)` : ''}
 
 </div>`,
       },

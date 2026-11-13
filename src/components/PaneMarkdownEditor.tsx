@@ -165,7 +165,7 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
         <button
           onClick={() =>
             insertSnippet(
-              `[![GitHolo 3D Card](https://githolo.vercel.app/api/og/${activeUsername})](https://githolo.bharatdn.com)\n`
+              `[![GitHolo 3D Card](https://githolo.bharatdn.com/api/og/${activeUsername})](https://githolo.bharatdn.com)\n`
             )
           }
           className="flex items-center gap-1 rounded border border-emerald-500/30 bg-[#0e1526] px-2 py-1 font-mono text-[10px] text-emerald-400 transition-colors hover:bg-[#131c31] hover:text-emerald-300"
@@ -178,7 +178,7 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
         <button
           onClick={() =>
             insertSnippet(
-              `[![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/${activeUsername}.svg)](https://gitchronicle.bharatdn.com)\n`
+              `[![GitChronicle Cadence](https://gitchronicle.bharatdn.com/badge/${activeUsername}.svg)](https://gitchronicle.bharatdn.com)\n`
             )
           }
           className="flex items-center gap-1 rounded border border-emerald-500/30 bg-[#0e1526] px-2 py-1 font-mono text-[10px] text-emerald-400 transition-colors hover:bg-[#131c31] hover:text-emerald-300"

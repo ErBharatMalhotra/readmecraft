@@ -63,13 +63,13 @@ export const ExportToolbar: React.FC<ExportToolbarProps> = ({
   };
 
   const handleCopyGitHolo = async () => {
-    const snippet = `[![GitHolo 3D Card](https://githolo.vercel.app/api/og/${activeUsername})](https://githolo.bharatdn.com)`;
+    const snippet = `[![GitHolo 3D Card](https://githolo.bharatdn.com/api/og/${activeUsername})](https://githolo.bharatdn.com)`;
     await navigator.clipboard.writeText(snippet);
     showToast('Copied GitHolo 3D Card snippet! 🌌');
   };
 
   const handleCopyGitChronicle = async () => {
-    const snippet = `[![GitChronicle Cadence](https://gitchronicle-wheat.vercel.app/badge/${activeUsername}.svg)](https://gitchronicle.bharatdn.com)`;
+    const snippet = `[![GitChronicle Cadence](https://gitchronicle.bharatdn.com/badge/${activeUsername}.svg)](https://gitchronicle.bharatdn.com)`;
     await navigator.clipboard.writeText(snippet);
     showToast('Copied GitChronicle Cadence badge snippet! 📈');
   };

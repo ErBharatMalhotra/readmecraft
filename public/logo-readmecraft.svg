@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="ReadmeCraft">
+  <!-- Deep obsidian background -->
+  <rect width="512" height="512" rx="64" fill="#090d16"/>
+  <!-- Titanium border -->
+  <rect x="2" y="2" width="508" height="508" rx="62" fill="none" stroke="#1e293b" stroke-width="4"/>
+  
+  <!-- Inner glow -->
+  <defs>
+    <filter id="innerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="emeraldGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feFlood flood-color="#10b981" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Main symbol: <> brackets merged with pen nib -->
+  <g transform="translate(256, 256)" filter="url(#innerGlow)">
+    <!-- Left bracket < -->
+    <path 
+      d="M -96 0 L -32 -48 L -32 48 Z" 
+      fill="#10b981" 
+      opacity="0.95"
+    />
+    <!-- Pen nib (center) -->
+    <path 
+      d="M -8 -8 L 0 24 L 8 -8 Z" 
+      fill="#10b981" 
+      filter="url(#emeraldGlow)"
+    />
+    <!-- Right bracket > -->
+    <path 
+      d="M 96 0 L 32 -48 L 32 48 Z" 
+      fill="#10b981" 
+      opacity="0.95"
+    />
+    <!-- Cursor line (subtle) -->
+    <rect x="-2" y="-60" width="4" height="100" fill="#10b981" opacity="0.3" rx="2">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- Typography: "ReadmeCraft" -->
+  <text x="256" y="420" text-anchor="middle" font-family="'Space Grotesk', 'Segoe UI', sans-serif" font-weight="700" font-size="36" fill="#f1f5f9" letter-spacing="0.5">
+    <tspan fill="#10b981">Readme</tspan><tspan fill="#94a3b8">Craft</tspan>
+  </text>
+
+  <!-- Subtle tagline -->
+  <text x="256" y="458" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#64748b" letter-spacing="2.5" text-transform="uppercase">
+    GitHub README Studio
+  </text>
+</svg>
