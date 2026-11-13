@@ -44,93 +44,36 @@ export function clearCache(): void {
 }
 
 // ============================================================================
-// MOCK FALLBACK DATA FOR RATE LIMIT RESILIENCE
+// MOCK FALLBACK DATA FOR RATE LIMIT RESILIENCE (GENERIC - NO HARDCODED USER DATA)
 // ============================================================================
 
 function getMockProfileData(username: string): ProfileDataRaw {
   return {
     login: username,
-    name: username === 'ErBharatMalhotra' ? 'Bharat Malhotra' : username,
-    bio: 'Full-stack software architect building high-performance developer tools & scalable systems.',
-    avatarUrl: `https://avatars.githubusercontent.com/u/9919?v=4`,
-    company: 'BharatDN',
-    location: 'New Delhi, India',
-    websiteUrl: 'https://bharatdn.com',
-    twitterUsername: 'ErBharatMalhotra',
+    name: username,
+    bio: 'Developer & Open Source Contributor',
+    avatarUrl: `https://avatars.githubusercontent.com/${username}?v=4`,
+    company: null,
+    location: null,
+    websiteUrl: null,
+    twitterUsername: null,
     url: `https://github.com/${username}`,
-    repositories: { totalCount: 42 },
-    followers: { totalCount: 1337 },
-    following: { totalCount: 256 },
+    repositories: { totalCount: 0 },
+    followers: { totalCount: 0 },
+    following: { totalCount: 0 },
     contributionsCollection: {
       contributionCalendar: {
-        totalContributions: 3551,
+        totalContributions: 0,
         weeks: Array.from({ length: 53 }, (_, w) => ({
-          contributionDays: Array.from({ length: 7 }, (_, d) => ({
-            contributionCount: (w + d) % 5 === 0 ? Math.floor(Math.random() * 8) : 0,
-            date: new Date(Date.now() - (53 - w) * 7 * 86400000 - (6 - d) * 86400000).toISOString().split('T')[0],
+          contributionDays: Array.from({ length: 7 }, () => ({
+            contributionCount: 0,
+            date: new Date(Date.now() - (53 - w) * 7 * 86400000).toISOString().split('T')[0],
           })),
         })),
       },
     },
-    reposList: {
-      nodes: [
-        {
-          name: 'readmecraft',
-          description: 'Intelligent dual-mode GitHub README Studio',
-          url: `https://github.com/${username}/readmecraft`,
-          stargazerCount: 1205,
-          primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
-          forkCount: 148,
-          isFork: false,
-          languages: { nodes: [{ name: 'TypeScript', size: 50000, color: '#3178c6' }] },
-        },
-        {
-          name: 'githolo',
-          description: '3D Holographic GitHub Profile & Repository Cards',
-          url: `https://github.com/${username}/githolo`,
-          stargazerCount: 842,
-          primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
-          forkCount: 92,
-          isFork: false,
-          languages: { nodes: [{ name: 'TypeScript', size: 40000, color: '#3178c6' }] },
-        },
-        {
-          name: 'gitchronicle',
-          description: 'Live percentile cadence badges and commit velocity telemetry',
-          url: `https://github.com/${username}/gitchronicle`,
-          stargazerCount: 512,
-          primaryLanguage: { name: 'Rust', color: '#dea584' },
-          forkCount: 45,
-          isFork: false,
-          languages: { nodes: [{ name: 'Rust', size: 30000, color: '#dea584' }] },
-        },
-      ],
-    },
-    pinnedItems: {
-      nodes: [
-        {
-          name: 'readmecraft',
-          description: 'Intelligent dual-mode GitHub README Studio',
-          url: `https://github.com/${username}/readmecraft`,
-          stargazerCount: 1205,
-          primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
-        },
-        {
-          name: 'githolo',
-          description: '3D Holographic GitHub Profile & Repository Cards',
-          url: `https://github.com/${username}/githolo`,
-          stargazerCount: 842,
-          primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
-        },
-        {
-          name: 'gitchronicle',
-          description: 'Live percentile cadence badges and commit velocity telemetry',
-          url: `https://github.com/${username}/gitchronicle`,
-          stargazerCount: 512,
-          primaryLanguage: { name: 'Rust', color: '#dea584' },
-        },
-      ],
-    },
+    reposList: { nodes: [] },
+    pinnedItems: { nodes: [] },
   };
 }
 
@@ -432,17 +375,17 @@ export async function fetchRepoData(
       console.warn('Repo GraphQL failed, using fallback mock repo:', error);
       const data: RepoDataRaw = {
         name: repo,
-        description: 'High-performance repository built with ReadmeCraft',
+        description: 'Repository',
         url: `https://github.com/${owner}/${repo}`,
-        stargazerCount: 1205,
-        forkCount: 148,
-        openIssues: { totalCount: 12 },
-        primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
+        stargazerCount: 0,
+        forkCount: 0,
+        openIssues: { totalCount: 0 },
+        primaryLanguage: null,
         defaultBranchRef: { name: 'main' },
-        licenseInfo: { spdxId: 'MIT' },
-        homepageUrl: `https://github.com/${owner}/${repo}`,
-        languages: { nodes: [{ name: 'TypeScript', size: 50000, color: '#3178c6' }] },
-        repositoryTopics: { nodes: [{ topic: { name: 'readmecraft' } }] },
+        licenseInfo: null,
+        homepageUrl: null,
+        languages: { nodes: [] },
+        repositoryTopics: { nodes: [] },
       };
       const etag = getETag(data);
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });

@@ -201,8 +201,8 @@ export async function fetchGitHubProfile(
       publicRepos: userData.repositories?.totalCount || 0,
       followers: userData.followers?.totalCount || 0,
       following: userData.following?.totalCount || 0,
-      languages: languages.length > 0 ? languages : SAMPLE_PROFILE.languages,
-      pinnedRepos: finalPinned.length > 0 ? finalPinned : SAMPLE_PROFILE.pinnedRepos,
+      languages: languages.length > 0 ? languages : [],
+      pinnedRepos: finalPinned.length > 0 ? finalPinned : [],
       skills: languages.map((l) => l.name).concat(['Git', 'Docker', 'REST APIs', 'CI/CD']),
       gitHoloEnabled: true,
       gitChronicleEnabled: true,
@@ -263,8 +263,8 @@ export async function fetchGitHubProfile(
         publicRepos: userData.public_repos,
         followers: userData.followers,
         following: userData.following,
-        languages: languages.length > 0 ? languages : SAMPLE_PROFILE.languages,
-        pinnedRepos: pinnedRepos.length > 0 ? pinnedRepos : SAMPLE_PROFILE.pinnedRepos,
+        languages: languages.length > 0 ? languages : [],
+        pinnedRepos: pinnedRepos.length > 0 ? pinnedRepos : [],
         skills: languages.map((l) => l.name).concat(['Git', 'Docker', 'REST APIs', 'CI/CD']),
         gitHoloEnabled: true,
         gitChronicleEnabled: true,
@@ -274,11 +274,29 @@ export async function fetchGitHubProfile(
         topLanguagesEnabled: true,
       };
     } catch (fallbackError) {
-      console.warn('REST API fallback also failed, using sample data:', fallbackError);
+      console.warn('REST API fallback also failed, returning minimal profile:', fallbackError);
       return {
-        ...SAMPLE_PROFILE,
-        username: username || SAMPLE_PROFILE.username,
-        name: username || SAMPLE_PROFILE.name,
+        username,
+        name: username,
+        bio: 'Developer & Open Source Contributor',
+        avatarUrl: `https://avatars.githubusercontent.com/${username}?v=4`,
+        company: '',
+        location: '',
+        website: '',
+        twitter: '',
+        githubUrl: `https://github.com/${username}`,
+        publicRepos: 0,
+        followers: 0,
+        following: 0,
+        languages: [],
+        pinnedRepos: [],
+        skills: ['Git', 'Docker', 'REST APIs', 'CI/CD'],
+        gitHoloEnabled: true,
+        gitChronicleEnabled: true,
+        visitorBadgeEnabled: true,
+        githubStatsEnabled: true,
+        githubStreakEnabled: true,
+        topLanguagesEnabled: true,
       };
     }
   }
@@ -293,17 +311,18 @@ export async function fetchGitHubProject(
     return SAMPLE_PROJECT;
   }
 
-  try {
-    let cleanSlug = repoUrlOrSlug.trim();
-    if (cleanSlug.includes('github.com/')) {
-      const parts = cleanSlug.split('github.com/')[1].split('/');
-      cleanSlug = `${parts[0]}/${parts[1]}`;
-    }
+  let cleanSlug = repoUrlOrSlug.trim();
+  if (cleanSlug.includes('github.com/')) {
+    const parts = cleanSlug.split('github.com/')[1].split('/');
+    cleanSlug = `${parts[0]}/${parts[1]}`;
+  }
 
-    const [owner, repo] = cleanSlug.split('/');
-    if (!owner || !repo) {
-      throw new Error('Invalid repository format. Use owner/repo or GitHub URL.');
-    }
+  const [owner, repo] = cleanSlug.split('/');
+  if (!owner || !repo) {
+    throw new Error('Invalid repository format. Use owner/repo or GitHub URL.');
+  }
+
+  try {
 
     const { data } = await fetchRepoData(owner, repo, { token, userToken });
     const repoData = data;
@@ -460,8 +479,30 @@ export async function fetchGitHubProject(
         gitChronicleEnabled: true,
       };
     } catch (fallbackError) {
-      console.warn('REST API fallback also failed, using sample data:', fallbackError);
-      return SAMPLE_PROJECT;
+      console.warn('REST API fallback also failed, returning minimal project:', fallbackError);
+      return {
+        owner,
+        repo,
+        title: repo,
+        description: 'Repository',
+        license: 'MIT',
+        defaultBranch: 'main',
+        stars: 0,
+        forks: 0,
+        openIssues: 0,
+        language: 'TypeScript',
+        framework: 'TypeScript',
+        packageManager: 'npm',
+        installCommand: 'npm install',
+        runCommand: 'npm run dev',
+        testCommand: 'npm test',
+        features: [],
+        techStack: ['TypeScript', 'Git', 'GitHub Actions'],
+        architectureDiagram: '',
+        demoUrl: `https://github.com/${owner}/${repo}`,
+        gitHoloEnabled: true,
+        gitChronicleEnabled: true,
+      };
     }
   }
 }
