@@ -233,7 +233,7 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bhar
 
 <table>
   <tr>
-    <td width="50%" valign="top">
+    <td width="50%" align="top">
       <h4>⚡ Focus & Principles</h4>
       <ul>
         <li>🔭 High-performance web apps & distributed systems</li>
@@ -249,7 +249,7 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bhar
         <li>Zero-Dependency Mindset</li>
       </ul>
     </td>
-    <td width="50%" valign="top">
+    <td width="50%" align="top">
       <h4>🔥 Top Languages (Real Repo Bytes)</h4>
       ${data.languages.map((l) => `- **${l.name}** \`${l.percentage}%\``).join('\n      ')}
     </td>

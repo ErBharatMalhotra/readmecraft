@@ -198,7 +198,7 @@ export default function TemplatesPage() {
     };
 
     try {
-      localStorage.setItem('readmecraft_state', JSON.stringify(stateToSave));
+      localStorage.setItem('readmecraft_saved_state_v2', JSON.stringify(stateToSave));
       localStorage.setItem('readmecraft-theme', template.theme);
     } catch (e) {}
 

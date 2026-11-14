@@ -42,6 +42,7 @@ interface PaneSectionManagerProps {
   theme?: string;
   setTheme?: (theme: string) => void;
   onReorderSections?: (sections: Section[]) => void;
+  isHydrated?: boolean;
 }
 
 const CATEGORY_TABS: { id: string; label: string; icon: string }[] = [
@@ -84,6 +85,7 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
   theme = 'gta6',
   setTheme,
   onReorderSections,
+  isHydrated = false,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
@@ -282,7 +284,7 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
               <Palette className="h-3.5 w-3.5 text-emerald-400" />
               Theme Engine (50 Themes)
             </label>
-            <span className="font-mono text-[10px] text-emerald-400">
+            <span className="font-mono text-[10px] text-emerald-400" suppressHydrationWarning>
               {THEMES.find((t) => t.id === theme)?.name || theme}
             </span>
           </div>
@@ -323,7 +325,7 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
           </div>
 
           {/* Themes Grid */}
-          <div className="grid grid-cols-1 gap-1.5 max-h-60 overflow-y-auto p-0.5">
+          <div className="grid grid-cols-1 gap-1.5 max-h-60 overflow-y-auto p-0.5" suppressHydrationWarning={!isHydrated}>
             {filteredThemes.length === 0 ? (
               <div className="py-6 text-center font-mono text-xs text-slate-500">
                 No themes found matching "{themeSearch}"

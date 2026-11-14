@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type {
   AppMode,
   ProfilePreset,
@@ -25,21 +26,31 @@ import { ExportToolbar } from '@/components/ExportToolbar';
 import { Footer } from '@/components/Footer';
 import { CommandPalette } from '@/components/CommandPalette';
 import { Layers, FileCode, Eye } from 'lucide-react';
+import { COMMUNITY_TEMPLATES, applyTemplate } from '@/lib/templates';
 
 const STORAGE_KEY = 'readmecraft_saved_state_v2';
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const urlTemplate = searchParams.get('template');
+  const urlTheme = searchParams.get('theme');
   const [mode, setMode] = useState<AppMode>('profile');
   const [profilePreset, setProfilePreset] = useState<ProfilePreset>('bento');
   const [projectPreset, setProjectPreset] = useState<ProjectPreset>('standard');
   const [profileData, setProfileData] = useState<ProfileData>(SAMPLE_PROFILE);
   const [projectData, setProjectData] = useState<ProjectData>(SAMPLE_PROJECT);
-  const [theme, setTheme] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('readmecraft-theme') || 'gta6';
-    }
-    return 'gta6';
-  });
+  const [theme, setTheme] = useState<string>('gta6');
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Sync theme from localStorage after hydration
+  useEffect(() => {
+    setIsHydrated(true);
+    try {
+      const savedTheme = localStorage.getItem('readmecraft-theme');
+      if (savedTheme) setTheme(savedTheme);
+    } catch (e) {}
+  }, []);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [sections, setSections] = useState<Section[]>(() =>
     getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6')
@@ -76,10 +87,32 @@ export default function Home() {
     } catch (e) {
       console.warn('Failed to restore from localStorage:', e);
     }
+    setHasLoaded(true);
   }, []);
 
-  // Autosave state to localStorage
+  // Load template from URL params (e.g., ?template=python-developer&theme=matrix)
   useEffect(() => {
+    if (urlTemplate) {
+      const templateData = applyTemplate(urlTemplate);
+      if (templateData) {
+        setMode(templateData.mode);
+        setProfilePreset(templateData.profilePreset);
+        setProfileData(templateData.profileData);
+        setProjectData(templateData.projectData);
+        setSections(templateData.sections);
+        setMarkdown(compileSectionsToMarkdown(templateData.sections));
+        const finalTheme = urlTheme || templateData.theme;
+        setTheme(finalTheme);
+        try {
+          localStorage.setItem('readmecraft-theme', finalTheme);
+        } catch (e) {}
+      }
+    }
+  }, [urlTemplate, urlTheme]);
+
+  // Autosave state to localStorage (only after initial load)
+  useEffect(() => {
+    if (!hasLoaded) return;
     try {
       const stateToSave: ReadmeState = {
         mode,
@@ -94,7 +127,7 @@ export default function Home() {
     } catch (e) {
       console.warn('Failed to save to localStorage:', e);
     }
-  }, [mode, profilePreset, projectPreset, profileData, projectData, sections, theme]);
+  }, [hasLoaded, mode, profilePreset, projectPreset, profileData, projectData, sections, theme]);
 
   // Global Keyboard Shortcuts (Cmd+K / Ctrl+K, Cmd+S / Ctrl+S)
   useEffect(() => {
@@ -494,6 +527,7 @@ export default function Home() {
             onRemoveSkill={handleRemoveSkill}
             theme={theme}
             setTheme={handleThemeChange}
+            isHydrated={isHydrated}
           />
         </div>
 
