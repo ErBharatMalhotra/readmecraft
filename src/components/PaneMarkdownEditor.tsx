@@ -221,6 +221,7 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
             }
           }}
           spellCheck={false}
+          suppressHydrationWarning
           className="h-full w-full resize-none bg-transparent p-4 font-mono text-xs leading-relaxed text-slate-100 selection:bg-emerald-500/30 focus:outline-none md:text-sm"
           placeholder="# Start typing your GitHub README markdown here..."
         />

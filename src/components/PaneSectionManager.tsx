@@ -332,7 +332,7 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
               </div>
             ) : (
               filteredThemes.map((t) => {
-                const isSelected = theme === t.id;
+                const isSelected = isHydrated && theme === t.id;
                 return (
                   <button
                     key={t.id}
@@ -387,7 +387,7 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
             </p>
             <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
               {POPULAR_SKILLS.map((skill) => {
-                const isSelected = skills.includes(skill);
+                const isSelected = isHydrated && skills.includes(skill);
                 return (
                   <button
                     key={skill}

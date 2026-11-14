@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type {
   AppMode,
@@ -30,20 +30,84 @@ import { COMMUNITY_TEMPLATES, applyTemplate } from '@/lib/templates';
 
 const STORAGE_KEY = 'readmecraft_saved_state_v2';
 
-export default function Home() {
+// Helper to compute initial state from URL params (SSR-safe) or localStorage (client-only)
+function getInitialState(urlTemplate: string | null, urlTheme: string | null) {
+  // If we have template URL params, use them (works on both server and client)
+  if (urlTemplate) {
+    const templateData = applyTemplate(urlTemplate);
+    if (templateData) {
+      const finalTheme = urlTheme || templateData.theme;
+      return {
+        mode: templateData.mode,
+        profilePreset: templateData.profilePreset,
+        projectPreset: 'standard' as ProjectPreset, // templates don't specify project preset
+        profileData: templateData.profileData,
+        projectData: templateData.projectData,
+        sections: templateData.sections,
+        theme: finalTheme,
+        hasLoaded: true,
+      };
+    }
+  }
+
+  // No template params - check localStorage (client-only)
+  // During SSR, localStorage is not available, so we return defaults
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed: ReadmeState = JSON.parse(saved);
+        const savedTheme = localStorage.getItem('readmecraft-theme') || 'gta6';
+        return {
+          mode: parsed.mode || 'profile',
+          profilePreset: parsed.profilePreset || 'bento',
+          projectPreset: parsed.projectPreset || 'standard',
+          profileData: parsed.profileData || SAMPLE_PROFILE,
+          projectData: parsed.projectData || SAMPLE_PROJECT,
+          sections: parsed.sections && parsed.sections.length > 0 
+            ? parsed.sections 
+            : getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6'),
+          theme: savedTheme,
+          hasLoaded: true,
+        };
+      }
+    } catch (e) {
+      console.warn('Failed to restore from localStorage:', e);
+    }
+  }
+
+  // Defaults
+  return {
+    mode: 'profile' as AppMode,
+    profilePreset: 'bento' as ProfilePreset,
+    projectPreset: 'standard' as ProjectPreset,
+    profileData: SAMPLE_PROFILE,
+    projectData: SAMPLE_PROJECT,
+    sections: getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6'),
+    theme: 'gta6',
+    hasLoaded: true,
+  };
+}
+
+// Inner component that uses useSearchParams (requires Suspense boundary)
+function HomeInner() {
   const searchParams = useSearchParams();
   const urlTemplate = searchParams.get('template');
   const urlTheme = searchParams.get('theme');
-  const [mode, setMode] = useState<AppMode>('profile');
-  const [profilePreset, setProfilePreset] = useState<ProfilePreset>('bento');
-  const [projectPreset, setProjectPreset] = useState<ProjectPreset>('standard');
-  const [profileData, setProfileData] = useState<ProfileData>(SAMPLE_PROFILE);
-  const [projectData, setProjectData] = useState<ProjectData>(SAMPLE_PROJECT);
-  const [theme, setTheme] = useState<string>('gta6');
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
 
-  // Sync theme from localStorage after hydration
+  // Compute initial state synchronously (works during SSR)
+  const initialState = getInitialState(urlTemplate, urlTheme);
+
+  const [mode, setMode] = useState<AppMode>(initialState.mode);
+  const [profilePreset, setProfilePreset] = useState<ProfilePreset>(initialState.profilePreset);
+  const [projectPreset, setProjectPreset] = useState<ProjectPreset>(initialState.projectPreset);
+  const [profileData, setProfileData] = useState<ProfileData>(initialState.profileData);
+  const [projectData, setProjectData] = useState<ProjectData>(initialState.projectData);
+  const [theme, setTheme] = useState<string>(initialState.theme);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(initialState.hasLoaded);
+
+  // Sync theme from localStorage after hydration (client-only)
   useEffect(() => {
     setIsHydrated(true);
     try {
@@ -52,11 +116,9 @@ export default function Home() {
     } catch (e) {}
   }, []);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [sections, setSections] = useState<Section[]>(() =>
-    getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6')
-  );
+  const [sections, setSections] = useState<Section[]>(initialState.sections);
   const [markdown, setMarkdown] = useState<string>(() =>
-    compileSectionsToMarkdown(getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6'))
+    compileSectionsToMarkdown(initialState.sections)
   );
   const [isLoading, setIsLoading] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState<'sections' | 'editor' | 'preview'>(
@@ -67,48 +129,27 @@ export default function Home() {
   const activeTitle =
     mode === 'profile' ? profileData.name || profileData.username : projectData.repo;
 
-  // Load state from localStorage on initial render
+  // Effect 2: Watch for template URL param changes (client-side navigation)
+  // Only applies if we have a template param
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed: ReadmeState = JSON.parse(saved);
-        if (parsed.mode) setMode(parsed.mode);
-        if (parsed.profilePreset) setProfilePreset(parsed.profilePreset);
-        if (parsed.projectPreset) setProjectPreset(parsed.projectPreset);
-        if (parsed.profileData) setProfileData(parsed.profileData);
-        if (parsed.projectData) setProjectData(parsed.projectData);
-        if (parsed.theme) setTheme(parsed.theme);
-        if (parsed.sections && parsed.sections.length > 0) {
-          setSections(parsed.sections);
-          setMarkdown(compileSectionsToMarkdown(parsed.sections));
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to restore from localStorage:', e);
+    if (!urlTemplate) return;
+    
+    const templateData = applyTemplate(urlTemplate);
+    if (templateData) {
+      setMode(templateData.mode);
+      setProfilePreset(templateData.profilePreset);
+      setProfileData(templateData.profileData);
+      setProjectData(templateData.projectData);
+      setSections(templateData.sections);
+      setMarkdown(compileSectionsToMarkdown(templateData.sections));
+      const finalTheme = urlTheme || templateData.theme;
+      setTheme(finalTheme);
+      try {
+        localStorage.setItem('readmecraft-theme', finalTheme);
+      } catch (e) {}
     }
     setHasLoaded(true);
-  }, []);
-
-  // Load template from URL params (e.g., ?template=python-developer&theme=matrix)
-  useEffect(() => {
-    if (urlTemplate) {
-      const templateData = applyTemplate(urlTemplate);
-      if (templateData) {
-        setMode(templateData.mode);
-        setProfilePreset(templateData.profilePreset);
-        setProfileData(templateData.profileData);
-        setProjectData(templateData.projectData);
-        setSections(templateData.sections);
-        setMarkdown(compileSectionsToMarkdown(templateData.sections));
-        const finalTheme = urlTheme || templateData.theme;
-        setTheme(finalTheme);
-        try {
-          localStorage.setItem('readmecraft-theme', finalTheme);
-        } catch (e) {}
-      }
-    }
-  }, [urlTemplate, urlTheme]);
+  }, [urlTemplate, urlTheme]); // Re-run when template params change
 
   // Autosave state to localStorage (only after initial load)
   useEffect(() => {
@@ -525,9 +566,9 @@ export default function Home() {
             skills={profileData.skills}
             onAddSkill={handleAddSkill}
             onRemoveSkill={handleRemoveSkill}
+            isHydrated={isHydrated}
             theme={theme}
             setTheme={handleThemeChange}
-            isHydrated={isHydrated}
           />
         </div>
 
@@ -598,5 +639,14 @@ export default function Home() {
         }}
       />
     </div>
+  );
+}
+
+// Wrapper with Suspense boundary for useSearchParams
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#090d16]"><div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent" /></div>}>
+      <HomeInner />
+    </Suspense>
   );
 }
