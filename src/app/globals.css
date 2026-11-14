@@ -23,6 +23,80 @@
   kbd {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
+
+  /* Focus visible for keyboard accessibility (WCAG 2.4.7) */
+  :focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+  }
+
+  /* Prevent focus hidden by sticky header (WCAG 2.4.11) */
+  :focus,
+  :target {
+    scroll-margin-top: 80px;
+    scroll-margin-bottom: 60px;
+  }
+
+  /* Skip link for keyboard users (WCAG 2.4.1) */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: #10b981;
+    color: #090d16;
+    font-weight: 600;
+    border-radius: 0 0 8px 8px;
+    z-index: 1000;
+    transition: top 0.2s;
+  }
+  .skip-link:focus {
+    top: 0;
+  }
+
+  /* Respect reduced motion (WCAG 2.3.3) */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Minimum touch target size (WCAG 2.5.8) */
+  button,
+  [role="button"],
+  a[href],
+  input:not([type="hidden"]),
+  select,
+  textarea,
+  summary {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Font face with size-adjust to prevent CLS from font swap */
+@layer base {
+  @font-face {
+    font-family: 'JetBrains Mono';
+    src: url('https://fonts.gstatic.com/s/jetbrainsmono/v25/tDbD2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKk.woff2') format('woff2');
+    font-display: swap;
+    font-size-adjust: 0.5;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('https://fonts.gstatic.com/s/spacegrotesk/v20/VdGHAYIAY6EgT2QJp6w2sIqdSZc.woff2') format('woff2');
+    font-display: swap;
+    font-size-adjust: 0.52;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
 }
 
 /* Custom sleek scrollbar */

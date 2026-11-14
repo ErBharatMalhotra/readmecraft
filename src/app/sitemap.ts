@@ -1,30 +1,34 @@
-import type { MetadataRoute } from 'next';
+import { MetadataRoute } from 'next';
+import { COMMUNITY_TEMPLATES } from '@/lib/templates';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://readme.bharatdn.com';
-
-  const staticRoutes = ['', '/deploy', '/craft', '/templates'].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: route === '' ? 1 : 0.8,
-  }));
-
-  const templateSlugs = [
-    'python-developer',
-    'react-developer',
-    'fullstack-architect',
-    'rust-engineer',
-    'devops-engineer',
-    'web3-developer',
-    'ai-ml-engineer',
-    'cs-student',
+  
+  const staticRoutes: MetadataRoute.Sitemap = [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/templates`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/deploy`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
   ];
 
-  const templateRoutes = templateSlugs.map((slug) => ({
-    url: `${baseUrl}/templates/${slug}`,
+  const templateRoutes: MetadataRoute.Sitemap = COMMUNITY_TEMPLATES.map((template) => ({
+    url: `${baseUrl}/?template=${template.id}&theme=${template.theme}`,
     lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
+    changeFrequency: 'weekly',
     priority: 0.7,
   }));
 

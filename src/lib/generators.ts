@@ -96,8 +96,8 @@ ${data.pinnedRepos.map((repo) => `- **[${repo.name}](${repo.url})** — ${repo.d
         content: `### 📊 Live GitHub Activity
 
 <div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${themeObj.id}&hide_border=true&bg_color=${bgHex}&title_color=${accentHex}&icon_color=${accentHex}&text_color=${subtextHex}" alt="GitHub Stats" width="48%" />
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${themeObj.id}&hide_border=true&bg_color=${bgHex}&title_color=${accentHex}&text_color=${subtextHex}" alt="Top Languages" width="48%" />
+  <img src="https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${themeObj.id}&hide_border=true&bg_color=${bgHex}&title_color=${accentHex}&icon_color=${accentHex}&text_color=${subtextHex}" alt="GitHub Stats" width="48%" onerror="this.onerror=null;this.src='https://readme.bharatdn.com/api/badges?username=${username}&type=repos&theme=${themeObj.id}'" />
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${themeObj.id}&hide_border=true&bg_color=${bgHex}&title_color=${accentHex}&text_color=${subtextHex}" alt="Top Languages" width="48%" onerror="this.onerror=null;this.src='https://readme.bharatdn.com/api/badges?username=${username}&type=language&theme=${themeObj.id}'" />
 </div>`,
       },
     ];
@@ -170,7 +170,7 @@ ${data.skills.map((s) => `<img src="https://img.shields.io/badge/-${encodeURICom
         content: `### 📈 Commit Cadence & Streak
 
 <div align="center">
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${themeObj.id}&hide_border=true&background=${bgHex}&ring=${accentHex}&fire=${accentHex}&currStreakLabel=${accentHex}" alt="GitHub Streak" width="70%" />
+  <img src="https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${themeObj.id}&hide_border=true&background=${bgHex}&ring=${accentHex}&fire=${accentHex}&currStreakLabel=${accentHex}" alt="GitHub Streak" width="70%" onerror="this.onerror=null;this.src='https://readme.bharatdn.com/api/badges?username=${username}&type=streak&theme=${themeObj.id}'" />
 </div>`,
       },
       {

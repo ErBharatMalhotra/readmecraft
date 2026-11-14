@@ -67,10 +67,14 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
         {/* Ingestion Search Box */}
         <form onSubmit={handleSubmit} className="relative mb-3 w-full max-w-2xl">
           <div className="relative flex items-center overflow-hidden rounded-2xl border border-[#1e293b] bg-[#0e1526] shadow-xl transition-all focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20">
+            <label htmlFor="github-target" className="visually-hidden">
+              {mode === 'profile' ? 'GitHub username' : 'Repository URL or slug'}
+            </label>
             <div className="pl-4 text-slate-500">
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5" aria-hidden="true" />
             </div>
             <input
+              id="github-target"
               type="text"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
@@ -91,7 +95,7 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Key className="h-3.5 w-3.5" />
+              <Key className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">Token</span>
             </button>
             <button
@@ -101,12 +105,12 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                   <span>Ingesting...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Auto-Craft</span>
                 </>
               )}
@@ -118,12 +122,14 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
             <div className="animate-in fade-in mt-2 rounded-xl border border-[#1e293b] bg-[#0e1526] p-3 text-left text-xs duration-200">
               <div className="mb-1 flex items-center justify-between font-medium text-slate-300">
                 <span className="flex items-center gap-1.5">
-                  <Key className="h-3.5 w-3.5 text-emerald-400" /> GitHub Personal Access Token
+                  <Key className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" /> GitHub Personal Access Token
                   (Optional)
                 </span>
                 <span className="text-[11px] text-slate-500">Increases API rate limits</span>
               </div>
+              <label htmlFor="github-token" className="visually-hidden">GitHub Personal Access Token</label>
               <input
+                id="github-token"
                 type="password"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}

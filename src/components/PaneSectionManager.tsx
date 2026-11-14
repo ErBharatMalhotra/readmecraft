@@ -294,8 +294,10 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
 
           {/* Search Bar */}
           <div className="relative mb-2.5">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" />
+            <label htmlFor="theme-search" className="visually-hidden">Search themes</label>
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
             <input
+              id="theme-search"
               type="text"
               value={themeSearch}
               onChange={(e) => setThemeSearch(e.target.value)}
@@ -405,7 +407,9 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
               })}
             </div>
             <form onSubmit={handleAddCustomSkill} className="mt-2.5 flex gap-1.5">
+              <label htmlFor="custom-skill-input" className="visually-hidden">Add custom tech skill</label>
               <input
+                id="custom-skill-input"
                 type="text"
                 placeholder="Add custom tech..."
                 value={customSkillInput}
@@ -551,7 +555,11 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
                   >
                     <GripVertical className="h-3.5 w-3.5" />
                   </div>
+                  <label htmlFor={`section-toggle-${section.id}`} className="visually-hidden">
+                    Toggle section: {section.title}
+                  </label>
                   <input
+                    id={`section-toggle-${section.id}`}
                     type="checkbox"
                     checked={section.enabled}
                     onChange={() => onToggleSection(section.id)}

@@ -210,6 +210,9 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
 
       {/* Monospace Raw Markdown Editor Textarea */}
       <div className="relative flex flex-1">
+        <label htmlFor="readme-editor" className="visually-hidden">
+          Markdown editor
+        </label>
         <textarea
           id="readme-editor"
           value={editorMode === 'full' ? markdown : activeSection?.content || ''}

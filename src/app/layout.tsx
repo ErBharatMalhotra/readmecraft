@@ -91,6 +91,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Preload critical fonts to prevent CLS from font swap */}
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://fonts.gstatic.com/s/jetbrainsmono/v25/tDbD2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKk.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://fonts.gstatic.com/s/spacegrotesk/v20/VdGHAYIAY6EgT2QJp6w2sIqdSZc.woff2" />
         <link
           href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&family=Space+Grotesk:wght@300..700&display=swap"
           rel="stylesheet"
@@ -129,6 +132,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-[#090d16] text-[#f1f5f9] selection:bg-emerald-500/30 selection:text-emerald-300 antialiased">
+        {/* Skip link for keyboard accessibility (WCAG 2.4.1) */}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
