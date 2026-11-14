@@ -681,11 +681,18 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme, viewe
 
   const getColor = (count: number, isCurrentHour = false) => {
     if (count === 0) return c.bgElevated;
-    if (count <= maxCount * 0.2) return isCurrentHour ? '#1a5c35' : '#0e4429';
-    if (count <= maxCount * 0.4) return isCurrentHour ? '#0a8a3f' : '#006d32';
-    if (count <= maxCount * 0.6) return isCurrentHour ? '#34c652' : '#26a641';
-    if (count <= maxCount * 0.8) return isCurrentHour ? '#4fd160' : '#39d353';
-    return isCurrentHour ? '#6ff08a' : '#5ee87a';
+    if (theme === THEMES.default) {
+      if (count <= maxCount * 0.2) return isCurrentHour ? '#1a5c35' : '#0e4429';
+      if (count <= maxCount * 0.4) return isCurrentHour ? '#0a8a3f' : '#006d32';
+      if (count <= maxCount * 0.6) return isCurrentHour ? '#34c652' : '#26a641';
+      if (count <= maxCount * 0.8) return isCurrentHour ? '#4fd160' : '#39d353';
+      return isCurrentHour ? '#6ff08a' : '#5ee87a';
+    }
+    if (count <= maxCount * 0.2) return isCurrentHour ? c.borderLight : c.border;
+    if (count <= maxCount * 0.4) return c.emeraldDim;
+    if (count <= maxCount * 0.6) return c.emerald;
+    if (count <= maxCount * 0.8) return c.emeraldLight;
+    return c.gold;
   };
 
   let inner = '';
@@ -798,8 +805,15 @@ function generateSnakeSvg(username: string, calendar: any, theme: Theme): string
   const weeks = (calendar?.weeks || []).slice(-maxCols);
   const cols = weeks.length;
 
-  const levelFill = (count: number) =>
-    count <= 0 ? emptyFill : count <= 2 ? '#0e4429' : count <= 4 ? '#006d32' : count <= 8 ? '#26a641' : '#3fb950';
+  // Theme-aware contribution levels: derive from theme palette
+  // Level 0 (empty): bgElevated, Level 1: border, Level 2: emeraldDim, Level 3: emerald, Level 4+: gold
+  const levelFill = (count: number) => {
+    if (count <= 0) return emptyFill;
+    if (count <= 2) return c.border;          // Very light activity - subtle theme border
+    if (count <= 4) return c.emeraldDim;      // Light activity - dimmed theme accent
+    if (count <= 8) return c.emerald;         // Medium activity - full theme accent
+    return c.gold;                             // High activity - theme gold highlight
+  };
 
   type Cell = { col: number; row: number; count: number };
   const cells: Cell[] = [];
@@ -933,8 +947,8 @@ function generateSnakeSvg(username: string, calendar: any, theme: Theme): string
     // Build segment element
     snakeBody +=
       `<g class="sn-seg" style="animation:sn-move-${segIdx} ${dur.toFixed(2)}s linear infinite">` +
-      `<rect x="${(-seg.size / 2).toFixed(1)}" y="${(-seg.size / 2).toFixed(1)}" width="${seg.size}" height="${seg.size}" rx="${(seg.size * 0.32).toFixed(1)}" fill="${seg.fill}" stroke="#052e16" stroke-width="0.9"/>` +
-      (seg.head ? buildSnakeHead(seg.size) : '') +
+      `<rect x="${(-seg.size / 2).toFixed(1)}" y="${(-seg.size / 2).toFixed(1)}" width="${seg.size}" height="${seg.size}" rx="${(seg.size * 0.32).toFixed(1)}" fill="${seg.fill}" stroke="${c.border}" stroke-width="0.9"/>` +
+      (seg.head ? buildSnakeHead(seg.size, c) : '') +
       `</g>`;
   });
 
@@ -999,7 +1013,7 @@ function generateSnakeSvg(username: string, calendar: any, theme: Theme): string
 
 // Build a proper snake head with eyes, nostrils, and forked tongue
 // Tongue is drawn symmetrically (both directions) so it's visible regardless of head rotation
-function buildSnakeHead(size: number): string {
+function buildSnakeHead(size: number, c: any): string {
   const half = size / 2;
   const eyeOffset = size * 0.22;
   const eyeR = Math.max(1.2, size * 0.1);
@@ -1011,18 +1025,23 @@ function buildSnakeHead(size: number): string {
   // This ensures visibility regardless of head rotation (0° or 180°)
   const tonguePath = `M ${(half * 0.75).toFixed(1)} ${(-tongueSplit * 0.5).toFixed(1)} L ${(half + tongueLen).toFixed(1)} ${(-tongueSplit).toFixed(1)} M ${(half * 0.75).toFixed(1)} ${(tongueSplit * 0.5).toFixed(1)} L ${(half + tongueLen).toFixed(1)} ${(tongueSplit).toFixed(1)} M ${(half * 0.75).toFixed(1)} ${(-tongueSplit * 0.5).toFixed(1)} L ${(half - tongueLen * 0.5).toFixed(1)} ${(-tongueSplit * 0.8).toFixed(1)} M ${(half * 0.75).toFixed(1)} ${(tongueSplit * 0.5).toFixed(1)} L ${(half - tongueLen * 0.5).toFixed(1)} ${(tongueSplit * 0.8).toFixed(1)}`;
 
+  const eyeColor = c?.bg || '#021a0a';
+  const highlightColor = c?.emeraldLight || '#4ade80';
+  const nostrilColor = c?.bg || '#021a0a';
+  const tongueColor = c?.red || '#ef4444';
+
   return (
     // Eyes (larger, more forward-facing)
-    `<circle cx="${(half * 0.4).toFixed(1)}" cy="${(-eyeOffset).toFixed(1)}" r="${eyeR.toFixed(1)}" fill="#021a0a"/>` +
-    `<circle cx="${(half * 0.4).toFixed(1)}" cy="${(eyeOffset).toFixed(1)}" r="${eyeR.toFixed(1)}" fill="#021a0a"/>` +
+    `<circle cx="${(half * 0.4).toFixed(1)}" cy="${(-eyeOffset).toFixed(1)}" r="${eyeR.toFixed(1)}" fill="${eyeColor}"/>` +
+    `<circle cx="${(half * 0.4).toFixed(1)}" cy="${(eyeOffset).toFixed(1)}" r="${eyeR.toFixed(1)}" fill="${eyeColor}"/>` +
     // Eye highlights (catch light)
-    `<circle cx="${(half * 0.45).toFixed(1)}" cy="${(-eyeOffset + 0.5).toFixed(1)}" r="${(eyeR * 0.35).toFixed(1)}" fill="#4ade80" opacity="0.6"/>` +
-    `<circle cx="${(half * 0.45).toFixed(1)}" cy="${(eyeOffset + 0.5).toFixed(1)}" r="${(eyeR * 0.35).toFixed(1)}" fill="#4ade80" opacity="0.6"/>` +
+    `<circle cx="${(half * 0.45).toFixed(1)}" cy="${(-eyeOffset + 0.5).toFixed(1)}" r="${(eyeR * 0.35).toFixed(1)}" fill="${highlightColor}" opacity="0.6"/>` +
+    `<circle cx="${(half * 0.45).toFixed(1)}" cy="${(eyeOffset + 0.5).toFixed(1)}" r="${(eyeR * 0.35).toFixed(1)}" fill="${highlightColor}" opacity="0.6"/>` +
     // Nostrils
-    `<circle cx="${(half * 0.7).toFixed(1)}" cy="${(-nostrilR * 1.5).toFixed(1)}" r="${nostrilR.toFixed(1)}" fill="#021a0a"/>` +
-    `<circle cx="${(half * 0.7).toFixed(1)}" cy="${(nostrilR * 1.5).toFixed(1)}" r="${nostrilR.toFixed(1)}" fill="#021a0a"/>` +
+    `<circle cx="${(half * 0.7).toFixed(1)}" cy="${(-nostrilR * 1.5).toFixed(1)}" r="${nostrilR.toFixed(1)}" fill="${nostrilColor}"/>` +
+    `<circle cx="${(half * 0.7).toFixed(1)}" cy="${(nostrilR * 1.5).toFixed(1)}" r="${nostrilR.toFixed(1)}" fill="${nostrilColor}"/>` +
     // Forked tongue (double-sided, animated flicker via CSS)
-    `<path class="sn-tongue" d="${tonguePath}" stroke="#ef4444" stroke-width="${(size * 0.09).toFixed(1)}" stroke-linecap="round" fill="none"/>`
+    `<path class="sn-tongue" d="${tonguePath}" stroke="${tongueColor}" stroke-width="${(size * 0.09).toFixed(1)}" stroke-linecap="round" fill="none"/>`
   );
 }
 
