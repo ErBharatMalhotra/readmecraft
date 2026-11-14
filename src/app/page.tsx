@@ -33,11 +33,17 @@ export default function Home() {
   const [projectPreset, setProjectPreset] = useState<ProjectPreset>('standard');
   const [profileData, setProfileData] = useState<ProfileData>(SAMPLE_PROFILE);
   const [projectData, setProjectData] = useState<ProjectData>(SAMPLE_PROJECT);
+  const [theme, setTheme] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('readmecraft-theme') || 'gta6';
+    }
+    return 'gta6';
+  });
   const [sections, setSections] = useState<Section[]>(() =>
-    getProfileSections(SAMPLE_PROFILE, 'bento')
+    getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6')
   );
   const [markdown, setMarkdown] = useState<string>(() =>
-    compileSectionsToMarkdown(getProfileSections(SAMPLE_PROFILE, 'bento'))
+    compileSectionsToMarkdown(getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6'))
   );
   const [isLoading, setIsLoading] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState<'sections' | 'editor' | 'preview'>(
@@ -55,6 +61,7 @@ export default function Home() {
         if (parsed.projectPreset) setProjectPreset(parsed.projectPreset);
         if (parsed.profileData) setProfileData(parsed.profileData);
         if (parsed.projectData) setProjectData(parsed.projectData);
+        if (parsed.theme) setTheme(parsed.theme);
         if (parsed.sections && parsed.sections.length > 0) {
           setSections(parsed.sections);
           setMarkdown(compileSectionsToMarkdown(parsed.sections));
@@ -75,18 +82,32 @@ export default function Home() {
         profileData,
         projectData,
         sections,
+        theme,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (e) {
       console.warn('Failed to save to localStorage:', e);
     }
-  }, [mode, profilePreset, projectPreset, profileData, projectData, sections]);
+  }, [mode, profilePreset, projectPreset, profileData, projectData, sections, theme]);
+
+  // Handler: Change Badge Theme
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    try {
+      localStorage.setItem('readmecraft-theme', newTheme);
+    } catch (e) {}
+    if (mode === 'profile') {
+      const newSecs = getProfileSections(profileData, profilePreset, newTheme);
+      setSections(newSecs);
+      setMarkdown(compileSectionsToMarkdown(newSecs));
+    }
+  };
 
   // Handler: Switch App Mode
   const handleModeChange = (newMode: AppMode) => {
     setMode(newMode);
     if (newMode === 'profile') {
-      const newSecs = getProfileSections(profileData, profilePreset);
+      const newSecs = getProfileSections(profileData, profilePreset, theme);
       setSections(newSecs);
       setMarkdown(compileSectionsToMarkdown(newSecs));
     } else {
@@ -99,7 +120,7 @@ export default function Home() {
   // Handler: Change Profile Preset
   const handleProfilePresetChange = (preset: ProfilePreset) => {
     setProfilePreset(preset);
-    const newSecs = getProfileSections(profileData, preset);
+    const newSecs = getProfileSections(profileData, preset, theme);
     setSections(newSecs);
     setMarkdown(compileSectionsToMarkdown(newSecs));
   };
@@ -130,7 +151,7 @@ export default function Home() {
       if (resData.success && resData.data) {
         if (mode === 'profile') {
           setProfileData(resData.data);
-          const newSecs = getProfileSections(resData.data, profilePreset);
+          const newSecs = getProfileSections(resData.data, profilePreset, theme);
           setSections(newSecs);
           setMarkdown(compileSectionsToMarkdown(newSecs));
         } else {
@@ -147,7 +168,7 @@ export default function Home() {
         const { fetchGitHubProfile } = await import('@/lib/github');
         const data = await fetchGitHubProfile(target, token);
         setProfileData(data);
-        const newSecs = getProfileSections(data, profilePreset);
+        const newSecs = getProfileSections(data, profilePreset, theme);
         setSections(newSecs);
         setMarkdown(compileSectionsToMarkdown(newSecs));
       } else {
@@ -226,7 +247,7 @@ export default function Home() {
     if (mode === 'profile') {
       const updatedProfile = { ...profileData, gitHoloEnabled: !profileData.gitHoloEnabled };
       setProfileData(updatedProfile);
-      const newSecs = getProfileSections(updatedProfile, profilePreset);
+      const newSecs = getProfileSections(updatedProfile, profilePreset, theme);
       setSections(newSecs);
       setMarkdown(compileSectionsToMarkdown(newSecs));
     } else {
@@ -245,7 +266,7 @@ export default function Home() {
         gitChronicleEnabled: !profileData.gitChronicleEnabled,
       };
       setProfileData(updatedProfile);
-      const newSecs = getProfileSections(updatedProfile, profilePreset);
+      const newSecs = getProfileSections(updatedProfile, profilePreset, theme);
       setSections(newSecs);
       setMarkdown(compileSectionsToMarkdown(newSecs));
     } else {
@@ -266,7 +287,7 @@ export default function Home() {
     const updatedSkills = [...profileData.skills, skill];
     const updatedProfile = { ...profileData, skills: updatedSkills };
     setProfileData(updatedProfile);
-    const newSecs = getProfileSections(updatedProfile, profilePreset);
+    const newSecs = getProfileSections(updatedProfile, profilePreset, theme);
     setSections(newSecs);
     setMarkdown(compileSectionsToMarkdown(newSecs));
   };
@@ -275,7 +296,7 @@ export default function Home() {
     const updatedSkills = profileData.skills.filter((s) => s !== skill);
     const updatedProfile = { ...profileData, skills: updatedSkills };
     setProfileData(updatedProfile);
-    const newSecs = getProfileSections(updatedProfile, profilePreset);
+    const newSecs = getProfileSections(updatedProfile, profilePreset, theme);
     setSections(newSecs);
     setMarkdown(compileSectionsToMarkdown(newSecs));
   };
@@ -284,12 +305,14 @@ export default function Home() {
   const handleReset = () => {
     if (window.confirm('Reset ReadmeCraft to default state? Any unsaved edits will be cleared.')) {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('readmecraft-theme');
       setMode('profile');
       setProfilePreset('bento');
       setProjectPreset('standard');
       setProfileData(SAMPLE_PROFILE);
       setProjectData(SAMPLE_PROJECT);
-      const newSecs = getProfileSections(SAMPLE_PROFILE, 'bento');
+      setTheme('gta6');
+      const newSecs = getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6');
       setSections(newSecs);
       setMarkdown(compileSectionsToMarkdown(newSecs));
     }
@@ -304,6 +327,7 @@ export default function Home() {
       profileData,
       projectData,
       sections,
+      theme,
     };
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -328,6 +352,7 @@ export default function Home() {
         if (parsed.projectPreset) setProjectPreset(parsed.projectPreset);
         if (parsed.profileData) setProfileData(parsed.profileData);
         if (parsed.projectData) setProjectData(parsed.projectData);
+        if (parsed.theme) setTheme(parsed.theme);
         if (parsed.sections) {
           setSections(parsed.sections);
           setMarkdown(compileSectionsToMarkdown(parsed.sections));
@@ -431,6 +456,8 @@ export default function Home() {
             skills={profileData.skills}
             onAddSkill={handleAddSkill}
             onRemoveSkill={handleRemoveSkill}
+            theme={theme}
+            setTheme={handleThemeChange}
           />
         </div>
 

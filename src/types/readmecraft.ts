@@ -83,4 +83,5 @@ export interface ReadmeState {
   projectData: ProjectData;
   sections: Section[];
   customToken?: string;
+  theme?: string;
 }

@@ -6,9 +6,10 @@ import type {
   Section,
 } from '@/types/readmecraft';
 
-export function getProfileSections(data: ProfileData, preset: ProfilePreset): Section[] {
+export function getProfileSections(data: ProfileData, preset: ProfilePreset, theme: string = 'gta6'): Section[] {
   const username = data.username || 'ErBharatMalhotra';
   const name = data.name || username;
+  const themeParam = `&theme=${theme}`;
 
   if (preset === 'minimalist') {
     return [
@@ -299,11 +300,11 @@ ${data.pinnedRepos
 
 <div align="center">
 
-![Public Repos](https://readme.bharatdn.com/api/badges?username=${username}&type=repos)
-![Followers](https://readme.bharatdn.com/api/badges?username=${username}&type=followers)
-![Following](https://readme.bharatdn.com/api/badges?username=${username}&type=following)
-${data.topLanguagesEnabled && data.languages.length > 0 ? `\n![Top Language](https://readme.bharatdn.com/api/badges?username=${username}&type=language)` : ''}
-${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges?username=${username}&type=streak)` : ''}
+![Public Repos](https://readme.bharatdn.com/api/badges?username=${username}&type=repos${themeParam})
+![Followers](https://readme.bharatdn.com/api/badges?username=${username}&type=followers${themeParam})
+![Following](https://readme.bharatdn.com/api/badges?username=${username}&type=following${themeParam})
+${data.topLanguagesEnabled && data.languages.length > 0 ? `\n![Top Language](https://readme.bharatdn.com/api/badges?username=${username}&type=language${themeParam})` : ''}
+${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges?username=${username}&type=streak${themeParam})` : ''}
 
 </div>
 
@@ -314,7 +315,7 @@ ${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges
 - **Followers:** ${data.followers}
 - **Following:** ${data.following}
 ${data.topLanguagesEnabled && data.languages.length > 0 ? `- **Top Language:** ${data.languages[0].name} (${data.languages[0].percentage}%)` : ''}
-${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badges API](https://readme.bharatdn.com/api/badges?username=${username}&type=streak)` : ''}
+${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badges API](https://readme.bharatdn.com/api/badges?username=${username}&type=streak${themeParam})` : ''}
 
 </details>`,
     },
@@ -326,7 +327,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🏆 Developer Trophies
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=trophy" alt="Developer Trophies" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=trophy${themeParam}" alt="Developer Trophies" />
 </div>`,
     },
     {
@@ -337,7 +338,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 📊 Commit Activity Graph
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=activity" alt="Commit Activity" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=activity${themeParam}" alt="Commit Activity" />
 </div>`,
     },
     {
@@ -348,7 +349,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 👀 Visitor Analytics
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=visitor" alt="Visitor Analytics" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=visitor${themeParam}" alt="Visitor Analytics" />
 </div>`,
     },
     {
@@ -359,7 +360,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🗓️ Contribution Heatmap
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=heatmap" alt="Contribution Heatmap" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=heatmap${themeParam}" alt="Contribution Heatmap" />
 </div>`,
     },
     {
@@ -370,7 +371,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🐍 Contribution Snake
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=snake&v=13" alt="Contribution Snake" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=snake&v=14${themeParam}" alt="Contribution Snake" />
 </div>`,
     },
     {
@@ -381,7 +382,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🎯 Skill Radar
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=skill-radar" alt="Skill Radar Chart" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=skill-radar${themeParam}" alt="Skill Radar Chart" />
 </div>`,
     },
     {
@@ -392,7 +393,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🏁 Language Evolution Race
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=language-race" alt="Language Race" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=language-race${themeParam}" alt="Language Race" />
 </div>`,
     },
     {
@@ -403,7 +404,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🌌 Repository Constellation
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=repo-constellation" alt="Repo Constellation" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=repo-constellation${themeParam}" alt="Repo Constellation" />
 </div>`,
     },
     {
@@ -414,7 +415,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 💓 Code Pulse
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=code-pulse" alt="Code Pulse" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=code-pulse${themeParam}" alt="Code Pulse" />
 </div>`,
     },
     {
@@ -425,7 +426,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🏔️ Contribution Mountain (Isometric)
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=contribution-mountain" alt="Contribution Mountain" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=contribution-mountain${themeParam}" alt="Contribution Mountain" />
 </div>`,
     },
     {
@@ -436,7 +437,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🌌 Tech Stack Galaxy
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=tech-galaxy" alt="Tech Stack Galaxy" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=tech-galaxy${themeParam}" alt="Tech Stack Galaxy" />
 </div>`,
     },
     {
@@ -447,7 +448,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🌊 Contribution Flow
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=contribution-flow" alt="Contribution Flow" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=contribution-flow${themeParam}" alt="Contribution Flow" />
 </div>`,
     },
     {
@@ -458,7 +459,7 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
       content: `### 🕐 Code Time Heatmap
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=code-time-heatmap" alt="Code Time Heatmap" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=code-time-heatmap${themeParam}" alt="Code Time Heatmap" />
 </div>`,
     },
   ];

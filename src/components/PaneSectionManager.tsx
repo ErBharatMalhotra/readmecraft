@@ -13,6 +13,7 @@ import {
   Box,
   Code2,
   Sparkles,
+  Palette,
 } from 'lucide-react';
 
 interface PaneSectionManagerProps {
@@ -34,7 +35,22 @@ interface PaneSectionManagerProps {
   skills?: string[];
   onAddSkill?: (skill: string) => void;
   onRemoveSkill?: (skill: string) => void;
+  theme?: string;
+  setTheme?: (theme: string) => void;
 }
+
+const THEMES_LIST = [
+  { id: 'gta6', name: 'GTA VI Sunset', bg: '#0a0a0f', accent: '#ff6b35' },
+  { id: 'tokyonight', name: 'Tokyo Night', bg: '#1a1b26', accent: '#7aa2f7' },
+  { id: 'dracula', name: 'Dracula', bg: '#282a36', accent: '#bd93f9' },
+  { id: 'nord', name: 'Nord', bg: '#2e3440', accent: '#88c0d0' },
+  { id: 'github', name: 'GitHub Dark', bg: '#0d1117', accent: '#58a6ff' },
+  { id: 'gruvbox', name: 'Gruvbox', bg: '#282828', accent: '#8ec07c' },
+  { id: 'rosePine', name: 'Rose Pine', bg: '#191724', accent: '#9ccfd8' },
+  { id: 'catppuccin', name: 'Catppuccin', bg: '#1e1e2e', accent: '#89dceb' },
+  { id: 'synthwave', name: 'Synthwave', bg: '#2d2a40', accent: '#f92aad' },
+  { id: 'default', name: 'Default Emerald', bg: '#090d16', accent: '#10b981' },
+];
 
 const POPULAR_SKILLS = [
   'TypeScript', 'JavaScript', 'React', 'Next.js', 'Node.js', 'Python', 'Rust', 'Go',
@@ -61,6 +77,8 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
   skills = [],
   onAddSkill,
   onRemoveSkill,
+  theme = 'gta6',
+  setTheme,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
@@ -184,6 +202,44 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
                 </button>
               </>
             )}
+          </div>
+        </div>
+
+        {/* Theme Engine Selector */}
+        <div className="rounded-xl border border-[#1e293b] bg-[#0e1526] p-3.5">
+          <div className="mb-2 flex items-center justify-between">
+            <label className="flex items-center gap-1.5 font-mono text-xs font-semibold tracking-wider text-slate-300 uppercase">
+              <Palette className="h-3.5 w-3.5 text-emerald-400" />
+              Theme Engine
+            </label>
+            <span className="font-mono text-[10px] text-emerald-400 capitalize">
+              {THEMES_LIST.find((t) => t.id === theme)?.name || theme}
+            </span>
+          </div>
+          <p className="mb-2.5 text-[11px] text-slate-400">
+            Select badge theme palette (applies instantly to live badges):
+          </p>
+          <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto p-0.5">
+            {THEMES_LIST.map((t) => {
+              const isSelected = theme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTheme && setTheme(t.id)}
+                  className={`flex items-center gap-2 rounded-lg border p-2 text-left transition-all ${
+                    isSelected
+                      ? 'border-emerald-500 bg-emerald-500/10 font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                      : 'border-[#1e293b] bg-[#090d16] text-slate-400 hover:border-slate-700 hover:text-white'
+                  }`}
+                >
+                  <span
+                    className="h-3.5 w-3.5 shrink-0 rounded-full border border-white/20 shadow-sm"
+                    style={{ backgroundColor: t.accent }}
+                  />
+                  <span className="truncate font-mono text-[11px]">{t.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
