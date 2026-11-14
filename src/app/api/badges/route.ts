@@ -860,12 +860,19 @@ function generateSnakeSvg(username: string, calendar: any, theme: Theme): string
   const routeIndex = new Map<string, number>();
   route.forEach((cell, i) => routeIndex.set(`${cell.col},${cell.row}`, i));
 
+  // Build theme-aware snake segment colors using theme.emerald gradient
+  const em = c.emerald;      // e.g., #ff6b35 for GTA 6, #7aa2f7 for tokyonight
+  const emDim = c.emeraldDim;
+  const emLight = c.emeraldLight;
+  const gold = c.gold;
+  const goldDim = c.goldDim;
+  
   const segmentDefs = [
-    { size: 17, fill: '#4ade80', head: true },
-    { size: 15.5, fill: '#34d399', head: false },
-    { size: 14, fill: '#22c55e', head: false },
-    { size: 12.5, fill: '#16a34a', head: false },
-    { size: 11, fill: '#15803d', head: false },
+    { size: 17, fill: em, head: true },
+    { size: 15.5, fill: emLight, head: false },
+    { size: 14, fill: emDim, head: false },
+    { size: 12.5, fill: gold, head: false },
+    { size: 11, fill: goldDim, head: false },
   ];
 
   // Build base path points (cell centers of CONTRIBUTION cells only in serpentine order)
