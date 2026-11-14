@@ -75,8 +75,6 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/manifest.json',
-  themeColor: '#090d16',
-  colorScheme: 'dark',
 };
 
 export const viewport: Viewport = {

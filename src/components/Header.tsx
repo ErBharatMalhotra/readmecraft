@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Rocket,
+  Search,
 } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
 import { useAuth } from '@/lib/auth-client';
@@ -26,6 +27,7 @@ interface HeaderProps {
   onReset: () => void;
   onExportJson: () => void;
   onImportJson: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onOpenCommandPalette?: () => void;
 }
 
 const REPO_OWNER = 'ErBharatMalhotra';
@@ -37,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   onReset,
   onExportJson,
   onImportJson,
+  onOpenCommandPalette,
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { session, status } = useAuth();
@@ -145,6 +148,21 @@ export const Header: React.FC<HeaderProps> = ({
               <Rocket className="h-4 w-4" />
               <span className="hidden sm:inline">Deploy</span>
             </Link>
+          )}
+
+          {/* Command Palette Trigger */}
+          {onOpenCommandPalette && (
+            <button
+              onClick={onOpenCommandPalette}
+              className="hidden lg:flex items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0c1220] px-3 py-1.5 font-mono text-xs text-slate-300 hover:border-emerald-500/50 hover:text-white transition-all shadow-sm"
+              title="Open Command Palette (⌘K or Ctrl+K)"
+            >
+              <Search className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Commands</span>
+              <kbd className="rounded bg-[#1e293b] px-1.5 py-0.5 text-[10px] text-slate-400 font-semibold">
+                ⌘K
+              </kbd>
+            </button>
           )}
         </div>
 

@@ -411,6 +411,16 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
               </div>
             )}
 
+            {/* Embeddable Taste Score Badge Snippet */}
+            <div className="mt-4">
+              <div className="text-xs font-semibold text-slate-400 font-mono uppercase mb-1.5">
+                Embed Taste Score Badge in README
+              </div>
+              <div className="rounded-xl border border-[#1e293b] bg-[#080d18] p-2.5 font-mono text-[10px] text-emerald-300 break-all select-all">
+                {`[![ReadmeCraft Score](https://readme.bharatdn.com/api/score?username=${(profileData as any)?.username || 'developer'}&score=${scoreData.score}&grade=${scoreData.grade}&theme=${theme})](https://readme.bharatdn.com)`}
+              </div>
+            </div>
+
             <div className="mt-5 flex gap-2">
               <button
                 onClick={() => {

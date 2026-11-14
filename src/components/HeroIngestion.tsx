@@ -137,7 +137,18 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
         {/* Quick Demo Pill Selector */}
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400">
           <span className="font-mono text-[11px] text-slate-500">Quick Try:</span>
-          {(mode === 'profile' ? sampleProfiles : sampleRepos).map((item) => (
+          <button
+            onClick={() => {
+              const demo = mode === 'profile' ? 'ErBharatMalhotra' : 'ErBharatMalhotra/readmecraft';
+              setTarget(demo);
+              onIngest(demo, token.trim() || undefined);
+            }}
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 font-mono text-[11px] font-bold text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)] hover:bg-emerald-500/25 transition-all"
+          >
+            <Sparkles className="h-3 w-3 text-emerald-400" />
+            <span>⚡ 1-Click Fast Demo: {mode === 'profile' ? '@ErBharatMalhotra' : 'readmecraft'}</span>
+          </button>
+          {(mode === 'profile' ? sampleProfiles.slice(1) : sampleRepos.slice(1)).map((item) => (
             <button
               key={item}
               onClick={() => {

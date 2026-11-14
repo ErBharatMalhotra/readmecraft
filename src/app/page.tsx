@@ -23,6 +23,7 @@ import { PaneMarkdownEditor } from '@/components/PaneMarkdownEditor';
 import { PaneGitHubPreview } from '@/components/PaneGitHubPreview';
 import { ExportToolbar } from '@/components/ExportToolbar';
 import { Footer } from '@/components/Footer';
+import { CommandPalette } from '@/components/CommandPalette';
 import { Layers, FileCode, Eye } from 'lucide-react';
 
 const STORAGE_KEY = 'readmecraft_saved_state_v2';
@@ -39,6 +40,7 @@ export default function Home() {
     }
     return 'gta6';
   });
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [sections, setSections] = useState<Section[]>(() =>
     getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6')
   );
@@ -49,6 +51,10 @@ export default function Home() {
   const [activeMobileTab, setActiveMobileTab] = useState<'sections' | 'editor' | 'preview'>(
     'preview'
   );
+
+  const activeUsername = mode === 'profile' ? profileData.username : projectData.owner;
+  const activeTitle =
+    mode === 'profile' ? profileData.name || profileData.username : projectData.repo;
 
   // Load state from localStorage on initial render
   useEffect(() => {
@@ -89,6 +95,27 @@ export default function Home() {
       console.warn('Failed to save to localStorage:', e);
     }
   }, [mode, profilePreset, projectPreset, profileData, projectData, sections, theme]);
+
+  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K, Cmd+S / Ctrl+S)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${activeTitle.toLowerCase().replace(/[^a-z0-9_-]/g, '-')}-README.md`;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [markdown, activeTitle]);
 
   // Handler: Change Badge Theme
   const handleThemeChange = (newTheme: string) => {
@@ -375,10 +402,6 @@ export default function Home() {
     reader.readAsText(file);
   };
 
-  const activeUsername = mode === 'profile' ? profileData.username : projectData.owner;
-  const activeTitle =
-    mode === 'profile' ? profileData.name || profileData.username : projectData.repo;
-
   return (
     <div className="flex min-h-screen flex-col bg-[#090d16] font-sans text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-300">
       {/* Top Header Navbar */}
@@ -388,6 +411,7 @@ export default function Home() {
         onReset={handleReset}
         onExportJson={handleExportJson}
         onImportJson={handleImportJson}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Hero Ingestion Banner */}
@@ -516,6 +540,29 @@ export default function Home() {
 
       {/* Cross-Promotion Ecosystem Footer */}
       <Footer />
+
+      {/* Global Command Palette (Cmd+K / Ctrl+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        mode={mode}
+        setMode={handleModeChange}
+        setTheme={handleThemeChange}
+        setProfilePreset={handleProfilePresetChange}
+        setProjectPreset={handleProjectPresetChange}
+        onDownload={() => {
+          const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${activeTitle.toLowerCase().replace(/[^a-z0-9_-]/g, '-')}-README.md`;
+          link.click();
+          URL.revokeObjectURL(url);
+        }}
+        onCopyMarkdown={() => {
+          navigator.clipboard.writeText(markdown);
+        }}
+      />
     </div>
   );
 }
