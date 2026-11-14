@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const username = searchParams.get('username') || 'ErBharatMalhotra';
     const theme = searchParams.get('theme') || 'tokyonight';
     const badgesParam = searchParams.get('badges');
+    const autoSync = searchParams.get('autosync') === 'true';
     const badges = badgesParam ? badgesParam.split(',').filter(b => AVAILABLE_BADGES.includes(b)) : AVAILABLE_BADGES;
     
     // Get config from request (passed via query params or body in real usage)
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
       template: 'bento',
       badges,
       theme,
+      autoSync,
     };
 
     // Create signed state with config

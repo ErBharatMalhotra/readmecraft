@@ -16,6 +16,7 @@ export default function DeployPage() {
   const [theme, setTheme] = useState<string>('tokyonight');
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [enableAutoSync, setEnableAutoSync] = useState<boolean>(false);
 
   // Get username from session
   useEffect(() => {
@@ -38,12 +39,14 @@ export default function DeployPage() {
       template: 'bento',
       badges: selectedBadges,
       theme: theme,
+      autoSync: enableAutoSync,
     };
     localStorage.setItem('readmecraft-deploy-config', JSON.stringify(config));
     
     // Redirect to install endpoint with badges
     const badgesParam = selectedBadges.join(',');
-    window.location.href = `/api/auth/github-app/install?username=${username}&theme=${theme}&badges=${badgesParam}`;
+    const autoSyncParam = enableAutoSync ? '&autosync=true' : '';
+    window.location.href = `/api/auth/github-app/install?username=${username}&theme=${theme}&badges=${badgesParam}${autoSyncParam}`;
   };
 
   const handleRetry = () => {
@@ -228,6 +231,31 @@ export default function DeployPage() {
               </label>
             ))}
           </div>
+        </div>
+
+        {/* GitHub Action Auto-Sync Option */}
+        <div className="mb-6 p-4 rounded-xl border border-[#1e293b] bg-[#161b22]/40">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={enableAutoSync}
+              onChange={(e) => setEnableAutoSync(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-[#1e293b] bg-[#090d16] text-[#10b981] focus:ring-0"
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm text-[#f1f5f9]">
+                  🔄 Enable Automated Daily Auto-Sync (GitHub Action)
+                </span>
+                <span className="rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 text-[10px] font-mono uppercase">
+                  New
+                </span>
+              </div>
+              <p className="text-xs text-[#94a3b8] mt-1 leading-relaxed">
+                Appends a preconfigured workflow snippet to automate cache invalidation and ensure your badges & commit snake refresh automatically every 24 hours.
+              </p>
+            </div>
+          </label>
         </div>
 
         <div className="p-4 bg-[#161b22]/50 border border-[#10b981]/30 rounded-xl mb-6">

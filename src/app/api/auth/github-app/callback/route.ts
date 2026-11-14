@@ -157,9 +157,18 @@ async function generateReadmeMarkdown(config: any): Promise<string> {
       : 'stats,trophies,snake,heatmap';
     markdown += `<img src="${baseUrl}?username=${config.username}&type=composite&include=${include}${themeParam}" alt="GitHub Pulse Composite" />\n\n`;
   }
+
+  // GitHub Action Scheduled Auto-Update Workflow instruction
+  if (config.autoSync) {
+    markdown += `## 🔄 Scheduled Auto-Update (GitHub Action)\n\n`;
+    markdown += `<details>\n<summary><b>🤖 Automated Daily Refresh Workflow</b></summary>\n\n`;
+    markdown += `This profile is configured with [ReadmeCraft Action](https://github.com/ErBharatMalhotra/readmecraft) for 24-hour scheduled badge & snake refresh:\n\n`;
+    markdown += `\`\`\`yaml\nname: ReadmeCraft Auto Refresh\non:\n  schedule:\n    - cron: '0 0 * * *' # Every midnight\n  workflow_dispatch:\n\njobs:\n  refresh:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Ping Badge Cache Invalidator\n        run: |\n          curl -s "https://readme.bharatdn.com/api/badges?username=${config.username}&type=composite&v=$(date +%s)" > /dev/null\n\`\`\`\n\n`;
+    markdown += `</details>\n\n`;
+  }
   
   markdown += '---\n\n';
-  markdown += `*Generated with [ReadmeCraft](https://readme.bharatdn.com)*`;
+  markdown += `<div align="center">\n  <sub>⚡ Powered by <a href="https://readme.bharatdn.com" target="_blank"><b>ReadmeCraft</b></a> — Intelligent Dual-Mode GitHub README Studio</sub>\n</div>`;
   
   return markdown;
 }
