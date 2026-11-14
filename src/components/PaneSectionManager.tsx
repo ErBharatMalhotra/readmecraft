@@ -10,10 +10,9 @@ import {
   Trash2,
   Sliders,
   ExternalLink,
-  ShieldCheck,
   Box,
-  Activity,
-  Check,
+  Code2,
+  Sparkles,
 } from 'lucide-react';
 
 interface PaneSectionManagerProps {
@@ -32,7 +31,16 @@ interface PaneSectionManagerProps {
   gitChronicleEnabled: boolean;
   onToggleGitChronicle: () => void;
   activeUsername?: string;
+  skills?: string[];
+  onAddSkill?: (skill: string) => void;
+  onRemoveSkill?: (skill: string) => void;
 }
+
+const POPULAR_SKILLS = [
+  'TypeScript', 'JavaScript', 'React', 'Next.js', 'Node.js', 'Python', 'Rust', 'Go',
+  'Docker', 'Kubernetes', 'PostgreSQL', 'Redis', 'TailwindCSS', 'GraphQL', 'AWS',
+  'Linux', 'Git', 'MongoDB', 'Prisma', 'Solidity', 'FastAPI', 'Express', 'Vue.js'
+];
 
 export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
   mode,
@@ -50,10 +58,14 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
   gitChronicleEnabled,
   onToggleGitChronicle,
   activeUsername = 'ErBharatMalhotra',
+  skills = [],
+  onAddSkill,
+  onRemoveSkill,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [customContent, setCustomContent] = useState('');
+  const [customSkillInput, setCustomSkillInput] = useState('');
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +77,13 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
     setCustomTitle('');
     setCustomContent('');
     setShowAddModal(false);
+  };
+
+  const handleAddCustomSkill = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customSkillInput.trim() || !onAddSkill) return;
+    onAddSkill(customSkillInput.trim());
+    setCustomSkillInput('');
   };
 
   const sortedSections = [...sections].sort((a, b) => a.order - b.order);
@@ -167,6 +186,56 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
             )}
           </div>
         </div>
+
+        {/* Tech Stack / Icon Quick Picker (Only in Profile Mode) */}
+        {mode === 'profile' && onAddSkill && onRemoveSkill && (
+          <div className="rounded-xl border border-[#1e293b] bg-[#0e1526] p-3.5">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="flex items-center gap-1.5 font-mono text-xs font-semibold tracking-wider text-slate-300 uppercase">
+                <Code2 className="h-3.5 w-3.5 text-emerald-400" />
+                Tech Stack Quick Picker
+              </label>
+              <span className="font-mono text-[10px] text-emerald-400">{skills.length} Selected</span>
+            </div>
+            <p className="mb-2.5 text-[11px] text-slate-400">
+              Click to toggle tech stack badges on your profile:
+            </p>
+            <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
+              {POPULAR_SKILLS.map((skill) => {
+                const isSelected = skills.includes(skill);
+                return (
+                  <button
+                    key={skill}
+                    onClick={() => (isSelected ? onRemoveSkill(skill) : onAddSkill(skill))}
+                    className={`rounded-lg px-2.5 py-1 font-mono text-[11px] transition-all ${
+                      isSelected
+                        ? 'border border-emerald-500/50 bg-emerald-500/20 font-bold text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                        : 'border border-[#1e293b] bg-[#090d16] text-slate-400 hover:border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {isSelected ? '✓ ' : '+ '}
+                    {skill}
+                  </button>
+                );
+              })}
+            </div>
+            <form onSubmit={handleAddCustomSkill} className="mt-2.5 flex gap-1.5">
+              <input
+                type="text"
+                placeholder="Add custom tech..."
+                value={customSkillInput}
+                onChange={(e) => setCustomSkillInput(e.target.value)}
+                className="flex-1 rounded-lg border border-[#1e293b] bg-[#090d16] px-2.5 py-1 font-mono text-xs text-white focus:border-emerald-500 focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="rounded-lg bg-emerald-500 px-3 py-1 text-xs font-bold text-slate-950 transition-colors hover:bg-emerald-400"
+              >
+                Add
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Ecosystem Cross-Pollination Card */}
         <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-[#0c1527] to-[#090e1a] p-3.5 shadow-lg">

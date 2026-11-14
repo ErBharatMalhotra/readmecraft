@@ -260,6 +260,26 @@ export default function Home() {
     }
   };
 
+  // Skill Handlers for Tech Stack Quick Picker
+  const handleAddSkill = (skill: string) => {
+    if (profileData.skills.includes(skill)) return;
+    const updatedSkills = [...profileData.skills, skill];
+    const updatedProfile = { ...profileData, skills: updatedSkills };
+    setProfileData(updatedProfile);
+    const newSecs = getProfileSections(updatedProfile, profilePreset);
+    setSections(newSecs);
+    setMarkdown(compileSectionsToMarkdown(newSecs));
+  };
+
+  const handleRemoveSkill = (skill: string) => {
+    const updatedSkills = profileData.skills.filter((s) => s !== skill);
+    const updatedProfile = { ...profileData, skills: updatedSkills };
+    setProfileData(updatedProfile);
+    const newSecs = getProfileSections(updatedProfile, profilePreset);
+    setSections(newSecs);
+    setMarkdown(compileSectionsToMarkdown(newSecs));
+  };
+
   // Reset Studio
   const handleReset = () => {
     if (window.confirm('Reset ReadmeCraft to default state? Any unsaved edits will be cleared.')) {
@@ -408,6 +428,9 @@ export default function Home() {
             }
             onToggleGitChronicle={handleToggleGitChronicle}
             activeUsername={activeUsername}
+            skills={profileData.skills}
+            onAddSkill={handleAddSkill}
+            onRemoveSkill={handleRemoveSkill}
           />
         </div>
 
