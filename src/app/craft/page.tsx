@@ -50,6 +50,7 @@ export default function CraftPage() {
     { id: 'rosePine', name: 'Rose Pine', bg: '#191724', accent: '#9ccfd8' },
     { id: 'catppuccin', name: 'Catppuccin', bg: '#1e1e2e', accent: '#89dceb' },
     { id: 'synthwave', name: 'Synthwave', bg: '#2d2a40', accent: '#f92aad' },
+    { id: 'gta6', name: 'GTA VI Sunset', bg: '#0a0a0f', accent: '#ff6b35' },
     { id: 'default', name: 'Default', bg: '#090d16', accent: '#10b981' },
   ];
 

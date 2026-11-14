@@ -143,6 +143,21 @@ const THEMES = {
     textMuted: '#64748b',
     red: '#ef4444',
   },
+  gta6: {
+    bg: '#0a0a0f',
+    bgElevated: '#12121a',
+    border: '#ff6b35',
+    borderLight: '#ff8c5a',
+    emerald: '#ff6b35',
+    emeraldDim: '#e85a28',
+    emeraldLight: '#ff9f7a',
+    gold: '#ffd700',
+    goldDim: '#e6c200',
+    textPrimary: '#ffffff',
+    textSecondary: '#ffb399',
+    textMuted: '#887766',
+    red: '#ff3333',
+  },
 } as const;
 
 type ThemeName = keyof typeof THEMES;
