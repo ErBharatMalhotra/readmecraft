@@ -11,6 +11,7 @@ export interface CommunityTemplate {
   preset: 'bento' | 'minimalist' | 'titan';
   bio: string;
   skills: string[];
+  languages: Array<{ name: string; percentage: number; color: string }>;
   pinnedRepos: Array<{ name: string; description: string; language: string; stargazersCount: number; url: string }>;
   accentColor: string;
 }
@@ -32,6 +33,11 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'edge-cache-proxy', description: 'Distributed caching proxy with zero cold-starts', language: 'Go', stargazersCount: 195, url: 'https://github.com' },
     ],
     accentColor: '#ff6b35',
+    languages: [
+      { name: 'TypeScript', percentage: 55, color: '#3178c6' },
+      { name: 'Go', percentage: 25, color: '#00ADD8' },
+      { name: 'Rust', percentage: 20, color: '#dea584' },
+    ],
   },
   {
     id: 'aiml-researcher',
@@ -43,6 +49,11 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     preset: 'titan',
     bio: 'Fine-tuning foundation models, optimizing multi-modal inference pipelines, and building autonomous agent swarms.',
     skills: ['Python', 'PyTorch', 'FastAPI', 'Docker', 'PostgreSQL', 'AWS', 'Linux', 'Git'],
+    languages: [
+      { name: 'Python', percentage: 70, color: '#3776ab' },
+      { name: 'C++', percentage: 20, color: '#f34b7d' },
+      { name: 'TypeScript', percentage: 10, color: '#3178c6' },
+    ],
     pinnedRepos: [
       { name: 'agent-swarm-core', description: 'Orchestration framework for hierarchical LLM agents', language: 'Python', stargazersCount: 1250, url: 'https://github.com' },
       { name: 'quant-kernel', description: 'Custom 4-bit CUDA quantization kernels for local inference', language: 'C++', stargazersCount: 890, url: 'https://github.com' },
@@ -60,6 +71,11 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     preset: 'minimalist',
     bio: 'Building memory-safe database engines, zero-copy network stacks, and concurrent systems in Rust & Go.',
     skills: ['Rust', 'Go', 'C++', 'Linux', 'PostgreSQL', 'Docker', 'Kubernetes', 'WebAssembly'],
+    languages: [
+      { name: 'Rust', percentage: 60, color: '#dea584' },
+      { name: 'Go', percentage: 25, color: '#00ADD8' },
+      { name: 'C++', percentage: 15, color: '#f34b7d' },
+    ],
     pinnedRepos: [
       { name: 'zero-copy-db', description: 'Lock-free database engine with zero-copy reads', language: 'Rust', stargazersCount: 3200, url: 'https://github.com' },
       { name: 'async-runtime', description: 'Custom async runtime for embedded systems', language: 'Rust', stargazersCount: 1800, url: 'https://github.com' },
@@ -77,6 +93,11 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     preset: 'bento',
     bio: 'Designing self-healing Kubernetes platforms, GitOps workflows, and observable distributed systems at scale.',
     skills: ['Kubernetes', 'Terraform', 'Go', 'Prometheus', 'Grafana', 'ArgoCD', 'Linux', 'AWS'],
+    languages: [
+      { name: 'Go', percentage: 50, color: '#00ADD8' },
+      { name: 'TypeScript', percentage: 30, color: '#3178c6' },
+      { name: 'Jsonnet', percentage: 20, color: '#008080' },
+    ],
     pinnedRepos: [
       { name: 'gitops-platform', description: 'Multi-cluster GitOps platform with ArgoCD', language: 'Go', stargazersCount: 2100, url: 'https://github.com' },
       { name: 'observability-stack', description: 'Batteries-included Prometheus/Grafana/Loki stack', language: 'Jsonnet', stargazersCount: 1400, url: 'https://github.com' },
@@ -94,6 +115,11 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     preset: 'bento',
     bio: 'Shipping audited DeFi protocols, ERC-4337 account abstraction, and MEV-resistant infrastructure.',
     skills: ['Solidity', 'Foundry', 'TypeScript', 'Rust', 'Cairo', 'Ethers.js', 'Viem', 'GraphQL'],
+    languages: [
+      { name: 'Solidity', percentage: 50, color: '#363636' },
+      { name: 'TypeScript', percentage: 30, color: '#3178c6' },
+      { name: 'Rust', percentage: 20, color: '#dea584' },
+    ],
     pinnedRepos: [
       { name: 'account-abstraction-wallet', description: 'ERC-4337 smart wallet with session keys', language: 'Solidity', stargazersCount: 3400, url: 'https://github.com' },
       { name: 'mev-protection', description: 'MEV-resistant transaction relayer', language: 'Rust', stargazersCount: 1200, url: 'https://github.com' },
@@ -111,6 +137,11 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     preset: 'bento',
     bio: 'Passionate about algorithms, systems programming, and open source. Building projects to learn and contribute.',
     skills: ['Python', 'C++', 'JavaScript', 'Git', 'Linux', 'SQL', 'Data Structures', 'Algorithms'],
+    languages: [
+      { name: 'Python', percentage: 40, color: '#3776ab' },
+      { name: 'C++', percentage: 35, color: '#f34b7d' },
+      { name: 'JavaScript', percentage: 25, color: '#f1e05a' },
+    ],
     pinnedRepos: [
       { name: 'leetcode-solutions', description: 'Clean LeetCode solutions with explanations', language: 'C++', stargazersCount: 120, url: 'https://github.com' },
       { name: 'mini-compiler', description: 'Toy compiler for a C-like language', language: 'C++', stargazersCount: 85, url: 'https://github.com' },
@@ -128,6 +159,11 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     preset: 'titan',
     bio: 'Crafting performant, accessible React applications with modern patterns. TypeScript, Tailwind, and testing enthusiast.',
     skills: ['React', 'TypeScript', 'Next.js', 'TailwindCSS', 'Vitest', 'Storybook', 'Zustand', 'Framer Motion'],
+    languages: [
+      { name: 'TypeScript', percentage: 70, color: '#3178c6' },
+      { name: 'JavaScript', percentage: 20, color: '#f1e05a' },
+      { name: 'CSS', percentage: 10, color: '#563d7c' },
+    ],
     pinnedRepos: [
       { name: 'design-system', description: 'Accessible component library with 50+ primitives', language: 'TypeScript', stargazersCount: 2200, url: 'https://github.com' },
       { name: 'animations-toolkit', description: 'Framer Motion utilities for delightful UX', language: 'TypeScript', stargazersCount: 1100, url: 'https://github.com' },
@@ -145,6 +181,11 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     preset: 'bento',
     bio: 'Building high-performance async APIs, data pipelines, and ML serving infrastructure with Python.',
     skills: ['Python', 'FastAPI', 'PostgreSQL', 'Redis', 'Docker', 'Kubernetes', 'PyTorch', 'Pydantic'],
+    languages: [
+      { name: 'Python', percentage: 80, color: '#3776ab' },
+      { name: 'TypeScript', percentage: 15, color: '#3178c6' },
+      { name: 'SQL', percentage: 5, color: '#e38c00' },
+    ],
     pinnedRepos: [
       { name: 'async-api-framework', description: 'Batteries-included FastAPI starter kit', language: 'Python', stargazersCount: 1800, url: 'https://github.com' },
       { name: 'ml-serving', description: 'Low-latency model serving with batching', language: 'Python', stargazersCount: 950, url: 'https://github.com' },
@@ -179,7 +220,7 @@ export function applyTemplate(templateId: string): {
     publicRepos: 32,
     followers: 240,
     following: 80,
-    languages: [
+    languages: template.languages || [
       { name: template.skills[0] || 'TypeScript', percentage: 55, color: '#3178c6' },
       { name: template.skills[1] || 'Python', percentage: 30, color: '#3572A5' },
       { name: template.skills[2] || 'Rust', percentage: 15, color: '#dea584' },

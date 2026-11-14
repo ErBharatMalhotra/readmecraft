@@ -8,132 +8,12 @@ import {
   ArrowRight,
   Check,
   Copy,
-  Terminal,
-  Code2,
-  Cpu,
-  Brain,
-  Shield,
-  GraduationCap,
-  Layers,
-  Palette,
   ExternalLink,
 } from 'lucide-react';
 import { getProfileSections, compileSectionsToMarkdown } from '@/lib/generators';
+import { COMMUNITY_TEMPLATES, type CommunityTemplate } from '@/lib/templates';
 
-interface CommunityTemplate {
-  id: string;
-  title: string;
-  role: string;
-  badge: string;
-  icon: any;
-  theme: string;
-  preset: 'bento' | 'minimalist' | 'titan';
-  bio: string;
-  skills: string[];
-  pinnedRepos: Array<{ name: string; description: string; language: string; stargazersCount: number; url: string }>;
-  accentColor: string;
-}
-
-const TEMPLATES: CommunityTemplate[] = [
-  {
-    id: 'fullstack-architect',
-    title: 'Full-Stack Systems Architect',
-    role: 'Staff / Lead Engineer',
-    badge: 'Most Popular',
-    icon: Code2,
-    theme: 'gta6',
-    preset: 'bento',
-    bio: 'Architecting resilient distributed web platforms & real-time telemetry systems. Obsessed with zero-overhead UX.',
-    skills: ['TypeScript', 'React', 'Next.js', 'Node.js', 'PostgreSQL', 'Docker', 'Redis', 'AWS', 'TailwindCSS'],
-    pinnedRepos: [
-      { name: 'hyper-stream', description: 'Ultra-low latency streaming microservice in Node.js', language: 'TypeScript', stargazersCount: 420, url: 'https://github.com' },
-      { name: 'bento-design-system', description: 'Accessible Tailwind component primitives for enterprise', language: 'TypeScript', stargazersCount: 280, url: 'https://github.com' },
-      { name: 'edge-cache-proxy', description: 'Distributed caching proxy with zero cold-starts', language: 'Go', stargazersCount: 195, url: 'https://github.com' },
-    ],
-    accentColor: '#ff6b35',
-  },
-  {
-    id: 'aiml-researcher',
-    title: 'AI / ML & LLM Engineer',
-    role: 'Deep Learning & Applied GenAI',
-    badge: 'Trending 🔥',
-    icon: Brain,
-    theme: 'cyberpunk2077',
-    preset: 'titan',
-    bio: 'Fine-tuning foundation models, optimizing multi-modal inference pipelines, and building autonomous agent swarms.',
-    skills: ['Python', 'PyTorch', 'FastAPI', 'Docker', 'PostgreSQL', 'AWS', 'Linux', 'Git'],
-    pinnedRepos: [
-      { name: 'agent-swarm-core', description: 'Orchestration framework for hierarchical LLM agents', language: 'Python', stargazersCount: 1250, url: 'https://github.com' },
-      { name: 'quant-kernel', description: 'Custom 4-bit CUDA quantization kernels for local inference', language: 'C++', stargazersCount: 890, url: 'https://github.com' },
-      { name: 'eval-bench', description: 'Automated hallucination benchmark for RAG applications', language: 'Python', stargazersCount: 540, url: 'https://github.com' },
-    ],
-    accentColor: '#ffcc00',
-  },
-  {
-    id: 'systems-rust',
-    title: 'Rust & Systems Engineer',
-    role: 'High-Performance & Low-Level Dev',
-    badge: 'Cult Classic',
-    icon: Cpu,
-    theme: 'elden-ring',
-    preset: 'minimalist',
-    bio: 'Building memory-safe database engines, zero-copy network stacks, and concurrent systems in Rust & Go.',
-    skills: ['Rust', 'Go', 'Linux', 'Docker', 'Kubernetes', 'Git'],
-    pinnedRepos: [
-      { name: 'iron-kv', description: 'LSM-tree embedded key-value store with ACID transactions in Rust', language: 'Rust', stargazersCount: 820, url: 'https://github.com' },
-      { name: 'zero-wire', description: 'Zero-copy high throughput UDP packet processor', language: 'Rust', stargazersCount: 410, url: 'https://github.com' },
-    ],
-    accentColor: '#c9a84c',
-  },
-  {
-    id: 'devops-infra',
-    title: 'DevOps & Cloud Architect',
-    role: 'Site Reliability & Infrastructure',
-    badge: 'Production Grade',
-    icon: Terminal,
-    theme: 'matrix',
-    preset: 'bento',
-    bio: 'Automating multi-region Kubernetes clusters, GitOps CI/CD pipelines, and zero-trust infrastructure as code.',
-    skills: ['Kubernetes', 'Docker', 'AWS', 'Linux', 'Go', 'Python', 'Git'],
-    pinnedRepos: [
-      { name: 'gitops-fleet', description: 'Production Terraform & ArgoCD templates for resilient clouds', language: 'HCL', stargazersCount: 630, url: 'https://github.com' },
-      { name: 'k8s-cost-watcher', description: 'Autonomous pod autoscaler based on real-time AWS spot pricing', language: 'Go', stargazersCount: 390, url: 'https://github.com' },
-    ],
-    accentColor: '#00ff00',
-  },
-  {
-    id: 'web3-security',
-    title: 'Web3 & Smart Contract Dev',
-    role: 'EVM & DeFi Security Auditor',
-    badge: 'High Value',
-    icon: Shield,
-    theme: 'synthwave',
-    preset: 'bento',
-    bio: 'Developing gas-optimized smart contracts, formal verification test suites, and audited decentralized liquidity protocols.',
-    skills: ['Solidity', 'TypeScript', 'React', 'Rust', 'Node.js', 'Next.js'],
-    pinnedRepos: [
-      { name: 'vault-protocol', description: 'Gas-optimized ERC-4626 multi-asset yield vault', language: 'Solidity', stargazersCount: 740, url: 'https://github.com' },
-      { name: 'sol-security-lint', description: 'Static analysis rules for re-entrancy and arithmetic anomalies', language: 'Rust', stargazersCount: 310, url: 'https://github.com' },
-    ],
-    accentColor: '#f92aad',
-  },
-  {
-    id: 'student-faang',
-    title: 'Student & Open Source Contributor',
-    role: 'CS Undergrad / Internship Ready',
-    badge: 'Hire Ready 🎓',
-    icon: GraduationCap,
-    theme: 'tokyonight',
-    preset: 'bento',
-    bio: 'Computer Science sophomore passionate about web applications, data structures, and contributing to open source.',
-    skills: ['JavaScript', 'TypeScript', 'React', 'Python', 'Node.js', 'PostgreSQL', 'Git', 'TailwindCSS'],
-    pinnedRepos: [
-      { name: 'dev-portfolio-v3', description: 'Modern dark-mode portfolio built with Next.js and Tailwind', language: 'TypeScript', stargazersCount: 180, url: 'https://github.com' },
-      { name: 'algorithm-visualizer', description: 'Interactive visualizer for pathfinding and sorting algorithms', language: 'JavaScript', stargazersCount: 290, url: 'https://github.com' },
-    ],
-    accentColor: '#7aa2f7',
-  },
-];
+const TEMPLATES = COMMUNITY_TEMPLATES;
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -153,7 +33,7 @@ export default function TemplatesPage() {
       publicRepos: 32,
       followers: 240,
       following: 80,
-      languages: [
+      languages: template.languages || [
         { name: template.skills[0] || 'TypeScript', percentage: 55, color: '#3178c6' },
         { name: template.skills[1] || 'Python', percentage: 30, color: '#3572A5' },
         { name: template.skills[2] || 'Rust', percentage: 15, color: '#dea584' },
@@ -297,7 +177,7 @@ export default function TemplatesPage() {
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {TEMPLATES.map((tmpl) => {
-            const Icon = tmpl.icon;
+            const Icon = tmpl.icon || (() => <Sparkles className="h-5 w-5" />);
             const isCopied = copiedId === tmpl.id;
 
             return (
