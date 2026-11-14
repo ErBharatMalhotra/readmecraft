@@ -1786,8 +1786,8 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
 
   // Draw from back to front for proper layering
   for (let r = rows - 1; r >= 0; r--) {
-    for (let c = 0; c < cols; c++) {
-      const week = weeks[weeks.length - cols + c];
+    for (let colIdx = 0; colIdx < cols; colIdx++) {
+      const week = weeks[weeks.length - cols + colIdx];
       if (!week) continue;
       const day = week.contributionDays?.[r];
       if (!day) continue;
@@ -1797,16 +1797,16 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
       
       const level = count <= 2 ? 1 : count <= 4 ? 2 : count <= 8 ? 3 : 4;
       const height3D = level * 12;
-      const color = level === 1 ? '#0e4429' : level === 2 ? '#006d32' : level === 3 ? '#26a641' : '#3fb950';
-      const colorLight = level === 1 ? '#1a5c35' : level === 2 ? '#0a8a3f' : level === 3 ? '#34c652' : '#4fd160';
-      const colorDark = level === 1 ? '#082e1a' : level === 2 ? '#004a24' : level === 3 ? '#1a7a2e' : '#2da640';
+      const color = level === 1 ? c.border : level === 2 ? c.emeraldDim : level === 3 ? c.emerald : c.gold;
+      const colorLight = level === 1 ? c.borderLight : level === 2 ? c.emerald : level === 3 ? c.emeraldLight : c.gold;
+      const colorDark = level === 1 ? c.bgElevated : level === 2 ? c.border : level === 3 ? c.emeraldDim : c.goldDim;
       
       // Isometric coordinates
-      const isoX = startX + c * cellW + r * (cellW / 2);
+      const isoX = startX + colIdx * cellW + r * (cellW / 2);
       const isoY = startY - r * (cellH / 2) - height3D;
 
       // Delay based on position for wave animation
-      const delay = (c * 0.02 + r * 0.03);
+      const delay = (colIdx * 0.02 + r * 0.03);
 
       inner += `<g transform="translate(${isoX}, ${isoY})">
         <!-- Top face -->
@@ -1857,10 +1857,10 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
 
   // Legend
   const legendData = [
-    { color: '#0e4429', label: '1-2' },
-    { color: '#006d32', label: '3-4' },
-    { color: '#26a641', label: '5-8' },
-    { color: '#3fb950', label: '9+' },
+    { color: c.border, label: '1-2' },
+    { color: c.emeraldDim, label: '3-4' },
+    { color: c.emerald, label: '5-8' },
+    { color: c.gold, label: '9+' },
   ];
   legendData.forEach((item, i) => {
     const x = 30;
@@ -2102,7 +2102,7 @@ function generateCodeTimeHeatmapSvg(username: string, theme: Theme): string {
       if (intensity < 0.1) return;
       
       const level = intensity < 0.25 ? 1 : intensity < 0.5 ? 2 : intensity < 0.75 ? 3 : 4;
-      const colors = ['#0e4429', '#006d32', '#26a641', '#3fb950'];
+      const colors = [c.border, c.emeraldDim, c.emerald, c.gold];
       const color = colors[level - 1];
       const x = startX + hourIdx * (cellSize + cellGap);
       const y = startY + dayIdx * (cellSize + cellGap);
@@ -2120,10 +2120,10 @@ function generateCodeTimeHeatmapSvg(username: string, theme: Theme): string {
 
   // Legend
   const legendColors = [
-    { color: '#0e4429', label: 'Low' },
-    { color: '#006d32', label: 'Medium' },
-    { color: '#26a641', label: 'High' },
-    { color: '#3fb950', label: 'Peak' },
+    { color: c.border, label: 'Low' },
+    { color: c.emeraldDim, label: 'Medium' },
+    { color: c.emerald, label: 'High' },
+    { color: c.gold, label: 'Peak' },
   ];
   legendColors.forEach((item, i) => {
     const x = width - 100;
@@ -2256,7 +2256,7 @@ function generateCompositeSvg(
   recentWeeks.forEach((week: any, col: number) => {
     (week.contributionDays || []).slice(0, 7).forEach((day: any, row: number) => {
       const count = day.contributionCount || 0;
-      const color = count === 0 ? c.bgElevated : count <= 2 ? '#0e4429' : count <= 4 ? '#006d32' : count <= 8 ? '#26a641' : '#3fb950';
+      const color = count === 0 ? c.bgElevated : count <= 2 ? c.border : count <= 4 ? c.emeraldDim : count <= 8 ? c.emerald : c.gold;
       const x = snakeStartX + col * (snakeCellSize + snakeGap);
       const y = snakeStartY + row * (snakeCellSize + snakeGap);
       snakeGrid += `<rect x="${x}" y="${y}" width="${snakeCellSize}" height="${snakeCellSize}" rx="1.5" fill="${color}"/>`;
@@ -2319,7 +2319,7 @@ function generateCompositeSvg(
   hmWeeks.forEach((week: any, col: number) => {
     (week.contributionDays || []).slice(0, 7).forEach((day: any, row: number) => {
       const count = day.contributionCount || 0;
-      const color = count === 0 ? c.bgElevated : count <= 2 ? '#0e4429' : count <= 4 ? '#006d32' : count <= 8 ? '#26a641' : '#3fb950';
+      const color = count === 0 ? c.bgElevated : count <= 2 ? c.border : count <= 4 ? c.emeraldDim : count <= 8 ? c.emerald : c.gold;
       const x = hmStartX + col * (hmCellSize + hmGap);
       const y = hmStartY + row * (hmCellSize + hmGap);
       hmGrid += `<rect x="${x}" y="${y}" width="${hmCellSize}" height="${hmCellSize}" rx="1" fill="${color}"/>`;
