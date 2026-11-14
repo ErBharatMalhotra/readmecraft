@@ -189,7 +189,7 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     pinnedRepos: [
       { name: 'async-api-framework', description: 'Batteries-included FastAPI starter kit', language: 'Python', stargazersCount: 1800, url: 'https://github.com/ErBharatMalhotra/async-api-framework' },
       { name: 'ml-serving', description: 'Low-latency model serving with batching', language: 'Python', stargazersCount: 950, url: 'https://github.com/ErBharatMalhotra/ml-serving' },
-      { name: 'data-pipeline', description: 'ETL pipeline with Airflow and dbt', language: 'Python', stargazersCount: 620, url: 'https://github.com/ErBharatMalhotra/data-pipeline' },
+      { name: 'open-source-ai-radar', description: 'Scores 10,200+ open-source AI repos on Impact / Velocity / Health', language: 'Python', stargazersCount: 1200, url: 'https://github.com/ErBharatMalhotra/open-source-ai-radar' },
     ],
     accentColor: '#3776ab',
   },
