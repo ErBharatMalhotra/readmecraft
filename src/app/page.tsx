@@ -212,6 +212,13 @@ export default function Home() {
     setMarkdown(compileSectionsToMarkdown(sorted));
   };
 
+  // Handler: Reorder Sections (Drag & Drop)
+  const handleReorderSections = (reorderedSections: Section[]) => {
+    const updated = reorderedSections.map((s, idx) => ({ ...s, order: idx + 1 }));
+    setSections(updated);
+    setMarkdown(compileSectionsToMarkdown(updated));
+  };
+
   // Handler: Add Custom Section
   const handleAddCustomSection = (title: string, content: string) => {
     const newSection: Section = {
@@ -446,6 +453,7 @@ export default function Home() {
             sections={sections}
             onToggleSection={handleToggleSection}
             onMoveSection={handleMoveSection}
+            onReorderSections={handleReorderSections}
             onAddCustomSection={handleAddCustomSection}
             onRemoveSection={handleRemoveSection}
             gitHoloEnabled={
@@ -486,7 +494,15 @@ export default function Home() {
             activeMobileTab === 'preview' ? 'block' : 'hidden lg:block'
           }`}
         >
-          <PaneGitHubPreview markdown={markdown} repoOrUserTitle={activeTitle} />
+          <PaneGitHubPreview
+            markdown={markdown}
+            repoOrUserTitle={activeTitle}
+            mode={mode}
+            profileData={profileData}
+            projectData={projectData}
+            sections={sections}
+            theme={theme}
+          />
         </div>
       </main>
 

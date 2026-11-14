@@ -15,6 +15,8 @@ import {
   Sparkles,
   Palette,
   Search,
+  GripVertical,
+  UserCheck,
 } from 'lucide-react';
 import { THEMES, ThemePalette } from '@/lib/themes';
 
@@ -39,6 +41,7 @@ interface PaneSectionManagerProps {
   onRemoveSkill?: (skill: string) => void;
   theme?: string;
   setTheme?: (theme: string) => void;
+  onReorderSections?: (sections: Section[]) => void;
 }
 
 const CATEGORY_TABS: { id: string; label: string; icon: string }[] = [
@@ -80,11 +83,14 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
   onRemoveSkill,
   theme = 'gta6',
   setTheme,
+  onReorderSections,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [customContent, setCustomContent] = useState('');
   const [customSkillInput, setCustomSkillInput] = useState('');
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,6 +232,48 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
             )}
           </div>
         </div>
+
+        {/* Quick Personas Switcher (Profile Mode Only) */}
+        {mode === 'profile' && (
+          <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-[#0c1527] to-[#090e1a] p-3.5 shadow-lg">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="flex items-center gap-1.5 font-['Space_Grotesk'] text-xs font-bold tracking-wider text-white uppercase">
+                <UserCheck className="h-3.5 w-3.5 text-emerald-400" />
+                Quick Personas
+              </span>
+              <a
+                href="/templates"
+                className="font-mono text-[10px] text-emerald-400 hover:text-emerald-300 hover:underline"
+              >
+                Browse All →
+              </a>
+            </div>
+            <p className="mb-3 text-[11px] leading-relaxed text-slate-400">
+              Instantly load community persona presets & themes:
+            </p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { name: 'Full-Stack', preset: 'bento', theme: 'gta6' },
+                { name: 'AI / ML', preset: 'titan', theme: 'cyberpunk2077' },
+                { name: 'Rust Eng', preset: 'minimalist', theme: 'elden-ring' },
+                { name: 'DevOps', preset: 'bento', theme: 'matrix' },
+                { name: 'Web3', preset: 'bento', theme: 'synthwave' },
+                { name: 'Student', preset: 'bento', theme: 'tokyonight' },
+              ].map((p) => (
+                <button
+                  key={p.name}
+                  onClick={() => {
+                    setProfilePreset(p.preset as ProfilePreset);
+                    if (setTheme) setTheme(p.theme);
+                  }}
+                  className="rounded-lg border border-[#1e293b] bg-[#090d16] px-2 py-1.5 text-center font-mono text-[11px] text-slate-300 transition-colors hover:border-emerald-500/50 hover:bg-[#121b2d] hover:text-emerald-300"
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Theme Engine Selector (50 Curated Viral Themes) */}
         <div className="rounded-xl border border-[#1e293b] bg-[#0e1526] p-3.5">
@@ -464,13 +512,43 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
             {sortedSections.map((section, index) => (
               <div
                 key={section.id}
+                draggable
+                onDragStart={() => setDraggedIndex(index)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (dragOverIndex !== index) setDragOverIndex(index);
+                }}
+                onDragEnd={() => {
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedIndex === null || draggedIndex === index) return;
+                  const newItems = [...sortedSections];
+                  const [removed] = newItems.splice(draggedIndex, 1);
+                  newItems.splice(index, 0, removed);
+                  if (onReorderSections) {
+                    onReorderSections(newItems);
+                  }
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
                 className={`flex items-center justify-between rounded-xl border p-2.5 transition-all ${
-                  section.enabled
+                  dragOverIndex === index
+                    ? 'border-emerald-400 bg-emerald-500/15 scale-[1.02]'
+                    : section.enabled
                     ? 'border-[#1e293b] bg-[#0e1526] text-slate-200'
                     : 'border-slate-900 bg-[#080b12] text-slate-600 opacity-60'
-                }`}
+                } ${draggedIndex === index ? 'opacity-40' : ''}`}
               >
-                <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div
+                    className="cursor-grab text-slate-500 hover:text-slate-300 active:cursor-grabbing p-0.5"
+                    title="Drag to reorder"
+                  >
+                    <GripVertical className="h-3.5 w-3.5" />
+                  </div>
                   <input
                     type="checkbox"
                     checked={section.enabled}
