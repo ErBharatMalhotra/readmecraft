@@ -502,6 +502,7 @@ export default function Home() {
             projectData={projectData}
             sections={sections}
             theme={theme}
+            onApplyMarkdown={setMarkdown}
           />
         </div>
       </main>

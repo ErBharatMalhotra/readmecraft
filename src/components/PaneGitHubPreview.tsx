@@ -20,9 +20,16 @@ import {
   Info,
   X,
   Sparkles,
+  Zap,
+  Brain,
+  Wrench,
+  Terminal,
+  Loader2,
 } from 'lucide-react';
 import type { AppMode, ProfileData, ProjectData, Section } from '@/types/readmecraft';
 import { scoreProfileReadme, scoreProjectReadme, ScoreBreakdown } from '@/lib/score';
+import { roastReadme, quickPolishMarkdown } from '@/lib/ai-assistant';
+import { generateGitHubWorkflowYaml } from '@/lib/action-generator';
 
 interface PaneGitHubPreviewProps {
   markdown: string;
@@ -32,6 +39,7 @@ interface PaneGitHubPreviewProps {
   projectData?: ProjectData;
   sections?: Section[];
   theme?: string;
+  onApplyMarkdown?: (newMarkdown: string) => void;
 }
 
 export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
@@ -42,11 +50,16 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
   projectData,
   sections = [],
   theme = 'gta6',
+  onApplyMarkdown,
 }) => {
   const [viewMode, setViewMode] = useState<'rendered' | 'raw'>('rendered');
   const [deviceWidth, setDeviceWidth] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [showScoreModal, setShowScoreModal] = useState<boolean>(false);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [showRoastModal, setShowRoastModal] = useState<boolean>(false);
+  const [showActionModal, setShowActionModal] = useState<boolean>(false);
+  const [showTelemetryModal, setShowTelemetryModal] = useState<boolean>(false);
+  const [isPolishing, setIsPolishing] = useState<boolean>(false);
 
   // Compute live taste score
   const scoreData: ScoreBreakdown | null = useMemo(() => {
@@ -57,6 +70,30 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
     }
     return null;
   }, [mode, profileData, projectData, sections, markdown]);
+
+  // Compute AI Roast & Polish
+  const roastData = useMemo(() => {
+    if (mode === 'profile' && profileData) {
+      return roastReadme('profile', profileData, sections, markdown);
+    } else if (mode === 'project' && projectData) {
+      return roastReadme('project', projectData, sections, markdown);
+    }
+    return null;
+  }, [mode, profileData, projectData, sections, markdown]);
+
+  const handleQuickPolish = () => {
+    if (!onApplyMarkdown) return;
+    setIsPolishing(true);
+    setTimeout(() => {
+      const data = mode === 'profile' ? profileData : projectData;
+      if (data) {
+        const polished = quickPolishMarkdown(mode, data, markdown);
+        onApplyMarkdown(polished);
+      }
+      setIsPolishing(false);
+      setShowRoastModal(false);
+    }, 500);
+  };
 
   const getContainerWidth = () => {
     switch (deviceWidth) {
@@ -115,6 +152,36 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
               </span>
             </button>
           )}
+
+          {/* AI Polish / Roast Button */}
+          <button
+            onClick={() => setShowRoastModal(true)}
+            className="flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 font-mono text-xs font-medium text-purple-300 hover:border-purple-500/60 hover:text-white transition-colors"
+            title="AI Roast & Polish (Google XYZ Formula)"
+          >
+            <Brain className="h-3.5 w-3.5 text-purple-400" />
+            <span className="hidden sm:inline">AI Polish</span>
+          </button>
+
+          {/* Actions Workflow Button */}
+          <button
+            onClick={() => setShowActionModal(true)}
+            className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] px-2.5 py-1 font-mono text-xs font-medium text-slate-300 hover:border-slate-700 hover:text-white transition-colors"
+            title="Generate GitHub Actions Auto-Updater"
+          >
+            <Terminal className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="hidden md:inline">Action</span>
+          </button>
+
+          {/* Telemetry / Views Badge Button */}
+          <button
+            onClick={() => setShowTelemetryModal(true)}
+            className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] px-2.5 py-1 font-mono text-xs font-medium text-slate-300 hover:border-slate-700 hover:text-white transition-colors"
+            title="Live Visitor & Click Analytics Badge"
+          >
+            <Zap className="h-3.5 w-3.5 text-amber-400" />
+            <span className="hidden md:inline">Analytics</span>
+          </button>
 
           {/* Viral Share Button */}
           <button
@@ -415,6 +482,216 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
                 className="w-full rounded-xl border border-[#1e293b] py-2 text-xs text-slate-400 hover:text-white"
               >
                 Copy Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Roast & Polish Modal */}
+      {showRoastModal && roastData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-purple-500/30 bg-[#0c1220] p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-purple-400" />
+                <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white">
+                  AI Roast & Polish (Google XYZ Formula)
+                </h3>
+              </div>
+              <button onClick={() => setShowRoastModal(false)} className="text-slate-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Roast Header */}
+            <div className="mt-4 flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/10 p-4">
+              <div>
+                <div className="font-mono text-xs text-purple-400 uppercase font-semibold">
+                  Roast Intensity
+                </div>
+                <div className="font-['Space_Grotesk'] text-2xl font-black text-white capitalize">
+                  {roastData.roastLevel} 🔥
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="font-mono text-xs text-slate-400">Score: </span>
+                <span className="font-bold text-lg text-purple-300">{roastData.score}/100</span>
+              </div>
+            </div>
+
+            {/* The Burns */}
+            <div className="mt-4">
+              <div className="text-xs font-semibold text-slate-400 font-mono uppercase mb-2">
+                Brutal Honest Feedback
+              </div>
+              <div className="space-y-2">
+                {roastData.burns.map((burn, i) => (
+                  <div key={i} className="rounded-lg border border-rose-500/20 bg-rose-950/20 p-2.5 text-xs text-rose-300">
+                    "{burn}"
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Google XYZ Formula Bullets */}
+            <div className="mt-4 rounded-xl border border-[#1e293b] bg-[#080d18] p-3 text-xs">
+              <div className="font-semibold text-emerald-400 flex items-center gap-1.5 mb-1.5">
+                <Sparkles className="h-3.5 w-3.5" />
+                Google XYZ Resume Formula:
+              </div>
+              <p className="text-slate-400 text-[11px] mb-2 leading-relaxed">
+                "Accomplished [X] as measured by [Y], by doing [Z]" transforms weak responsibilities into high-impact accomplishments.
+              </p>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="mt-5 flex gap-2">
+              <button
+                disabled={isPolishing}
+                onClick={handleQuickPolish}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-purple-500 py-2.5 font-bold text-xs text-slate-950 hover:bg-purple-400 transition-colors shadow-[0_0_12px_rgba(168,85,247,0.3)] disabled:opacity-50"
+              >
+                {isPolishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                <span>1-Click Apply AI Polish</span>
+              </button>
+              <button
+                onClick={() => setShowRoastModal(false)}
+                className="rounded-xl border border-[#1e293b] px-4 py-2.5 text-xs text-slate-300 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GitHub Actions Workflow Modal */}
+      {showActionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-xl rounded-2xl border border-[#1e293b] bg-[#0c1220] p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+              <div className="flex items-center gap-2">
+                <Terminal className="h-5 w-5 text-emerald-400" />
+                <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white">
+                  GitHub Actions Auto-Updater
+                </h3>
+              </div>
+              <button onClick={() => setShowActionModal(false)} className="text-slate-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs text-slate-300">
+              Run this automated workflow in your repository to keep your contributions, telemetry, and live stats synchronized:
+            </p>
+
+            <div className="mt-3 rounded-xl border border-[#1e293b] bg-[#080d18] p-3">
+              <div className="font-mono text-[10px] text-slate-500 mb-1">
+                .github/workflows/readme-craft-updater.yml
+              </div>
+              <pre className="font-mono text-[11px] text-emerald-300 leading-relaxed max-h-48 overflow-y-auto">
+                {generateGitHubWorkflowYaml({
+                  updateFrequency: 'daily',
+                  includeWakatime: true,
+                  includeBlogRss: true,
+                  includeGithubStats: true,
+                  includeSpotify: false,
+                })}
+              </pre>
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => {
+                  const yaml = generateGitHubWorkflowYaml({
+                    updateFrequency: 'daily',
+                    includeWakatime: true,
+                    includeBlogRss: true,
+                    includeGithubStats: true,
+                    includeSpotify: false,
+                  });
+                  navigator.clipboard.writeText(yaml);
+                  alert('Workflow YAML copied to clipboard!');
+                }}
+                className="flex-1 rounded-xl bg-emerald-500 py-2.5 font-bold text-xs text-slate-950 hover:bg-emerald-400 transition-colors shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+              >
+                Copy Workflow YAML
+              </button>
+              <button
+                onClick={() => {
+                  const yaml = generateGitHubWorkflowYaml({
+                    updateFrequency: 'daily',
+                    includeWakatime: true,
+                    includeBlogRss: true,
+                    includeGithubStats: true,
+                    includeSpotify: false,
+                  });
+                  const blob = new Blob([yaml], { type: 'text/yaml' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'readme-craft-updater.yml';
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                }}
+                className="rounded-xl border border-[#1e293b] px-4 py-2.5 text-xs text-slate-300 hover:text-white"
+              >
+                Download .yml
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Telemetry / Views Analytics Modal */}
+      {showTelemetryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-amber-500/30 bg-[#0c1220] p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-amber-400" />
+                <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white">
+                  README Visitor & Click Telemetry
+                </h3>
+              </div>
+              <button onClick={() => setShowTelemetryModal(false)} className="text-slate-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs text-slate-300">
+              Track live profile views and unique recruiter visits with an animated telemetry badge:
+            </p>
+
+            <div className="mt-4 flex justify-center rounded-xl border border-[#1e293b] bg-[#080d18] p-4">
+              <img
+                src={`/api/telemetry?username=${(profileData as any)?.username || 'ErBharatMalhotra'}&theme=${theme}`}
+                alt="README Views"
+                className="h-12"
+              />
+            </div>
+
+            <div className="mt-4 rounded-xl border border-[#1e293b] bg-[#080d18] p-3 font-mono text-[11px] text-slate-400 break-all select-all">
+              {`[![README Views](https://readme.bharatdn.com/api/telemetry?username=${(profileData as any)?.username || 'ErBharatMalhotra'}&theme=${theme})](https://readme.bharatdn.com)`}
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => {
+                  const snippet = `[![README Views](https://readme.bharatdn.com/api/telemetry?username=${(profileData as any)?.username || 'ErBharatMalhotra'}&theme=${theme})](https://readme.bharatdn.com)`;
+                  navigator.clipboard.writeText(snippet);
+                  alert('Telemetry Badge markdown copied to clipboard!');
+                }}
+                className="flex-1 rounded-xl bg-amber-400 py-2.5 font-bold text-xs text-slate-950 hover:bg-amber-300 transition-colors shadow-[0_0_12px_rgba(251,191,36,0.25)]"
+              >
+                Copy Badge Snippet
+              </button>
+              <button
+                onClick={() => setShowTelemetryModal(false)}
+                className="rounded-xl border border-[#1e293b] px-4 py-2.5 text-xs text-slate-300 hover:text-white"
+              >
+                Close
               </button>
             </div>
           </div>
