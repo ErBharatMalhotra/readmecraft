@@ -91,9 +91,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Preload critical fonts to prevent CLS from font swap */}
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://fonts.gstatic.com/s/jetbrainsmono/v25/tDbD2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKk.woff2" />
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://fonts.gstatic.com/s/spacegrotesk/v20/VdGHAYIAY6EgT2QJp6w2sIqdSZc.woff2" />
         <link
           href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&family=Space+Grotesk:wght@300..700&display=swap"
           rel="stylesheet"
