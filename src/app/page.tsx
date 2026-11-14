@@ -100,6 +100,10 @@ export default function Home() {
       const newSecs = getProfileSections(profileData, profilePreset, newTheme);
       setSections(newSecs);
       setMarkdown(compileSectionsToMarkdown(newSecs));
+    } else {
+      const newSecs = getProjectSections(projectData, projectPreset, newTheme);
+      setSections(newSecs);
+      setMarkdown(compileSectionsToMarkdown(newSecs));
     }
   };
 
@@ -111,7 +115,7 @@ export default function Home() {
       setSections(newSecs);
       setMarkdown(compileSectionsToMarkdown(newSecs));
     } else {
-      const newSecs = getProjectSections(projectData, projectPreset);
+      const newSecs = getProjectSections(projectData, projectPreset, theme);
       setSections(newSecs);
       setMarkdown(compileSectionsToMarkdown(newSecs));
     }
@@ -128,7 +132,7 @@ export default function Home() {
   // Handler: Change Project Preset
   const handleProjectPresetChange = (preset: ProjectPreset) => {
     setProjectPreset(preset);
-    const newSecs = getProjectSections(projectData, preset);
+    const newSecs = getProjectSections(projectData, preset, theme);
     setSections(newSecs);
     setMarkdown(compileSectionsToMarkdown(newSecs));
   };
@@ -156,7 +160,7 @@ export default function Home() {
           setMarkdown(compileSectionsToMarkdown(newSecs));
         } else {
           setProjectData(resData.data);
-          const newSecs = getProjectSections(resData.data, projectPreset);
+          const newSecs = getProjectSections(resData.data, projectPreset, theme);
           setSections(newSecs);
           setMarkdown(compileSectionsToMarkdown(newSecs));
         }
@@ -175,7 +179,7 @@ export default function Home() {
         const { fetchGitHubProject } = await import('@/lib/github');
         const data = await fetchGitHubProject(target, token);
         setProjectData(data);
-        const newSecs = getProjectSections(data, projectPreset);
+        const newSecs = getProjectSections(data, projectPreset, theme);
         setSections(newSecs);
         setMarkdown(compileSectionsToMarkdown(newSecs));
       }

@@ -5,11 +5,18 @@ import type {
   ProjectPreset,
   Section,
 } from '@/types/readmecraft';
+import { getThemeById } from '@/lib/themes';
 
 export function getProfileSections(data: ProfileData, preset: ProfilePreset, theme: string = 'gta6'): Section[] {
   const username = data.username || 'ErBharatMalhotra';
   const name = data.name || username;
-  const themeParam = `&theme=${theme}`;
+  const themeObj = getThemeById(theme);
+  const themeParam = `&theme=${themeObj.id}`;
+  const bgHex = themeObj.bg.replace('#', '');
+  const accentHex = themeObj.emerald.replace('#', '');
+  const goldHex = themeObj.gold.replace('#', '');
+  const textHex = themeObj.textPrimary.replace('#', '');
+  const subtextHex = themeObj.textSecondary.replace('#', '');
 
   if (preset === 'minimalist') {
     return [
@@ -89,8 +96,8 @@ ${data.pinnedRepos.map((repo) => `- **[${repo.name}](${repo.url})** — ${repo.d
         content: `### 📊 Live GitHub Activity
 
 <div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=tokyonight&hide_border=true&bg_color=090d16&title_color=10b981&icon_color=10b981&text_color=94a3b8" alt="GitHub Stats" width="48%" />
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=tokyonight&hide_border=true&bg_color=090d16&title_color=10b981&text_color=94a3b8" alt="Top Languages" width="48%" />
+  <img src="https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${themeObj.id}&hide_border=true&bg_color=${bgHex}&title_color=${accentHex}&icon_color=${accentHex}&text_color=${subtextHex}" alt="GitHub Stats" width="48%" />
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${themeObj.id}&hide_border=true&bg_color=${bgHex}&title_color=${accentHex}&text_color=${subtextHex}" alt="Top Languages" width="48%" />
 </div>`,
       },
     ];
@@ -108,9 +115,9 @@ ${data.pinnedRepos.map((repo) => `- **[${repo.name}](${repo.url})** — ${repo.d
 # ⚡ ${name}
 ### Open Source Architect & Systems Engineer
 
-[![Followers](https://img.shields.io/github/followers/${username}?label=Followers&style=flat-square&color=10b981&labelColor=090d16)](https://github.com/${username})
-[![Stars](https://img.shields.io/badge/Stars-Earned-10b981?style=flat-square&labelColor=090d16)](https://github.com/${username})
-[![License](https://img.shields.io/badge/License-MIT-10b981?style=flat-square&labelColor=090d16)](https://opensource.org/licenses/MIT)
+[![Followers](https://img.shields.io/github/followers/${username}?label=Followers&style=flat-square&color=${accentHex}&labelColor=${bgHex})](https://github.com/${username})
+[![Stars](https://img.shields.io/badge/Stars-Earned-${accentHex}?style=flat-square&labelColor=${bgHex})](https://github.com/${username})
+[![License](https://img.shields.io/badge/License-MIT-${accentHex}?style=flat-square&labelColor=${bgHex})](https://opensource.org/licenses/MIT)
 
 > "${data.bio || 'Designing high-impact software, maintaining mission-critical tools.'}"
 
@@ -152,7 +159,7 @@ ${data.pinnedRepos.map((r) => `| **[${r.name}](${r.url})** | ${r.description} | 
         content: `### ⚔️ Technology Arsenal
 
 <p align="left">
-${data.skills.map((s) => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-090d16?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=10b981&labelColor=090d16" alt="${s}" />`).join(' ')}
+${data.skills.map((s) => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`).join(' ')}
 </p>`,
       },
       {
@@ -163,7 +170,7 @@ ${data.skills.map((s) => `<img src="https://img.shields.io/badge/-${encodeURICom
         content: `### 📈 Commit Cadence & Streak
 
 <div align="center">
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=tokyonight&hide_border=true&background=090d16&ring=10b981&fire=10b981&currStreakLabel=10b981" alt="GitHub Streak" width="70%" />
+  <img src="https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${themeObj.id}&hide_border=true&background=${bgHex}&ring=${accentHex}&fire=${accentHex}&currStreakLabel=${accentHex}" alt="GitHub Streak" width="70%" />
 </div>`,
       },
       {
@@ -193,9 +200,9 @@ ${data.skills.map((s) => `<img src="https://img.shields.io/badge/-${encodeURICom
 ### ${data.bio || 'Architecting Modern Web & Distributed Infrastructure'}
 
 <p align="center">
-  <a href="https://github.com/${username}"><img src="https://img.shields.io/github/followers/${username}?label=Followers&style=for-the-badge&color=10b981&labelColor=090d16" alt="Followers" /></a>
-  <a href="${data.website || `https://github.com/${username}`}"><img src="https://img.shields.io/badge/Portfolio-Live-10b981?style=for-the-badge&labelColor=090d16" alt="Website" /></a>
-  <a href="https://twitter.com/${data.twitter || username}"><img src="https://img.shields.io/badge/Twitter-@${data.twitter || username}-10b981?style=for-the-badge&labelColor=090d16" alt="Twitter" /></a>
+  <a href="https://github.com/${username}"><img src="https://img.shields.io/github/followers/${username}?label=Followers&style=for-the-badge&color=${accentHex}&labelColor=${bgHex}" alt="Followers" /></a>
+  <a href="${data.website || `https://github.com/${username}`}"><img src="https://img.shields.io/badge/Portfolio-Live-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Website" /></a>
+  <a href="https://twitter.com/${data.twitter || username}"><img src="https://img.shields.io/badge/Twitter-@${data.twitter || username}-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Twitter" /></a>
 </p>
 
 </div>
@@ -258,7 +265,7 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bhar
 
 <div align="center">
 
-${data.skills.map((s) => `<img src="https://img.shields.io/badge/${encodeURIComponent(s)}-090d16?style=for-the-badge&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=10b981&labelColor=090d16" alt="${s}" />`).join(' ')}
+${data.skills.map((s) => `<img src="https://img.shields.io/badge/${encodeURIComponent(s)}-${bgHex}?style=for-the-badge&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`).join(' ')}
 
 </div>`,
     },
@@ -273,7 +280,7 @@ ${data.skills.map((s) => `<img src="https://img.shields.io/badge/${encodeURIComp
 
 ${data.pinnedRepos
   .map(
-    (repo) => `[![${repo.name}](${repo.language ? `https://img.shields.io/badge/${repo.name}-${repo.language}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16` : `https://img.shields.io/badge/${repo.name}-10b981?style=for-the-badge&logo=github&logoColor=white&labelColor=090d16`})](${repo.url})`
+    (repo) => `[![${repo.name}](${repo.language ? `https://img.shields.io/badge/${repo.name}-${repo.language}-${accentHex}?style=for-the-badge&logo=github&logoColor=white&labelColor=${bgHex}` : `https://img.shields.io/badge/${repo.name}-${accentHex}?style=for-the-badge&logo=github&logoColor=white&labelColor=${bgHex}`})](${repo.url})`
   )
   .join(' ')}
 
@@ -465,7 +472,12 @@ ${data.githubStreakEnabled ? `- **Current Streak:** Powered by [ReadmeCraft Badg
   ];
 }
 
-export function getProjectSections(data: ProjectData, preset: ProjectPreset): Section[] {
+export function getProjectSections(data: ProjectData, preset: ProjectPreset, theme: string = 'gta6'): Section[] {
+  const themeObj = getThemeById(theme);
+  const bgHex = themeObj.bg.replace('#', '');
+  const accentHex = themeObj.emerald.replace('#', '');
+  const goldHex = themeObj.gold.replace('#', '');
+
   const {
     owner,
     repo,
@@ -491,9 +503,9 @@ export function getProjectSections(data: ProjectData, preset: ProjectPreset): Se
 
 > ${description}
 
-[![Stars](https://img.shields.io/github/stars/${owner}/${repo}?style=flat-square&color=10b981&labelColor=090d16)](https://github.com/${owner}/${repo})
-[![License](https://img.shields.io/badge/License-${license}-10b981?style=flat-square&labelColor=090d16)](https://opensource.org/licenses/${license})
-[![Language](https://img.shields.io/badge/Language-${encodeURIComponent(language)}-10b981?style=flat-square&labelColor=090d16)](https://github.com/${owner}/${repo})`,
+[![Stars](https://img.shields.io/github/stars/${owner}/${repo}?style=flat-square&color=${accentHex}&labelColor=${bgHex})](https://github.com/${owner}/${repo})
+[![License](https://img.shields.io/badge/License-${license}-${accentHex}?style=flat-square&labelColor=${bgHex})](https://opensource.org/licenses/${license})
+[![Language](https://img.shields.io/badge/Language-${encodeURIComponent(language)}-${accentHex}?style=flat-square&labelColor=${bgHex})](https://github.com/${owner}/${repo})`,
       },
       {
         id: 'quickstart',
@@ -569,8 +581,8 @@ Distributed under the **${license}** License. See \`LICENSE\` for more details.`
 
 > ${description}
 
-[![Stars](https://img.shields.io/github/stars/${owner}/${repo}?style=for-the-badge&color=10b981&labelColor=090d16)](https://github.com/${owner}/${repo})
-[![License: ${license}](https://img.shields.io/badge/License-${license}-10b981?style=for-the-badge&labelColor=090d16)](LICENSE)`,
+[![Stars](https://img.shields.io/github/stars/${owner}/${repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${owner}/${repo})
+[![License: ${license}](https://img.shields.io/badge/License-${license}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](LICENSE)`,
       },
       {
         id: 'installation',
@@ -654,10 +666,10 @@ ${testCommand}
 # 🛠️ ${title}
 > ${description}
 
-[![Stars](https://img.shields.io/github/stars/${owner}/${repo}?style=for-the-badge&color=10b981&labelColor=090d16)](https://github.com/${owner}/${repo}/stargazers)
-[![Forks](https://img.shields.io/github/forks/${owner}/${repo}?style=for-the-badge&color=10b981&labelColor=090d16)](https://github.com/${owner}/${repo}/network/members)
-[![License: ${license}](https://img.shields.io/badge/License-${license}-10b981?style=for-the-badge&labelColor=090d16)](LICENSE)
-[![Built With](https://img.shields.io/badge/Stack-${encodeURIComponent(language)}-10b981?style=for-the-badge&labelColor=090d16)](https://github.com/${owner}/${repo})
+[![Stars](https://img.shields.io/github/stars/${owner}/${repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${owner}/${repo}/stargazers)
+[![Forks](https://img.shields.io/github/forks/${owner}/${repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${owner}/${repo}/network/members)
+[![License: ${license}](https://img.shields.io/badge/License-${license}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](LICENSE)
+[![Built With](https://img.shields.io/badge/Stack-${encodeURIComponent(language)}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](https://github.com/${owner}/${repo})
 
 ${data.demoUrl ? `[**Explore Live Demo 🚀**](${data.demoUrl})` : ''}
 
@@ -683,7 +695,7 @@ ${data.features.map((f) => `- **${f}**`).join('\n')}`,
 
 <div align="left">
 
-${data.techStack.map((t) => `<img src="https://img.shields.io/badge/-${encodeURIComponent(t)}-090d16?style=flat-square&logoColor=10b981&labelColor=090d16" alt="${t}" />`).join(' ')}
+${data.techStack.map((t) => `<img src="https://img.shields.io/badge/-${encodeURIComponent(t)}-${bgHex}?style=flat-square&logoColor=${accentHex}&labelColor=${bgHex}" alt="${t}" />`).join(' ')}
 
 </div>`,
     },

@@ -5,167 +5,13 @@ import { fetchProfileData, checkETag, createETagResponse, createNotModifiedRespo
 // ============================================================================
 // DESIGN SYSTEM CONSTANTS
 // ============================================================================
-// Theme definitions - each theme is a complete color palette
-const THEMES = {
-  tokyonight: {
-    bg: '#1a1b26',
-    bgElevated: '#24283b',
-    border: '#414868',
-    borderLight: '#565f89',
-    emerald: '#7aa2f7',
-    emeraldDim: '#5d7acf',
-    emeraldLight: '#a5bdfc',
-    gold: '#e0af68',
-    goldDim: '#c4964a',
-    textPrimary: '#c0caf5',
-    textSecondary: '#9aa5ce',
-    textMuted: '#565f89',
-    red: '#f7768e',
-  },
-  dracula: {
-    bg: '#282a36',
-    bgElevated: '#44475a',
-    border: '#6272a4',
-    borderLight: '#6272a4',
-    emerald: '#50fa7b',
-    emeraldDim: '#3fd86a',
-    emeraldLight: '#6aff8f',
-    gold: '#f1fa8c',
-    goldDim: '#d9e27a',
-    textPrimary: '#f8f8f2',
-    textSecondary: '#bd93f9',
-    textMuted: '#6272a4',
-    red: '#ff5555',
-  },
-  nord: {
-    bg: '#2e3440',
-    bgElevated: '#3b4252',
-    border: '#4c566a',
-    borderLight: '#4c566a',
-    emerald: '#88c0d0',
-    emeraldDim: '#6db4c4',
-    emeraldLight: '#a0d8e8',
-    gold: '#ebcb8b',
-    goldDim: '#d8b778',
-    textPrimary: '#eceff4',
-    textSecondary: '#d8dee9',
-    textMuted: '#4c566a',
-    red: '#bf616a',
-  },
-  github: {
-    bg: '#0d1117',
-    bgElevated: '#161b22',
-    border: '#30363d',
-    borderLight: '#484f58',
-    emerald: '#58a6ff',
-    emeraldDim: '#3d8ce0',
-    emeraldLight: '#79c0ff',
-    gold: '#d2a8ff',
-    goldDim: '#b88fff',
-    textPrimary: '#e6edf3',
-    textSecondary: '#8b949e',
-    textMuted: '#6e7681',
-    red: '#f85149',
-  },
-  gruvbox: {
-    bg: '#282828',
-    bgElevated: '#3c3836',
-    border: '#504945',
-    borderLight: '#665c54',
-    emerald: '#8ec07c',
-    emeraldDim: '#7aa86a',
-    emeraldLight: '#a8d898',
-    gold: '#fabd2f',
-    goldDim: '#e2a81d',
-    textPrimary: '#ebdbb2',
-    textSecondary: '#a89984',
-    textMuted: '#665c54',
-    red: '#fb4934',
-  },
-  rosePine: {
-    bg: '#191724',
-    bgElevated: '#1f1d2e',
-    border: '#6e6a86',
-    borderLight: '#908caa',
-    emerald: '#9ccfd8',
-    emeraldDim: '#7abdc8',
-    emeraldLight: '#b8e7f0',
-    gold: '#f6c177',
-    goldDim: '#e8ad5f',
-    textPrimary: '#e0def4',
-    textSecondary: '#908caa',
-    textMuted: '#6e6a86',
-    red: '#eb6f92',
-  },
-  catppuccin: {
-    bg: '#1e1e2e',
-    bgElevated: '#313244',
-    border: '#45475a',
-    borderLight: '#585b70',
-    emerald: '#89dceb',
-    emeraldDim: '#6ec9d8',
-    emeraldLight: '#a4e4f3',
-    gold: '#f9e2af',
-    goldDim: '#e8c996',
-    textPrimary: '#cdd6f4',
-    textSecondary: '#bac2de',
-    textMuted: '#6c7086',
-    red: '#f38ba8',
-  },
-  synthwave: {
-    bg: '#2d2a40',
-    bgElevated: '#3e3a59',
-    border: '#f92aad',
-    borderLight: '#f92aad',
-    emerald: '#00ffff',
-    emeraldDim: '#00cccc',
-    emeraldLight: '#33ffff',
-    gold: '#ffe600',
-    goldDim: '#e6cc00',
-    textPrimary: '#ffffff',
-    textSecondary: '#f92aad',
-    textMuted: '#8a88b0',
-    red: '#ff4c4c',
-  },
-  // Default (original) theme
-  default: {
-    bg: '#090d16',
-    bgElevated: '#0b101c',
-    border: '#1e293b',
-    borderLight: '#2a3a4f',
-    emerald: '#10b981',
-    emeraldDim: '#059669',
-    emeraldLight: '#34d399',
-    gold: '#f59e0b',
-    goldDim: '#d97706',
-    textPrimary: '#f1f5f9',
-    textSecondary: '#94a3b8',
-    textMuted: '#64748b',
-    red: '#ef4444',
-  },
-  gta6: {
-    bg: '#0a0a0f',
-    bgElevated: '#12121a',
-    border: '#ff6b35',
-    borderLight: '#ff8c5a',
-    emerald: '#ff6b35',
-    emeraldDim: '#e85a28',
-    emeraldLight: '#ff9f7a',
-    gold: '#ffd700',
-    goldDim: '#e6c200',
-    textPrimary: '#ffffff',
-    textSecondary: '#ffb399',
-    textMuted: '#887766',
-    red: '#ff3333',
-  },
-} as const;
+// Theme definitions - using 50 curated viral themes from single source of truth
+import { getThemeById, ThemePalette } from '@/lib/themes';
 
-type ThemeName = keyof typeof THEMES;
-type Theme = typeof THEMES[ThemeName];
+type Theme = ThemePalette;
 
 function getTheme(themeName?: string): Theme {
-  const normalized = (themeName || 'default').toLowerCase() as ThemeName;
-  return THEMES[normalized] || THEMES.default;
+  return getThemeById(themeName || 'gta6');
 }
 
 const FONTS = {
@@ -494,7 +340,7 @@ function generateBadge(label: string, message: string, theme: Theme, accent?: 'e
   const labelWidth = (label.length + 1) * 7;
   const messageWidth = (message.length + 1) * 7;
   const totalWidth = labelWidth + messageWidth + 20;
-  const labelBg = theme === THEMES.default ? '090d16' : c.bg.replace('#', '');
+  const labelBg = theme.id === 'default' ? '090d16' : c.bg.replace('#', '');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="28" role="img" aria-label="${label}: ${message}">
 <linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient>
 <mask id="a"><rect width="${totalWidth}" height="28" rx="4" fill="#fff"/></mask>
@@ -681,7 +527,7 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme, viewe
 
   const getColor = (count: number, isCurrentHour = false) => {
     if (count === 0) return c.bgElevated;
-    if (theme === THEMES.default) {
+    if (theme.id === 'default') {
       if (count <= maxCount * 0.2) return isCurrentHour ? '#1a5c35' : '#0e4429';
       if (count <= maxCount * 0.4) return isCurrentHour ? '#0a8a3f' : '#006d32';
       if (count <= maxCount * 0.6) return isCurrentHour ? '#34c652' : '#26a641';
@@ -1049,7 +895,8 @@ function buildSnakeHead(size: number, c: any): string {
 // 6. TYPING SVG ANIMATION (Viral - pure SVG)
 // ============================================================================
 function generateTypingSvg(username: string, bio?: string, theme?: Theme): string {
-  const c = theme ? C(theme) : C(THEMES.default);
+  const activeTheme = theme || getTheme('gta6');
+  const c = C(activeTheme);
   const width = 600;
   const height = 100;
   const phrases = [
@@ -1084,7 +931,7 @@ function generateTypingSvg(username: string, bio?: string, theme?: Theme): strin
       css('cursor', { fill: c.emerald, 'font-family': FONTS.mono, 'font-size': 20, 'font-weight': 'bold' })
     )}
     ${inner}
-  `, theme || THEMES.default);
+  `, activeTheme);
 }
 
 // ============================================================================

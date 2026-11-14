@@ -88,7 +88,7 @@ async function generateReadmeMarkdown(config: any): Promise<string> {
   const sections = getProfileSections(profileData, preset);
   
   const enabledBadges = new Set(config.badges || []);
-  const theme = config.theme || 'tokyonight';
+  const theme = config.theme || 'gta6';
   const themeParam = `&theme=${theme}`;
   const baseUrl = 'https://readme.bharatdn.com/api/badges';
   

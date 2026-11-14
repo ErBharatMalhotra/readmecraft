@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { THEME_LIST } from '@/lib/themes';
 
 type ProjectType = 'cli' | 'library' | 'webapp' | 'api' | 'mobile' | 'unknown';
 
@@ -38,21 +39,10 @@ export default function CraftPage() {
   const [analysis, setAnalysis] = useState<RepoAnalysis | null>(null);
   const [crafted, setCrafted] = useState<CraftedReadme | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [theme, setTheme] = useState('tokyonight');
+  const [theme, setTheme] = useState('gta6');
   const [copied, setCopied] = useState(false);
 
-  const themes = [
-    { id: 'tokyonight', name: 'Tokyo Night', bg: '#1a1b26', accent: '#7aa2f7' },
-    { id: 'dracula', name: 'Dracula', bg: '#282a36', accent: '#bd93f9' },
-    { id: 'nord', name: 'Nord', bg: '#2e3440', accent: '#88c0d0' },
-    { id: 'github', name: 'GitHub Dark', bg: '#0d1117', accent: '#58a6ff' },
-    { id: 'gruvbox', name: 'Gruvbox', bg: '#282828', accent: '#8ec07c' },
-    { id: 'rosePine', name: 'Rose Pine', bg: '#191724', accent: '#9ccfd8' },
-    { id: 'catppuccin', name: 'Catppuccin', bg: '#1e1e2e', accent: '#89dceb' },
-    { id: 'synthwave', name: 'Synthwave', bg: '#2d2a40', accent: '#f92aad' },
-    { id: 'gta6', name: 'GTA VI Sunset', bg: '#0a0a0f', accent: '#ff6b35' },
-    { id: 'default', name: 'Default', bg: '#090d16', accent: '#10b981' },
-  ];
+  const themes = THEME_LIST;
 
   const parseGithubUrl = (url: string): { owner: string; repo: string } | null => {
     const patterns = [
@@ -423,8 +413,11 @@ export default function CraftPage() {
 
             {/* Theme Selector */}
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-[#94a3b8]">Badge Theme</label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-[#94a3b8]">Badge Theme (50 Themes)</label>
+                <span className="font-mono text-xs text-emerald-400 capitalize">{theme}</span>
+              </div>
+              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 border border-[#1e293b]/50 rounded-lg">
                 {themes.map((t) => (
                   <button
                     key={t.id}

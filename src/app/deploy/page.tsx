@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-client';
+import { THEME_LIST } from '@/lib/themes';
 
 export default function DeployPage() {
   const { session, status } = useAuth();
@@ -13,7 +14,7 @@ export default function DeployPage() {
     'code-pulse', 'contribution-mountain', 'tech-galaxy',
     'contribution-flow', 'code-time-heatmap'
   ]);
-  const [theme, setTheme] = useState<string>('tokyonight');
+  const [theme, setTheme] = useState<string>('gta6');
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [enableAutoSync, setEnableAutoSync] = useState<boolean>(false);
@@ -62,18 +63,7 @@ export default function DeployPage() {
     );
   };
 
-  const themes = [
-    { id: 'tokyonight', name: 'Tokyo Night', bg: '#1a1b26', accent: '#7aa2f7' },
-    { id: 'dracula', name: 'Dracula', bg: '#282a36', accent: '#bd93f9' },
-    { id: 'nord', name: 'Nord', bg: '#2e3440', accent: '#88c0d0' },
-    { id: 'github', name: 'GitHub Dark', bg: '#0d1117', accent: '#58a6ff' },
-    { id: 'gruvbox', name: 'Gruvbox', bg: '#282828', accent: '#8ec07c' },
-    { id: 'rosePine', name: 'Rose Pine', bg: '#191724', accent: '#9ccfd8' },
-    { id: 'catppuccin', name: 'Catppuccin', bg: '#1e1e2e', accent: '#89dceb' },
-    { id: 'synthwave', name: 'Synthwave', bg: '#2d2a40', accent: '#f92aad' },
-    { id: 'gta6', name: 'GTA VI Sunset', bg: '#0a0a0f', accent: '#ff6b35' },
-    { id: 'default', name: 'Default', bg: '#090d16', accent: '#10b981' },
-  ];
+  const themes = THEME_LIST;
 
   if (step === 'done') {
     return (
@@ -164,10 +154,11 @@ export default function DeployPage() {
 
         {/* Theme Selector */}
         <div className="space-y-4 mb-6 p-4 bg-[#090d16] rounded-xl border border-[#1e293b]">
-          <h3 className="font-medium text-[#f1f5f9] mb-3 flex items-center gap-2">
-            <span>🎨</span> Theme
+          <h3 className="font-medium text-[#f1f5f9] mb-3 flex items-center justify-between">
+            <span className="flex items-center gap-2"><span>🎨</span> Theme (50 Curated Themes)</span>
+            <span className="font-mono text-xs text-emerald-400 capitalize">{theme}</span>
           </h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1 border border-[#1e293b]/50 rounded-lg">
             {themes.map((t) => (
               <button
                 key={t.id}

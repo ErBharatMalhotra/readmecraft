@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { AppMode, ProfilePreset, ProjectPreset, Section } from '@/types/readmecraft';
 import {
   Layers,
@@ -14,7 +14,9 @@ import {
   Code2,
   Sparkles,
   Palette,
+  Search,
 } from 'lucide-react';
+import { THEMES, ThemePalette } from '@/lib/themes';
 
 interface PaneSectionManagerProps {
   mode: AppMode;
@@ -39,17 +41,16 @@ interface PaneSectionManagerProps {
   setTheme?: (theme: string) => void;
 }
 
-const THEMES_LIST = [
-  { id: 'gta6', name: 'GTA VI Sunset', bg: '#0a0a0f', accent: '#ff6b35' },
-  { id: 'tokyonight', name: 'Tokyo Night', bg: '#1a1b26', accent: '#7aa2f7' },
-  { id: 'dracula', name: 'Dracula', bg: '#282a36', accent: '#bd93f9' },
-  { id: 'nord', name: 'Nord', bg: '#2e3440', accent: '#88c0d0' },
-  { id: 'github', name: 'GitHub Dark', bg: '#0d1117', accent: '#58a6ff' },
-  { id: 'gruvbox', name: 'Gruvbox', bg: '#282828', accent: '#8ec07c' },
-  { id: 'rosePine', name: 'Rose Pine', bg: '#191724', accent: '#9ccfd8' },
-  { id: 'catppuccin', name: 'Catppuccin', bg: '#1e1e2e', accent: '#89dceb' },
-  { id: 'synthwave', name: 'Synthwave', bg: '#2d2a40', accent: '#f92aad' },
-  { id: 'default', name: 'Default Emerald', bg: '#090d16', accent: '#10b981' },
+const CATEGORY_TABS: { id: string; label: string; icon: string }[] = [
+  { id: 'all', label: 'All 50', icon: '🎨' },
+  { id: 'gaming', label: 'Gaming', icon: '🎮' },
+  { id: 'anime', label: 'Anime', icon: '⚔️' },
+  { id: 'aesthetic', label: 'Aesthetic', icon: '✨' },
+  { id: 'dev-classic', label: 'Dev Cult', icon: '💻' },
+  { id: 'cyberpunk', label: 'Cyberpunk', icon: '👾' },
+  { id: 'retro', label: 'Retro', icon: '🕹️' },
+  { id: 'nature', label: 'Nature', icon: '🌿' },
+  { id: 'minimal', label: 'Minimal', icon: '⚡' },
 ];
 
 const POPULAR_SKILLS = [
@@ -105,6 +106,27 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
   };
 
   const sortedSections = [...sections].sort((a, b) => a.order - b.order);
+
+  // Theme filtering state
+  const [themeSearch, setThemeSearch] = useState('');
+  const [themeCategory, setThemeCategory] = useState<string>('all');
+
+  // Filter themes based on search and category
+  const filteredThemes = useMemo(() => {
+    let themes = THEMES;
+    if (themeCategory !== 'all') {
+      themes = themes.filter(t => t.category === themeCategory);
+    }
+    if (themeSearch.trim()) {
+      const query = themeSearch.toLowerCase().trim();
+      themes = themes.filter(t => 
+        t.name.toLowerCase().includes(query) || 
+        t.id.toLowerCase().includes(query) ||
+        t.description.toLowerCase().includes(query)
+      );
+    }
+    return themes;
+  }, [themeSearch, themeCategory]);
 
   return (
     <div className="flex h-full flex-col border-r border-[#1e293b] bg-[#090d16]">
@@ -205,41 +227,98 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
           </div>
         </div>
 
-        {/* Theme Engine Selector */}
+        {/* Theme Engine Selector (50 Curated Viral Themes) */}
         <div className="rounded-xl border border-[#1e293b] bg-[#0e1526] p-3.5">
           <div className="mb-2 flex items-center justify-between">
             <label className="flex items-center gap-1.5 font-mono text-xs font-semibold tracking-wider text-slate-300 uppercase">
               <Palette className="h-3.5 w-3.5 text-emerald-400" />
-              Theme Engine
+              Theme Engine (50 Themes)
             </label>
-            <span className="font-mono text-[10px] text-emerald-400 capitalize">
-              {THEMES_LIST.find((t) => t.id === theme)?.name || theme}
+            <span className="font-mono text-[10px] text-emerald-400">
+              {THEMES.find((t) => t.id === theme)?.name || theme}
             </span>
           </div>
           <p className="mb-2.5 text-[11px] text-slate-400">
-            Select badge theme palette (applies instantly to live badges):
+            Select from 50 viral aesthetic themes (applies instantly to all badges & icons):
           </p>
-          <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto p-0.5">
-            {THEMES_LIST.map((t) => {
-              const isSelected = theme === t.id;
+
+          {/* Search Bar */}
+          <div className="relative mb-2.5">
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" />
+            <input
+              type="text"
+              value={themeSearch}
+              onChange={(e) => setThemeSearch(e.target.value)}
+              placeholder="Search 50 themes (e.g. gta6, matrix, tokyo)..."
+              className="w-full rounded-lg border border-[#1e293b] bg-[#090d16] py-1.5 pl-8 pr-3 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+
+          {/* Category Tabs */}
+          <div className="mb-2.5 flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+            {CATEGORY_TABS.map((tab) => {
+              const active = themeCategory === tab.id;
               return (
                 <button
-                  key={t.id}
-                  onClick={() => setTheme && setTheme(t.id)}
-                  className={`flex items-center gap-2 rounded-lg border p-2 text-left transition-all ${
-                    isSelected
-                      ? 'border-emerald-500 bg-emerald-500/10 font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.2)]'
-                      : 'border-[#1e293b] bg-[#090d16] text-slate-400 hover:border-slate-700 hover:text-white'
+                  key={tab.id}
+                  onClick={() => setThemeCategory(tab.id)}
+                  className={`shrink-0 rounded-lg px-2 py-1 font-mono text-[10px] transition-all ${
+                    active
+                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-[0_0_8px_rgba(16,185,129,0.3)]'
+                      : 'bg-[#090d16] border border-[#1e293b] text-slate-400 hover:text-white hover:border-slate-700'
                   }`}
                 >
-                  <span
-                    className="h-3.5 w-3.5 shrink-0 rounded-full border border-white/20 shadow-sm"
-                    style={{ backgroundColor: t.accent }}
-                  />
-                  <span className="truncate font-mono text-[11px]">{t.name}</span>
+                  {tab.icon} {tab.label}
                 </button>
               );
             })}
+          </div>
+
+          {/* Themes Grid */}
+          <div className="grid grid-cols-1 gap-1.5 max-h-60 overflow-y-auto p-0.5">
+            {filteredThemes.length === 0 ? (
+              <div className="py-6 text-center font-mono text-xs text-slate-500">
+                No themes found matching "{themeSearch}"
+              </div>
+            ) : (
+              filteredThemes.map((t) => {
+                const isSelected = theme === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setTheme && setTheme(t.id)}
+                    className={`group flex items-center justify-between rounded-lg border p-2.5 text-left transition-all ${
+                      isSelected
+                        ? 'border-emerald-500 bg-emerald-500/15 font-bold text-white shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                        : 'border-[#1e293b] bg-[#090d16] text-slate-300 hover:border-slate-700 hover:bg-[#121824]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className="h-4 w-4 shrink-0 rounded-full border border-white/20 shadow-sm"
+                        style={{ backgroundColor: t.emerald }}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate font-mono text-xs font-semibold">{t.name}</span>
+                          <span className="rounded bg-slate-800/80 px-1 py-0.2 font-mono text-[9px] text-slate-400 uppercase">
+                            {t.category}
+                          </span>
+                        </div>
+                        <div className="truncate text-[10px] text-slate-400">
+                          {t.description}
+                        </div>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <span className="shrink-0 font-mono text-[10px] font-bold text-emerald-400">
+                        ACTIVE
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 

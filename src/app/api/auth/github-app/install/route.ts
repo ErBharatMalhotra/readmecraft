@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const username = searchParams.get('username') || 'ErBharatMalhotra';
-    const theme = searchParams.get('theme') || 'tokyonight';
+    const theme = searchParams.get('theme') || 'gta6';
     const badgesParam = searchParams.get('badges');
     const autoSync = searchParams.get('autosync') === 'true';
     const badges = badgesParam ? badgesParam.split(',').filter(b => AVAILABLE_BADGES.includes(b)) : AVAILABLE_BADGES;
