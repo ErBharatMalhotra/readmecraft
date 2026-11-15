@@ -12,10 +12,13 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     const userToken = (session as any)?.accessToken;
 
-    console.log('[INGEST] Session:', session ? 'present' : 'null');
-    console.log('[INGEST] userToken:', userToken ? 'present (length: ' + userToken.length + ')' : 'null');
-    console.log('[INGEST] token from body:', token ? 'present' : 'null');
-    console.log('[INGEST] GITHUB_TOKEN env:', process.env.GITHUB_TOKEN ? 'present' : 'null');
+    const debugInfo = {
+      sessionPresent: !!session,
+      userTokenPresent: !!userToken,
+      userTokenPrefix: userToken ? userToken.slice(0, 10) + '...' : null,
+      tokenFromBodyPresent: !!token,
+      envTokenPresent: !!process.env.GITHUB_TOKEN,
+    };
 
     if (!target || typeof target !== 'string' || target.trim() === '') {
       return NextResponse.json({ error: 'Target identifier is required.' }, { status: 400 });
@@ -23,19 +26,19 @@ export async function POST(req: NextRequest) {
 
     // Use user's OAuth token if available, fallback to provided token, then server PAT
     const effectiveToken = userToken || token || process.env.GITHUB_TOKEN;
-    console.log('[INGEST] effectiveToken:', effectiveToken ? 'present (length: ' + effectiveToken.length + ')' : 'null');
+    debugInfo.effectiveTokenPresent = !!effectiveToken;
+    debugInfo.effectiveTokenPrefix = effectiveToken ? effectiveToken.slice(0, 10) + '...' : null;
 
     if (mode === 'project') {
       const projectData = await fetchGitHubProject(target.trim(), effectiveToken, effectiveToken);
-      return NextResponse.json({ success: true, data: projectData });
+      return NextResponse.json({ success: true, data: projectData, debug: debugInfo });
     } else {
       const profileData = await fetchGitHubProfile(target.trim(), effectiveToken, effectiveToken);
-      return NextResponse.json({ success: true, data: profileData });
+      return NextResponse.json({ success: true, data: profileData, debug: debugInfo });
     }
   } catch (error: any) {
-    console.error('[INGEST] Error:', error);
     return NextResponse.json(
-      { error: error?.message || 'Failed to ingest GitHub data' },
+      { error: error?.message || 'Failed to ingest GitHub data', debug: { error: error?.message } },
       { status: 500 }
     );
   }
