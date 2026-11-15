@@ -1,46 +1,42 @@
+import { MetadataRoute } from 'next';
 import { COMMUNITY_TEMPLATES } from '@/lib/templates';
 
-export const dynamic = 'force-dynamic';
-
-export default function sitemap() {
+export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://readme.bharatdn.com';
-  const now = new Date().toISOString();
   
-  const staticUrls = [
-    { url: baseUrl, changefreq: 'daily', priority: 1.0 },
-    { url: `${baseUrl}/deploy`, changefreq: 'monthly', priority: 0.5 },
+  const staticRoutes: MetadataRoute.Sitemap = [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/deploy`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
   ];
 
+  // Filter out any templates with missing id or theme
   const validTemplates = COMMUNITY_TEMPLATES.filter(t => t.id && t.theme);
 
-  const templateUrls = validTemplates.map((template) => ({
+  // Build template routes - Next.js handles XML escaping automatically
+  const templateRoutes: MetadataRoute.Sitemap = validTemplates.map((template) => ({
     url: `${baseUrl}/?template=${template.id}&theme=${template.theme}`,
-    changefreq: 'weekly',
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
     priority: 0.7,
   }));
 
-  const templatePageUrls = validTemplates.map((template) => ({
+  // Also include /templates/[slug] static routes for SEO
+  const templatePageRoutes: MetadataRoute.Sitemap = validTemplates.map((template) => ({
     url: `${baseUrl}/templates/${template.id}`,
-    changefreq: 'weekly',
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
     priority: 0.6,
   }));
 
-  const allUrls = [...staticUrls, ...templateUrls, ...templatePageUrls];
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${allUrls.map(u => `  <url>
-    <loc>${u.url.replace(/&/g, '&')}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>${u.changefreq}</changefreq>
-    <priority>${u.priority}</priority>
-  </url>`).join('\n')}
-</urlset>`;
-
-  return new Response(xml, {
-    headers: {
-      'Content-Type': 'application/xml',
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-    },
-  });
+  return [...staticRoutes, ...templateRoutes, ...templatePageRoutes];
 }
