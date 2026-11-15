@@ -19,8 +19,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
+  // Build template routes with proper URL encoding
   const templateRoutes: MetadataRoute.Sitemap = COMMUNITY_TEMPLATES.map((template) => ({
-    url: `${baseUrl}/?template=${template.id}&theme=${template.theme}`,
+    url: `${baseUrl}/?template=${encodeURIComponent(template.id)}&theme=${encodeURIComponent(template.theme)}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.7,
@@ -28,7 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   // Also include /templates/[slug] static routes for SEO
   const templatePageRoutes: MetadataRoute.Sitemap = COMMUNITY_TEMPLATES.map((template) => ({
-    url: `${baseUrl}/templates/${template.id}`,
+    url: `${baseUrl}/templates/${encodeURIComponent(template.id)}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.6,
