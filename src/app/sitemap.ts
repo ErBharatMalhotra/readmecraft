@@ -19,17 +19,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Build template routes with proper URL encoding
-  const templateRoutes: MetadataRoute.Sitemap = COMMUNITY_TEMPLATES.map((template) => ({
-    url: `${baseUrl}/?template=${encodeURIComponent(template.id)}&theme=${encodeURIComponent(template.theme)}`,
+  // Filter out any templates with missing id or theme
+  const validTemplates = COMMUNITY_TEMPLATES.filter(t => t.id && t.theme);
+
+  // Build template routes - let Next.js handle XML escaping
+  const templateRoutes: MetadataRoute.Sitemap = validTemplates.map((template) => ({
+    url: `${baseUrl}/?template=${template.id}&theme=${template.theme}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
 
   // Also include /templates/[slug] static routes for SEO
-  const templatePageRoutes: MetadataRoute.Sitemap = COMMUNITY_TEMPLATES.map((template) => ({
-    url: `${baseUrl}/templates/${encodeURIComponent(template.id)}`,
+  const templatePageRoutes: MetadataRoute.Sitemap = validTemplates.map((template) => ({
+    url: `${baseUrl}/templates/${template.id}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.6,
