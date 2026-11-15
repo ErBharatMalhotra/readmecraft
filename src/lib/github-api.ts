@@ -161,12 +161,13 @@ const UNIFIED_PROFILE_QUERY = `
           url
         }
       }
-      packages(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
-        nodes {
-          name
-          packageType
-        }
-      }
+      // packages requires read:packages scope - skipped for OAuth tokens
+      // packages(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
+      //   nodes {
+      //     name
+      //     packageType
+      //   }
+      // }
       // sponsors and sponsorshipsAsMaintainer require special handling - simplified for now
       sponsors(first: 5) {
         nodes {
