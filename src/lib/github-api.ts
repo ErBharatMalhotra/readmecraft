@@ -134,7 +134,7 @@ const UNIFIED_PROFILE_QUERY = `
       updatedAt
       url
       resourcePath
-      repositories(privacy: PUBLIC) {
+      repositories {
         totalCount
         totalDiskUsage
       }
@@ -144,13 +144,13 @@ const UNIFIED_PROFILE_QUERY = `
       following {
         totalCount
       }
-      starredRepositories(privacy: PUBLIC) {
+      starredRepositories {
         totalCount
       }
-      watching(privacy: PUBLIC) {
+      watching {
         totalCount
       }
-      gists(privacy: PUBLIC) {
+      gists {
         totalCount
       }
       organizations(first: 20) {
@@ -165,27 +165,39 @@ const UNIFIED_PROFILE_QUERY = `
         nodes {
           name
           packageType
-          url
         }
       }
       sponsors(first: 5) {
         nodes {
-          login
-          avatarUrl
-          url
+          ... on SponsorsListing {
+            sponsorEntity {
+              login
+              avatarUrl
+              url
+              ... on User { name }
+              ... on Organization { name }
+            }
+            tier {
+              monthlyPriceInCents
+              name
+            }
+          }
         }
       }
       sponsorshipsAsMaintainer(first: 5) {
         nodes {
-          sponsorEntity {
-            login
-            avatarUrl
-            ... on User { name }
-            ... on Organization { name }
-          }
-          tier {
-            monthlyPriceInCents
-            name
+          ... on Sponsorship {
+            sponsorEntity {
+              login
+              avatarUrl
+              url
+              ... on User { name }
+              ... on Organization { name }
+            }
+            tier {
+              monthlyPriceInCents
+              name
+            }
           }
         }
       }
@@ -227,7 +239,7 @@ const UNIFIED_PROFILE_QUERY = `
           }
         }
       }
-      reposList: repositories(first: 100, privacy: PUBLIC, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      reposList: repositories(first: 100, orderBy: {field: UPDATED_AT, direction: DESC}) {
         nodes {
           name
           description
@@ -330,8 +342,7 @@ const UNIFIED_PROFILE_QUERY = `
           }
         }
       }
-      anyPinnableItems(type: REPOSITORY)
-      repositoriesContributedTo(first: 20, privacy: PUBLIC, contributionTypes: [COMMIT, PULL_REQUEST, ISSUE, REPOSITORY]) {
+      repositoriesContributedTo(first: 20, contributionTypes: [COMMIT, PULL_REQUEST, ISSUE, REPOSITORY]) {
         nodes {
           name
           owner { login }
