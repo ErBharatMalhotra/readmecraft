@@ -373,7 +373,7 @@ const UNIFIED_PROFILE_QUERY = `
         message
         expiresAt
       }
-      socialAccounts {
+      socialAccounts(first: 10) {
         nodes {
           provider
           url
