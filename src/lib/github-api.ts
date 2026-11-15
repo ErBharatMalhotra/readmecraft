@@ -18,12 +18,13 @@ interface DeduplicationEntry<T> {
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const DEDUP_WINDOW_MS = 60 * 1000; // 60 seconds
+const CACHE_VERSION = 'v2'; // Increment to bust cache after auth fix
 
 const cache = new Map<string, CacheEntry<any>>();
 const deduplication = new Map<string, DeduplicationEntry<any>>();
 
 function getCacheKey(username: string, type: string): string {
-  return `${type}:${username.toLowerCase()}`;
+  return `${type}:${username.toLowerCase()}:${CACHE_VERSION}`;
 }
 
 function getETag(data: any): string {

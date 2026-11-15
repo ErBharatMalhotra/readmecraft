@@ -20,10 +20,10 @@ export async function POST(req: NextRequest) {
     const effectiveToken = userToken || token || process.env.GITHUB_TOKEN;
 
     if (mode === 'project') {
-      const projectData = await fetchGitHubProject(target.trim(), token, userToken);
+      const projectData = await fetchGitHubProject(target.trim(), effectiveToken, effectiveToken);
       return NextResponse.json({ success: true, data: projectData });
     } else {
-      const profileData = await fetchGitHubProfile(target.trim(), token, userToken);
+      const profileData = await fetchGitHubProfile(target.trim(), effectiveToken, effectiveToken);
       return NextResponse.json({ success: true, data: profileData });
     }
   } catch (error: any) {
