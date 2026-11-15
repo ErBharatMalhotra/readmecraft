@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const TEMPLATE_SLUGS = [
   { id: 'fullstack-architect', theme: 'gta6' },
   { id: 'aiml-researcher', theme: 'cyberpunk2077' },
