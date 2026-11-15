@@ -1,42 +1,44 @@
-import { MetadataRoute } from 'next';
 import { COMMUNITY_TEMPLATES } from '@/lib/templates';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default function sitemap() {
   const baseUrl = 'https://readme.bharatdn.com';
+  const now = new Date().toISOString();
   
-  const staticRoutes: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/deploy`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+  const staticUrls = [
+    { url: baseUrl, changefreq: 'daily', priority: 1.0 },
+    { url: `${baseUrl}/deploy`, changefreq: 'monthly', priority: 0.5 },
   ];
 
-  // Filter out any templates with missing id or theme
   const validTemplates = COMMUNITY_TEMPLATES.filter(t => t.id && t.theme);
 
-  // Build template routes - let Next.js handle XML escaping
-  const templateRoutes: MetadataRoute.Sitemap = validTemplates.map((template) => ({
+  const templateUrls = validTemplates.map((template) => ({
     url: `${baseUrl}/?template=${template.id}&theme=${template.theme}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
+    changefreq: 'weekly',
     priority: 0.7,
   }));
 
-  // Also include /templates/[slug] static routes for SEO
-  const templatePageRoutes: MetadataRoute.Sitemap = validTemplates.map((template) => ({
+  const templatePageUrls = validTemplates.map((template) => ({
     url: `${baseUrl}/templates/${template.id}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
+    changefreq: 'weekly',
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...templateRoutes, ...templatePageRoutes];
+  const allUrls = [...staticUrls, ...templateUrls, ...templatePageUrls];
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allUrls.map(u => `  <url>
+    <loc>${u.url.replace(/&/g, '&')}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+    },
+  });
 }
