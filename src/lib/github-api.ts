@@ -583,6 +583,14 @@ interface GitHubClientOptions {
 function createGraphQLClient(options: GitHubClientOptions = {}) {
   const authToken = options.userToken || options.token || process.env.GITHUB_TOKEN;
   
+  console.log('[GRAPHQL_CLIENT] options:', { 
+    hasUserToken: !!options.userToken, 
+    hasToken: !!options.token, 
+    hasEnvToken: !!process.env.GITHUB_TOKEN,
+    authTokenPresent: !!authToken,
+    authTokenPrefix: authToken ? authToken.slice(0, 10) + '...' : 'none'
+  });
+  
   return graphql.defaults({
     headers: {
       authorization: authToken ? `Bearer ${authToken}` : undefined,
@@ -899,8 +907,14 @@ export async function fetchProfileData(
       
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };
-    } catch (error) {
-      console.warn('GraphQL API rate limited or failed, falling back to robust mock telemetry:', error);
+    } catch (error: any) {
+      console.error('[FETCH_PROFILE] GraphQL error:', {
+        message: error?.message,
+        status: error?.status,
+        response: error?.response?.data,
+        errors: error?.response?.data?.errors,
+        stack: error?.stack
+      });
       const data = getMockProfileData(username);
       const etag = getETag(data);
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });
