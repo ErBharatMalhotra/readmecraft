@@ -167,13 +167,9 @@ const UNIFIED_PROFILE_QUERY = `
           packageType
         }
       }
+      // sponsors and sponsorshipsAsMaintainer require special handling - simplified for now
       sponsors(first: 5) {
         nodes {
-          ... on SponsorsListing {
-            login
-            avatarUrl
-            url
-          }
           ... on User {
             login
             name
@@ -190,25 +186,9 @@ const UNIFIED_PROFILE_QUERY = `
       }
       sponsorshipsAsMaintainer(first: 5) {
         nodes {
-          ... on Sponsorship {
-            sponsorEntity {
-              ... on User {
-                login
-                name
-                avatarUrl
-                url
-              }
-              ... on Organization {
-                login
-                name
-                avatarUrl
-                url
-              }
-            }
-            tier {
-              monthlyPriceInCents
-              name
-            }
+          tier {
+            monthlyPriceInCents
+            name
           }
         }
       }
