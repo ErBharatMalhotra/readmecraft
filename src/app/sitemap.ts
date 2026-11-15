@@ -1,39 +1,44 @@
 import { MetadataRoute } from 'next';
-import { COMMUNITY_TEMPLATES } from '@/lib/templates';
+
+// Template slugs that match both ?template= and /templates/[slug] routes
+const TEMPLATE_SLUGS = [
+  { id: 'fullstack-architect', theme: 'gta6' },
+  { id: 'aiml-researcher', theme: 'cyberpunk2077' },
+  { id: 'systems-rust', theme: 'elden-ring' },
+  { id: 'devops-platform', theme: 'matrix' },
+  { id: 'web3-builder', theme: 'synthwave' },
+  { id: 'cs-student', theme: 'tokyonight' },
+  { id: 'react-engineer', theme: 'atom' },
+  { id: 'python-developer', theme: 'matrix' },
+  { id: 'mobile-developer', theme: 'tokyonight' },
+  { id: 'data-scientist', theme: 'matrix' },
+  { id: 'security-engineer', theme: 'cyberpunk2077' },
+  { id: 'game-developer', theme: 'synthwave' },
+  { id: 'sre-engineer', theme: 'matrix' },
+  { id: 'engineering-manager', theme: 'gta6' },
+  { id: 'embedded-engineer', theme: 'elden-ring' },
+  { id: 'qa-sdet', theme: 'atom' },
+];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://readme.bharatdn.com';
+  const now = new Date();
   
   const staticRoutes: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/deploy`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+    { url: baseUrl, lastModified: now, changeFrequency: 'daily', priority: 1 },
+    { url: `${baseUrl}/deploy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
   ];
 
-  // Filter out any templates with missing id or theme
-  const validTemplates = COMMUNITY_TEMPLATES.filter(t => t.id && t.theme);
-
-  // Build template routes - Next.js handles XML escaping automatically
-  const templateRoutes: MetadataRoute.Sitemap = validTemplates.map((template) => ({
-    url: `${baseUrl}/?template=${template.id}&theme=${template.theme}`,
-    lastModified: new Date(),
+  const templateRoutes: MetadataRoute.Sitemap = TEMPLATE_SLUGS.map((t) => ({
+    url: `${baseUrl}/?template=${t.id}&theme=${t.theme}`,
+    lastModified: now,
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
 
-  // Also include /templates/[slug] static routes for SEO
-  const templatePageRoutes: MetadataRoute.Sitemap = validTemplates.map((template) => ({
-    url: `${baseUrl}/templates/${template.id}`,
-    lastModified: new Date(),
+  const templatePageRoutes: MetadataRoute.Sitemap = TEMPLATE_SLUGS.map((t) => ({
+    url: `${baseUrl}/templates/${t.id}`,
+    lastModified: now,
     changeFrequency: 'weekly',
     priority: 0.6,
   }));
