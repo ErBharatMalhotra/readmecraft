@@ -1,5 +1,7 @@
 import { COMMUNITY_TEMPLATES } from '@/lib/templates';
 
+export const dynamic = 'force-dynamic';
+
 export default function sitemap() {
   const baseUrl = 'https://readme.bharatdn.com';
   const now = new Date().toISOString();
