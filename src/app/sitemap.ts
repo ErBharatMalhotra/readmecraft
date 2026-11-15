@@ -12,12 +12,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${baseUrl}/templates`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
       url: `${baseUrl}/deploy`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
@@ -32,5 +26,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...templateRoutes];
+  // Also include /templates/[slug] static routes for SEO
+  const templatePageRoutes: MetadataRoute.Sitemap = COMMUNITY_TEMPLATES.map((template) => ({
+    url: `${baseUrl}/templates/${template.id}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...templateRoutes, ...templatePageRoutes];
 }
