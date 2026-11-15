@@ -18,7 +18,7 @@ interface DeduplicationEntry<T> {
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const DEDUP_WINDOW_MS = 60 * 1000; // 60 seconds
-const CACHE_VERSION = 'v3'; // Increment to bust cache after GraphQL fixes
+const CACHE_VERSION = 'v4'; // Increment to bust cache after GraphQL fixes
 
 const cache = new Map<string, CacheEntry<any>>();
 const deduplication = new Map<string, DeduplicationEntry<any>>();
