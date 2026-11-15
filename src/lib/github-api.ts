@@ -170,17 +170,21 @@ const UNIFIED_PROFILE_QUERY = `
       sponsors(first: 5) {
         nodes {
           ... on SponsorsListing {
-            sponsorEntity {
-              login
-              avatarUrl
-              url
-              ... on User { name }
-              ... on Organization { name }
-            }
-            tier {
-              monthlyPriceInCents
-              name
-            }
+            login
+            avatarUrl
+            url
+          }
+          ... on User {
+            login
+            name
+            avatarUrl
+            url
+          }
+          ... on Organization {
+            login
+            name
+            avatarUrl
+            url
           }
         }
       }
@@ -188,11 +192,18 @@ const UNIFIED_PROFILE_QUERY = `
         nodes {
           ... on Sponsorship {
             sponsorEntity {
-              login
-              avatarUrl
-              url
-              ... on User { name }
-              ... on Organization { name }
+              ... on User {
+                login
+                name
+                avatarUrl
+                url
+              }
+              ... on Organization {
+                login
+                name
+                avatarUrl
+                url
+              }
             }
             tier {
               monthlyPriceInCents
@@ -259,10 +270,12 @@ const UNIFIED_PROFILE_QUERY = `
             color
           }
           languages(first: 10) {
-            nodes {
-              name
-              color
+            edges {
               size
+              node {
+                name
+                color
+              }
             }
           }
           repositoryTopics(first: 10) {
@@ -387,7 +400,6 @@ const UNIFIED_PROFILE_QUERY = `
       }
       pronouns
       userViewType
-      isSponsorable
       estimatedNextSponsorsPayoutInCents
       monthlyEstimatedSponsorsIncomeInCents
       hasSponsorsListing
