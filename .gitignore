@@ -46,3 +46,9 @@ App ID *.txt
 *private-key*.pem
 .env.verify
 pull.log
+
+# AI Documentation (private, for AI context only)
+AI_DOCUMENTATION.md
+PROJECT_CONTEXT.md
+*.ai.md
+*.context.md
