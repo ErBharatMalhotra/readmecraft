@@ -277,19 +277,19 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
           </div>
         )}
 
-        {/* Theme Engine Selector (50 Curated Viral Themes) */}
+        {/* Theme Engine Selector (curated viral themes, count from THEMES) */}
         <div className="rounded-xl border border-[#1e293b] bg-[#0e1526] p-3.5">
           <div className="mb-2 flex items-center justify-between">
             <label className="flex items-center gap-1.5 font-mono text-xs font-semibold tracking-wider text-slate-300 uppercase">
               <Palette className="h-3.5 w-3.5 text-emerald-400" />
-              Theme Engine (50 Themes)
+              Theme Engine ({THEMES.length} Themes)
             </label>
             <span className="font-mono text-[10px] text-emerald-400" suppressHydrationWarning>
               {THEMES.find((t) => t.id === theme)?.name || theme}
             </span>
           </div>
           <p className="mb-2.5 text-[11px] text-slate-400">
-            Select from 50 viral aesthetic themes (applies instantly to all badges & icons):
+            Select from {THEMES.length} viral aesthetic themes (applies instantly to all badges & icons):
           </p>
 
           {/* Search Bar */}
@@ -301,7 +301,7 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
               type="text"
               value={themeSearch}
               onChange={(e) => setThemeSearch(e.target.value)}
-              placeholder="Search 50 themes (e.g. gta6, matrix, tokyo)..."
+              placeholder={`Search ${THEMES.length} themes (e.g. gta6, matrix, tokyo)...`}
               className="w-full rounded-lg border border-[#1e293b] bg-[#090d16] py-1.5 pl-8 pr-3 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
             />
           </div>
