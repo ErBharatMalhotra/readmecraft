@@ -2549,7 +2549,11 @@ function generateDemoCalendar() {
     for (let d = 0; d < 7; d++) {
       const date = new Date(now);
       date.setDate(date.getDate() - (52 - w) * 7 - (6 - d));
-      const count = Math.random() > 0.7 ? Math.floor(Math.random() * 8) : 0;
+      // Deterministic pseudo-random: an empty calendar must render the same
+      // badge on every request so CDN caches and previews stay stable.
+      const seed = ((w * 7 + d + 1) * 2654435761) % 4294967296;
+      const rand = (seed % 1000) / 1000;
+      const count = rand > 0.7 ? Math.floor(rand * 10) : 0;
       week.contributionDays.push({ date: date.toISOString().split('T')[0], contributionCount: count });
     }
     weeks.push(week);
