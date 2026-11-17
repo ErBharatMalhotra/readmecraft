@@ -1359,14 +1359,13 @@ function generateAsciiBannerSvg(text_content: string, theme: Theme): string {
 // ============================================================================
 function generateStreakCalendarSvg(username: string, calendar: any, streak: number, theme: Theme): string {
   const c = C(theme);
-  const width = 400;
-  const height = 220;
+  const width = 280;
+  const height = 244;
   const weeks = calendar?.weeks || [];
   const cellSize = 18;
   const cellGap = 4;
-  const gridWidth = 7 * (cellSize + cellGap) - cellGap;
-  const startX = Math.round((width - gridWidth) / 2) + 16;
-  const startY = 56;
+  const startX = 62;
+  const startY = 58;
 
   let inner = '';
   inner += safeText({
@@ -1393,7 +1392,7 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
   });
 
   inner += safeText({
-    x: width / 2, y: height - 20, content: 'Last 7 weeks | Active days', cls: 'muted',
+    x: width / 2, y: height - 14, content: 'Last 7 weeks | Active days', cls: 'muted',
     maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
   });
 
