@@ -963,7 +963,7 @@ function generateNameBannerSvg(name: string, theme?: Theme): string {
   const width = 1000;
   const height = 220;
   const displayName = name || 'Developer';
-  const fontSize = Math.min(76, Math.max(36, Math.floor(900 / Math.max(6, displayName.length))));
+  const fontSize = Math.min(68, Math.max(34, Math.floor(880 / Math.max(6, displayName.length))));
   const mid = activeTheme.purple || c.gold;
   const wavePath =
     'M0 188 Q 125 158 250 188 T 500 188 T 750 188 T 1000 188 T 1250 188 T 1500 188 L1500 220 L0 220 Z';
@@ -988,7 +988,7 @@ function generateNameBannerSvg(name: string, theme?: Theme): string {
       </path>
     </g>
 
-    <text x="${width / 2}" y="112" text-anchor="middle" fill="url(#nb-name)"
+    <text x="${width / 2}" y="100" text-anchor="middle" fill="url(#nb-name)"
       font-family="${FONTS.display}" font-size="${fontSize}" font-weight="bold"
       letter-spacing="1" opacity="0">
       <animate attributeName="opacity" values="0;1" dur="0.9s" fill="freeze"/>
@@ -996,13 +996,13 @@ function generateNameBannerSvg(name: string, theme?: Theme): string {
       ${escapeXmlText(displayName)}
     </text>
 
-    <text x="${width / 2}" y="152" text-anchor="middle" fill="${c.textMuted}"
+    <text x="${width / 2}" y="158" text-anchor="middle" fill="${c.textMuted}"
       font-family="${FONTS.mono}" font-size="13" letter-spacing="4" opacity="0">
       <animate attributeName="opacity" values="0;1" dur="0.7s" begin="0.55s" fill="freeze"/>
       ANIMATED PROFILE INTRO
     </text>
 
-    <circle cx="${width / 2}" cy="172" r="3" fill="${c.emerald}">
+    <circle cx="${width / 2}" cy="178" r="3" fill="${c.emerald}">
       <animate attributeName="opacity" values="1;0.15;1" dur="2s" repeatCount="indefinite"/>
     </circle>
   `, activeTheme);
@@ -1022,32 +1022,40 @@ function generateTypingSvg(username: string, bio?: string, theme?: Theme): strin
   const phrases = introPhrases(username, bio);
   const phraseDuration = Math.max(3, 1.2 + Math.max(...phrases.map((p) => p.length)) * 0.11);
   const cycleTime = phrases.length * phraseDuration;
-  const maxWidth = Math.max(...phrases.map((p) => p.length * charWidth));
-
-  let defs = '';
-  let texts = '';
+  // Each phrase lives in its own group and CSS keyframes give it a exclusive
+  // slice of the cycle, so lines can never overlap. CSS animations (unlike
+  // clip-path/SMIL) render reliably when this SVG is embedded via <img>.
+  const slice = 100 / phrases.length;
+  let animationCss = '';
+  let groups = '';
   phrases.forEach((phrase, i) => {
-    const textWidth = Math.max(24, phrase.length * charWidth);
-    const x = cx - textWidth / 2;
-    const start = i * phraseDuration;
-    defs += `<clipPath id="typing-clip-${i}"><rect x="${x}" y="0" width="0" height="${height}">
-      <animate attributeName="width" values="0;0;${textWidth};${textWidth};0" keyTimes="0;0.04;0.7;0.98;1" dur="${cycleTime}s" begin="${start}s" repeatCount="indefinite"/>
-    </rect></clipPath>`;
-    texts += `<text x="${cx}" y="${baseline}" text-anchor="middle" clip-path="url(#typing-clip-${i})" fill="${i % 2 === 0 ? c.emerald : c.gold || c.emerald}" font-family="${FONTS.mono}" font-size="${fontSize}" font-weight="bold">${escapeXmlText(phrase)}</text>`;
-  });
+    const start = i * slice;
+    const end = start + slice;
+    const fadeIn = start + slice * 0.08;
+    const fadeOut = end - slice * 0.08;
+    animationCss +=
+      `@keyframes tp-${i}{0%,${start.toFixed(2)}%{opacity:0}` +
+      `${fadeIn.toFixed(2)}%,${fadeOut.toFixed(2)}%{opacity:1}` +
+      `${end.toFixed(2)}%,100%{opacity:0}}` +
+      `.tp-${i}{animation:tp-${i} ${cycleTime}s linear infinite}`;
 
-  const cursorX = cx + maxWidth / 2 + 8;
-  const cursor = `<rect x="${cursorX}" y="${baseline - 16}" width="9" height="20" fill="${c.emerald}">
-    <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="1s" repeatCount="indefinite"/>
-  </rect>`;
+    const textWidth = Math.max(24, phrase.length * charWidth);
+    const cursorX = cx + textWidth / 2 + 8;
+    groups += `<g class="tp-${i}" style="opacity:0">
+      <text x="${cx}" y="${baseline}" text-anchor="middle" fill="${i % 2 === 0 ? c.emerald : c.gold || c.emerald}" font-family="${FONTS.mono}" font-size="${fontSize}" font-weight="bold">${escapeXmlText(phrase)}</text>
+      <rect class="typing-caret" x="${cursorX}" y="${baseline - 15}" width="9" height="19" fill="${c.emerald}"/>
+    </g>`;
+  });
+  animationCss +=
+    '@keyframes typing-blink{0%,49%{opacity:1}50%,100%{opacity:0}}' +
+    '.typing-caret{animation:typing-blink 1s steps(1,end) infinite}';
 
   return createSvg(width, height, `${username}'s animated intro`, `
     ${styleBlock(
       css('typing-text', { fill: c.textPrimary, 'font-family': FONTS.mono, 'font-size': fontSize, 'font-weight': 'bold' }),
     )}
-    <defs>${defs}</defs>
-    ${texts}
-    ${cursor}
+    <style>${animationCss}</style>
+    ${groups}
   `, activeTheme);
 }
 
