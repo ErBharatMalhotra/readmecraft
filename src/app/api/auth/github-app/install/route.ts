@@ -1,8 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { SignJWT } from 'jose';
+import { SignJWT, importPKCS8 } from 'jose';
 
 const COOKIE_NAME = 'readmecraft-config';
+
+/**
+ * Look up an existing installation for the given account login.
+ * Returns the installation id when the GitHub App is already installed,
+ * otherwise null. This lets repeat deploys skip GitHub's "Configure"
+ * screen and go straight to the callback.
+ */
+async function findExistingInstallation(accountLogin: string): Promise<string | null> {
+  const appId = process.env.GITHUB_APP_ID;
+  const privateKeyPem = process.env.GITHUB_APP_PRIVATE_KEY;
+
+  if (!appId || !privateKeyPem) return null;
+
+  try {
+    const privateKey = await importPKCS8(privateKeyPem, 'RS256');
+    const now = Math.floor(Date.now() / 1000);
+    const appJwt = await new SignJWT({})
+      .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+      .setIssuedAt(now - 60)
+      .setExpirationTime(now + 600)
+      .setIssuer(appId)
+      .sign(privateKey);
+
+    const res = await fetch('https://api.github.com/app/installations?per_page=100', {
+      headers: {
+        Authorization: `Bearer ${appJwt}`,
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'ReadmeCraft',
+      },
+      cache: 'no-store',
+    });
+
+    if (!res.ok) return null;
+
+    const installations = (await res.json()) as Array<{
+      id: number;
+      account?: { login?: string };
+    }>;
+
+    const match = installations.find(
+      (inst) => inst.account?.login?.toLowerCase() === accountLogin.toLowerCase()
+    );
+
+    return match ? String(match.id) : null;
+  } catch (error) {
+    console.error('Existing installation lookup failed:', error);
+    return null;
+  }
+}
 
 const AVAILABLE_BADGES = [
   'composite', 'stats', 'snake', 'heatmap', 'trophy', 'activity',
@@ -47,6 +96,17 @@ export async function GET(request: NextRequest) {
       maxAge: 600, // 10 minutes
       path: '/',
     });
+
+    // If the app is already installed for this account, skip GitHub's
+    // "Configure" screen entirely and go straight to the callback.
+    const existingInstallationId = await findExistingInstallation(username);
+    if (existingInstallationId) {
+      const callbackUrl = new URL('/api/auth/github-app/callback', request.nextUrl.origin);
+      callbackUrl.searchParams.set('installation_id', existingInstallationId);
+      callbackUrl.searchParams.set('setup_action', 'install');
+      callbackUrl.searchParams.set('state', state);
+      return NextResponse.redirect(callbackUrl.toString());
+    }
 
     // Build GitHub App install URL
     const appSlug = 'readmecraft-deploy'; // Must match your GitHub App name slug

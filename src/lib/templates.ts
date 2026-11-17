@@ -40,7 +40,7 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     ],
   },
   {
-    id: 'aiml-researcher',
+    id: 'ai-ml-engineer',
     title: 'AI / ML & LLM Engineer',
     role: 'Deep Learning & Applied GenAI',
     badge: 'Trending 🔥',
@@ -62,7 +62,7 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     accentColor: '#ffcc00',
   },
   {
-    id: 'systems-rust',
+    id: 'rust-engineer',
     title: 'Rust & Systems Engineer',
     role: 'High-Performance & Low-Level Dev',
     badge: 'Cult Classic',
@@ -84,7 +84,7 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     accentColor: '#c9a84c',
   },
   {
-    id: 'devops-platform',
+    id: 'devops-engineer',
     title: 'DevOps & Platform Engineer',
     role: 'Infrastructure & Reliability',
     badge: 'Enterprise Ready',
@@ -106,7 +106,7 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     accentColor: '#00ff41',
   },
   {
-    id: 'web3-builder',
+    id: 'web3-developer',
     title: 'Web3 & Smart Contract Dev',
     role: 'Solidity & Protocol Engineer',
     badge: 'On-Chain Verified',
@@ -150,7 +150,7 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     accentColor: '#7aa2f7',
   },
   {
-    id: 'react-engineer',
+    id: 'react-developer',
     title: 'React & Frontend Specialist',
     role: 'Senior Frontend Engineer',
     badge: 'UI Perfectionist',
