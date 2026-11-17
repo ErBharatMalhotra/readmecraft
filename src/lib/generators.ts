@@ -207,17 +207,32 @@ function generateHeaderSection(data: ProfileData, username: string, name: string
   const createdYear = data.createdAt ? new Date(data.createdAt).getFullYear() : '';
   const accountAge = createdYear ? ` (since ${createdYear})` : '';
 
+  // Denylist of Twitter handles that don't resolve (stale/renamed accounts)
+  // This avoids dead 404 links in the generated README without relying on
+  // external API checks at deploy time (which can fail from serverless envs).
+  const deadTwitterHandles = new Set([
+    'ErBharatMalhotra',
+  ]);
+  const showTwitter = twitter && !deadTwitterHandles.has(twitter);
+
+  // Sanitize the bio: GitHub sometimes returns trailing CR/LF characters which
+  // otherwise leak a stray `\r` into the rendered heading on the profile.
+  const cleanBio = (data.bio || 'Building resilient systems & high-taste developer tools.')
+    .replace(/\r\n?/g, ' ')
+    .replace(/[\t ]+/g, ' ')
+    .trim();
+
   return `<div align="center">
 
 # ${name}${accountAge}
-### ${data.bio || 'Building resilient systems & high-taste developer tools.'}
+### ${cleanBio}
 
 ${company}
 
 <p align="center">
   <a href="https://github.com/${username}"><img src="https://img.shields.io/github/followers/${username}?label=Followers&style=for-the-badge&color=${accentHex}&labelColor=${bgHex}" alt="Followers" /></a>
   <a href="${website}"><img src="https://img.shields.io/badge/Portfolio-Live-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Website" /></a>
-  <a href="https://twitter.com/${twitter}"><img src="https://img.shields.io/badge/Twitter-@${twitter}-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Twitter" /></a>
+  ${showTwitter ? `<a href="https://twitter.com/${twitter}"><img src="https://img.shields.io/badge/Twitter-@${twitter}-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Twitter" /></a>` : ''}
   ${data.email ? `<a href="mailto:${data.email}"><img src="https://img.shields.io/badge/Email-Contact-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Email" /></a>` : ''}
 </p>
 
@@ -273,13 +288,13 @@ function generateStatsGridSection(data: ProfileData, username: string, themeObj:
 ![Public Repos](https://readme.bharatdn.com/api/badges?username=${username}&type=repos${themeParam})
 ![Followers](https://readme.bharatdn.com/api/badges?username=${username}&type=followers${themeParam})
 ![Following](https://readme.bharatdn.com/api/badges?username=${username}&type=following${themeParam})
-![Stars Given](https://readme.bharatdn.com/api/badges?username=${username}&type=stars&label=Stars%20Given${themeParam})
+![Stars Given](https://readme.bharatdn.com/api/badges?username=${username}&type=stars&label=Stars%20Given&v=2${themeParam})
 ${data.topLanguagesEnabled && (data.languages?.length ?? 0) > 0 ? `\n![Top Language](https://readme.bharatdn.com/api/badges?username=${username}&type=language${themeParam})` : ''}
 ${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges?username=${username}&type=streak${themeParam})` : ''}
 
 </div>
 
-<details>
+<details open>
 <summary><b>📊 Detailed Statistics</b></summary>
 
 | Metric | Value |
@@ -319,7 +334,7 @@ ${(data.languages ?? []).map(l => getLanguageBadge(l, bgHex, accentHex)).join(' 
 
 </div>
 
-<details>
+<details open>
 <summary><b>📊 Language Statistics</b></summary>
 
 | Language | Percentage | Estimated Bytes |
@@ -362,7 +377,7 @@ function generateSkillsEnhancedSection(data: ProfileData, bgHex: string, accentH
   }
 
   if (otherSkills.length > 0) {
-    content += `<details><summary><b>🛠️ Other Skills (${otherSkills.length})</b></summary>\n\n`;
+    content += `<details open><summary><b>🛠️ Other Skills (${otherSkills.length})</b></summary>\n\n`;
     content += otherSkills.map(s => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`).join(' ') + '\n\n</details>\n\n';
   }
 
@@ -387,7 +402,7 @@ ${data.pinnedRepos
 </div>
 
 ${data.pinnedRepos.length > 0 ? `
-<details>
+<details open>
 <summary><b>Repository Details</b></summary>
 
 ${data.pinnedRepos
@@ -476,7 +491,7 @@ function generateSponsorsSection(data: ProfileData, bgHex: string, accentHex: st
 function generateContributionDetailsSection(data: ProfileData, bgHex: string, accentHex: string): string {
   return `### 📊 Contribution Breakdown
 
-<details>
+<details open>
 <summary><b>Contribution Types</b></summary>
 
 | Type | Count |
@@ -489,7 +504,7 @@ function generateContributionDetailsSection(data: ProfileData, bgHex: string, ac
 
 </details>
 
-<details>
+<details open>
 <summary><b>Contribution Calendar (Heatmap)</b></summary>
 
 <div align="center">
@@ -500,7 +515,7 @@ function generateContributionDetailsSection(data: ProfileData, bgHex: string, ac
   <img src="https://readme.bharatdn.com/api/badges?username=${data.username}&type=snake&v=14" alt="Contribution Snake" />
 </div>
 
-<details>
+<details open>
 <summary><b>🗓️ Weekly Breakdown</b></summary>
 
 ${generateWeeklyBreakdown(data.contributionCalendar ?? { totalContributions: 0, weeks: [] })}
@@ -562,11 +577,17 @@ function generateContactSection(data: ProfileData, username: string, bgHex: stri
   const website = data.website || `https://github.com/${username}`;
   const twitter = data.twitter || username;
 
+  // Denylist of Twitter handles that don't resolve
+  const deadTwitterHandles = new Set([
+    'ErBharatMalhotra',
+  ]);
+  const showTwitter = twitter && !deadTwitterHandles.has(twitter);
+
   return `### 🤝 Connect & Collaborate
 
 - **Web:** [${website}](${website})
 - **GitHub:** [@${username}](https://github.com/${username})
-- **Twitter / 𝕏:** [@${twitter}](https://twitter.com/${twitter})
+${showTwitter ? `- **Twitter / 𝕏:** [@${twitter}](https://twitter.com/${twitter})` : ''}
 ${data.email ? `- **Email:** [${data.email}](mailto:${data.email})` : ''}
 ${data.company ? `- **Company:** ${data.company}` : ''}
 ${data.location ? `- **Location:** ${data.location}` : ''}
@@ -1049,7 +1070,7 @@ function generateDetailedBadgesSection(data: ProjectData, bgHex: string, accentH
 
 </div>
 
-<details>
+<details open>
 <summary><b>📈 Detailed Stats</b></summary>
 
 | Metric | Value |
@@ -1113,7 +1134,7 @@ ${languages.map(l => getLanguageBadge(l, bgHex, accentHex)).join(' ')}
 
 </div>
 
-<details>
+<details open>
 <summary><b>📊 Detailed Breakdown</b></summary>
 
 | Language | Percentage | Bytes |
@@ -1140,7 +1161,7 @@ ${topics
 
 </div>
 
-<details>
+<details open>
 <summary><b>Topic Popularity</b></summary>
 
 | Topic | GitHub Stars |
@@ -1423,4 +1444,81 @@ export function compileSectionsToMarkdown(sections: Section[]): string {
     .sort((a, b) => a.order - b.order)
     .map((s) => s.content.trim())
     .join('\n\n');
+}
+
+// ============================================================================
+// DEPLOY EXTRAS (shared by the Studio preview AND the GitHub App deploy)
+// ============================================================================
+// These sections are appended after the core sections when a user deploys.
+// Keeping a single builder here guarantees the Studio preview always matches
+// the README that is actually written to the user's profile repository.
+
+export const DEPLOY_ANIMATED_BADGES: Array<{ id: string; title: string }> = [
+  { id: 'skill-radar', title: '🎯 Skill Radar' },
+  { id: 'language-race', title: '🏁 Language Evolution Race' },
+  { id: 'repo-constellation', title: '🌌 Repository Constellation' },
+  { id: 'code-pulse', title: '💓 Code Pulse' },
+  { id: 'contribution-mountain', title: '🏔️ Contribution Mountain' },
+  { id: 'tech-galaxy', title: '🌌 Tech Stack Galaxy' },
+  { id: 'contribution-flow', title: '🌊 Contribution Flow' },
+  { id: 'code-time-heatmap', title: '🕐 Code Time Heatmap' },
+];
+
+export const DEPLOY_DEFAULT_BADGES: string[] = [
+  'composite', 'snake', 'heatmap', 'trophy', 'activity',
+  'skill-radar', 'language-race', 'repo-constellation',
+  'code-pulse', 'contribution-mountain', 'tech-galaxy',
+  'contribution-flow', 'code-time-heatmap',
+];
+
+export interface DeployExtrasOptions {
+  username: string;
+  theme: string;
+  badges?: string[];
+  autoSync?: boolean;
+}
+
+export function appendDeployExtras(markdown: string, options: DeployExtrasOptions): string {
+  const username = options.username;
+  const theme = options.theme || 'gta6';
+  const badges =
+    options.badges && options.badges.length > 0 ? options.badges : DEPLOY_DEFAULT_BADGES;
+  const autoSync = !!options.autoSync;
+  const themeParam = `&theme=${theme}`;
+  const baseUrl = 'https://readme.bharatdn.com/api/badges';
+  const enabled = new Set(badges);
+
+  let out = markdown;
+
+  // Extra animated badges chosen on the deploy page (not part of core sections)
+  for (const badge of DEPLOY_ANIMATED_BADGES) {
+    if (enabled.has(badge.id)) {
+      out += `\n\n## ${badge.title}\n\n<img src="${baseUrl}?username=${username}&type=${badge.id}${themeParam}" alt="${badge.title}" />`;
+    }
+  }
+
+  // Composite card (all-in-one)
+  if (enabled.has('composite')) {
+    const include =
+      badges.filter((b) => b !== 'composite').join(',') || 'stats,trophies,snake,heatmap';
+    out += `\n\n## 🎯 GitHub Pulse (Composite)\n\n<img src="${baseUrl}?username=${username}&type=composite&include=${include}${themeParam}" alt="GitHub Pulse Composite" />`;
+  }
+
+  // Scheduled auto-update workflow
+  if (autoSync) {
+    out += '\n\n## 🔄 Scheduled Auto-Update (GitHub Action)\n\n';
+    out += '<details>\n<summary><b>🤖 Automated Daily Refresh Workflow</b></summary>\n\n';
+    out +=
+      'This profile is configured with [ReadmeCraft Action](https://github.com/ErBharatMalhotra/readmecraft) for 24-hour scheduled badge & snake refresh:\n\n';
+    out +=
+      '```yaml\nname: ReadmeCraft Auto Refresh\non:\n  schedule:\n    - cron: \'0 0 * * *\' # Every midnight\n  workflow_dispatch:\n\njobs:\n  refresh:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Ping Badge Cache Invalidator\n        run: |\n          curl -s "https://readme.bharatdn.com/api/badges?username=' +
+      username +
+      '&type=composite&v=$(date +%s)" > /dev/null\n```\n\n';
+    out += '</details>';
+  }
+
+  out += '\n\n---\n\n';
+  out += `<div align="center">\n  <sub>⚡ Powered by <a href="https://readme.bharatdn.com" target="_blank"><b>ReadmeCraft</b></a> — Intelligent Dual-Mode GitHub README Studio</sub>\n</div>`;
+
+  return out.trim();
 }

@@ -18,7 +18,7 @@ interface DeduplicationEntry<T> {
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const DEDUP_WINDOW_MS = 60 * 1000; // 60 seconds
-const CACHE_VERSION = 'v4'; // Increment to bust cache after GraphQL fixes
+const CACHE_VERSION = 'v6'; // Increment to bust cache after GraphQL fixes
 
 const cache = new Map<string, CacheEntry<any>>();
 const deduplication = new Map<string, DeduplicationEntry<any>>();
@@ -63,7 +63,10 @@ function getMockProfileData(username: string): ProfileDataRaw {
     email: null,
     url: `https://github.com/${username}`,
     resourcePath: `/${username}`,
-    createdAt: new Date().toISOString(),
+    // Leave createdAt empty instead of faking "now": a fabricated date made the
+    // generated README claim a wrong "(since YYYY)" whenever the API was rate
+    // limited. An empty value simply omits the year.
+    createdAt: '',
     updatedAt: new Date().toISOString(),
     userViewType: 'PUBLIC',
     isSponsorable: false,
@@ -113,7 +116,7 @@ function getMockProfileData(username: string): ProfileDataRaw {
 }
 
 // ============================================================================
-// UNIFIED GRAPHQL QUERY - MAXIMUM DATA EXTRACTION (Cost: ~5 points)
+// UNIFIED GRAPHQL QUERY - BALANCED (Cost: ~400 points)
 // ============================================================================
 
 const UNIFIED_PROFILE_QUERY = `
@@ -134,65 +137,13 @@ const UNIFIED_PROFILE_QUERY = `
       updatedAt
       url
       resourcePath
-      repositories {
-        totalCount
-        totalDiskUsage
-      }
-      followers {
-        totalCount
-      }
-      following {
-        totalCount
-      }
-      starredRepositories {
-        totalCount
-      }
-      watching {
-        totalCount
-      }
-      gists {
-        totalCount
-      }
-      organizations(first: 20) {
-        nodes {
-          login
-          name
-          avatarUrl
-          url
-        }
-      }
-      // packages requires read:packages scope - skipped for OAuth tokens
-      // packages(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
-      //   nodes {
-      //     name
-      //     packageType
-      //   }
-      // }
-      // sponsors and sponsorshipsAsMaintainer require special handling - simplified for now
-      sponsors(first: 5) {
-        nodes {
-          ... on User {
-            login
-            name
-            avatarUrl
-            url
-          }
-          ... on Organization {
-            login
-            name
-            avatarUrl
-            url
-          }
-        }
-      }
-      sponsorshipsAsMaintainer(first: 5) {
-        nodes {
-          tier {
-            monthlyPriceInCents
-            name
-          }
-        }
-      }
+      repositories { totalCount totalDiskUsage }
+      followers { totalCount }
+      following { totalCount }
+      starredRepositories { totalCount }
+      watching { totalCount }
+      gists { totalCount }
+      organizations(first: 10) { nodes { login name avatarUrl url } }
       contributionsCollection(from: $from, to: $to) {
         totalCommitContributions
         totalIssueContributions
@@ -201,111 +152,31 @@ const UNIFIED_PROFILE_QUERY = `
         totalRepositoriesWithContributedCommits
         contributionCalendar {
           totalContributions
-          weeks {
-            contributionDays {
-              contributionCount
-              date
-              weekday
-            }
-          }
+          weeks { contributionDays { contributionCount date weekday } }
         }
-        commitContributionsByRepository(maxRepositories: 25) {
-          repository {
-            name
-            owner { login }
-            url
-            primaryLanguage { name color }
-          }
-          contributions {
-            totalCount
-          }
+        commitContributionsByRepository(maxRepositories: 10) {
+          repository { name owner { login } url primaryLanguage { name color } }
+          contributions { totalCount }
         }
-        pullRequestContributionsByRepository(maxRepositories: 10) {
-          repository {
-            name
-            owner { login }
-            url
-          }
-          contributions {
-            totalCount
-          }
+        pullRequestContributionsByRepository(maxRepositories: 5) {
+          repository { name owner { login } url }
+          contributions { totalCount }
         }
       }
-      reposList: repositories(first: 100, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      reposList: repositories(first: 30, orderBy: {field: STARGAZERS, direction: DESC}) {
         nodes {
           name
           description
-          descriptionHTML
           url
           stargazerCount
           forkCount
           isFork
           isArchived
-          isDisabled
-          isLocked
-          isMirror
           isPrivate
-          isTemplate
-          primaryLanguage {
-            name
-            color
-          }
-          languages(first: 10) {
-            edges {
-              size
-              node {
-                name
-                color
-              }
-            }
-          }
-          repositoryTopics(first: 10) {
-            nodes {
-              topic {
-                name
-              }
-            }
-          }
-          licenseInfo {
-            spdxId
-            name
-            url
-          }
-          defaultBranchRef {
-            name
-            target {
-              ... on Commit {
-                history(first: 1) {
-                  nodes {
-                    committedDate
-                  }
-                }
-              }
-            }
-          }
-          releases(first: 5, orderBy: {field: CREATED_AT, direction: DESC}) {
-            nodes {
-              name
-              tagName
-              publishedAt
-              url
-              isPrerelease
-              isDraft
-            }
-          }
-          deployments(first: 5, orderBy: {field: CREATED_AT, direction: DESC}) {
-            nodes {
-              createdAt
-              environment
-              state
-            }
-          }
-          mergeCommitAllowed
-          rebaseMergeAllowed
-          squashMergeAllowed
-          diskUsage
-          updatedAt
-          pushedAt
+          primaryLanguage { name color }
+          languages(first: 5) { edges { size node { name color } } }
+          repositoryTopics(first: 5) { nodes { topic { name } } }
+          licenseInfo { spdxId }
           homepageUrl
         }
       }
@@ -314,84 +185,23 @@ const UNIFIED_PROFILE_QUERY = `
           ... on Repository {
             name
             description
-            descriptionHTML
             url
             stargazerCount
-            primaryLanguage {
-              name
-              color
-            }
+            primaryLanguage { name color }
             forkCount
             isFork
-            licenseInfo {
-              spdxId
-            }
-            repositoryTopics(first: 5) {
-              nodes {
-                topic {
-                  name
-                }
-              }
-            }
+            isPrivate
+            licenseInfo { spdxId }
+            repositoryTopics(first: 5) { nodes { topic { name } } }
           }
         }
       }
-      repositoriesContributedTo(first: 20, contributionTypes: [COMMIT, PULL_REQUEST, ISSUE, REPOSITORY]) {
-        nodes {
-          name
-          owner { login }
-          url
-          stargazerCount
-          primaryLanguage { name color }
-        }
+      topRepositories(first: 10, orderBy: {field: STARGAZERS, direction: DESC}) {
+        nodes { name stargazerCount url isPrivate primaryLanguage { name color } }
       }
-      pullRequests(first: 10, states: [OPEN, MERGED], orderBy: {field: UPDATED_AT, direction: DESC}) {
-        nodes {
-          title
-          url
-          state
-          mergedAt
-          repository {
-            name
-            owner { login }
-          }
-        }
-      }
-      issues(first: 10, states: [OPEN, CLOSED], orderBy: {field: UPDATED_AT, direction: DESC}) {
-        nodes {
-          title
-          url
-          state
-          repository {
-            name
-            owner { login }
-          }
-        }
-      }
-      status {
-        emoji
-        message
-        expiresAt
-      }
-      socialAccounts(first: 10) {
-        nodes {
-          provider
-          url
-        }
-      }
+      status { emoji message expiresAt }
       pronouns
       userViewType
-      estimatedNextSponsorsPayoutInCents
-      monthlyEstimatedSponsorsIncomeInCents
-      hasSponsorsListing
-      topRepositories(first: 10, orderBy: {field: STARGAZERS, direction: DESC}) {
-        nodes {
-          name
-          stargazerCount
-          url
-          primaryLanguage { name color }
-        }
-      }
     }
   }
 `;
@@ -406,167 +216,34 @@ const UNIFIED_REPO_QUERY = `
       url
       stargazerCount
       forkCount
-      openIssues: issues(states: OPEN) {
-        totalCount
-      }
-      closedIssues: issues(states: CLOSED) {
-        totalCount
-      }
-      primaryLanguage {
-        name
-        color
-      }
-      defaultBranchRef {
-        name
-        target {
-          ... on Commit {
-            history(first: 1) {
-              nodes {
-                committedDate
-              }
-            }
-          }
-        }
-      }
-      licenseInfo {
-        spdxId
-        name
-        url
-      }
+      openIssues: issues(states: OPEN) { totalCount }
+      closedIssues: issues(states: CLOSED) { totalCount }
+      primaryLanguage { name color }
+      defaultBranchRef { name target { ... on Commit { history(first: 1) { nodes { committedDate } } } } }
+      licenseInfo { spdxId name url }
       homepageUrl
-      languages(first: 20) {
-        nodes {
-          name
-          color
-          size
-        }
-        totalSize
-      }
-      repositoryTopics(first: 20) {
-        nodes {
-          topic {
-            name
-            stargazerCount
-          }
-        }
-      }
-      releases(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
-        nodes {
-          name
-          tagName
-          description
-          publishedAt
-          url
-          isPrerelease
-          isDraft
-        }
-      }
-      deployments(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
-        nodes {
-          createdAt
-          environment
-          state
-          payload
-        }
-      }
-      environments(first: 10) {
-        nodes {
-          name
-          url
-        }
-      }
-      packages(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
-        nodes {
-          name
-          packageType
-          version
-          url
-        }
-      }
-      workflows(first: 10) {
-        nodes {
-          name
-          state
-          filePath
-        }
-      }
-      vulnerabilityAlerts(first: 5) {
-        nodes {
-          securityVulnerability {
-            severity
-            package {
-              name
-              ecosystem
-            }
-          }
-        }
-      }
-      dependencyGraphManifests(first: 5) {
-        nodes {
-          filename
-          dependencies(first: 10) {
-            nodes {
-              packageName
-              repository {
-                name
-                url
-              }
-              requirements
-              hasDependencies
-            }
-          }
-        }
-      }
-      mergeCommitAllowed
-      rebaseMergeAllowed
-      squashMergeAllowed
-      deleteBranchOnMerge
+      languages(first: 15) { nodes { name color } totalSize }
+      repositoryTopics(first: 15) { nodes { topic { name } } }
+      releases(first: 5, orderBy: {field: CREATED_AT, direction: DESC}) { nodes { name tagName description publishedAt url isPrerelease isDraft } }
       diskUsage
       updatedAt
       pushedAt
       createdAt
       isArchived
-      isDisabled
       isFork
-      isLocked
-      isMirror
       isPrivate
       isTemplate
-      templateRepository {
-        name
-        owner { login }
-        url
-      }
-      parent {
-        name
-        owner { login }
-        url
-      }
-      mentionableUsers(first: 10) {
-        nodes {
-          login
-          name
-          avatarUrl
-        }
-      }
+      templateRepository { name owner { login } url }
+      parent { name owner { login } url }
       securityPolicyUrl
-      codeOfConduct {
-        name
-        url
-      }
-      fundingLinks {
-        platform
-        url
-      }
-      usesCustomOpenGraphImage
+      codeOfConduct { name url }
+      fundingLinks { platform url }
       openGraphImageUrl
       shortDescriptionHTML
       hasIssuesEnabled
       hasWikiEnabled
       hasProjectsEnabled
       hasDiscussionsEnabled
-      hasSponsorshipsEnabled
-      autoMergeAllowed
     }
   }
 `;
@@ -582,14 +259,6 @@ interface GitHubClientOptions {
 
 function createGraphQLClient(options: GitHubClientOptions = {}) {
   const authToken = options.userToken || options.token || process.env.GITHUB_TOKEN;
-  
-  console.log('[GRAPHQL_CLIENT] options:', { 
-    hasUserToken: !!options.userToken, 
-    hasToken: !!options.token, 
-    hasEnvToken: !!process.env.GITHUB_TOKEN,
-    authTokenPresent: !!authToken,
-    authTokenPrefix: authToken ? authToken.slice(0, 10) + '...' : 'none'
-  });
   
   return graphql.defaults({
     headers: {
@@ -908,14 +577,19 @@ export async function fetchProfileData(
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };
     } catch (error: any) {
-      console.error('[FETCH_PROFILE] GraphQL error:', {
+      const errorDetail = {
+        username,
         message: error?.message,
         status: error?.status,
         response: error?.response?.data,
-        errors: error?.response?.data?.errors,
-        stack: error?.stack
-      });
+        errors: error?.errors,
+        cause: error?.cause?.message,
+        stack: error?.stack?.slice(0, 500),
+      };
+      console.error('GraphQL Profile Query Failed:', errorDetail);
+      // Return error in data to debug - but still provide mock fallback
       const data = getMockProfileData(username);
+      (data as any).__graphQLError = errorDetail;
       const etag = getETag(data);
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };
@@ -955,8 +629,19 @@ export async function fetchRepoData(
       
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };
-    } catch (error) {
-      console.warn('Repo GraphQL failed, using fallback mock repo:', error);
+    } catch (error: any) {
+      const errorDetail = {
+        owner,
+        repo,
+        message: error?.message,
+        status: error?.status,
+        response: error?.response?.data,
+        errors: error?.errors,
+        cause: error?.cause?.message,
+        stack: error?.stack?.slice(0, 500),
+      };
+      console.error('Repo GraphQL Query Failed:', errorDetail);
+      // Return error in data to debug
       const data: RepoDataRaw = {
         name: repo,
         nameWithOwner: `${owner}/${repo}`,
@@ -1005,12 +690,13 @@ export async function fetchRepoData(
         openGraphImageUrl: null,
         shortDescriptionHTML: null,
         hasIssuesEnabled: true,
-        hasWikiEnabled: false,
+        hasWikiEnabled: true,
         hasProjectsEnabled: true,
         hasDiscussionsEnabled: true,
         hasSponsorshipsEnabled: false,
         autoMergeAllowed: true,
       };
+      (data as any).__graphQLError = errorDetail;
       const etag = getETag(data);
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };

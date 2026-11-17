@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useTransition, Suspense, lazy } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type {
   AppMode,
@@ -16,6 +16,8 @@ import {
   getProfileSections,
   getProjectSections,
   compileSectionsToMarkdown,
+  appendDeployExtras,
+  DEPLOY_DEFAULT_BADGES,
 } from '@/lib/generators';
 import { Header } from '@/components/Header';
 import { HeroIngestion } from '@/components/HeroIngestion';
@@ -25,6 +27,7 @@ import { ExportToolbar } from '@/components/ExportToolbar';
 import { Footer } from '@/components/Footer';
 import { Layers, FileCode, Eye } from 'lucide-react';
 import { COMMUNITY_TEMPLATES, applyTemplate } from '@/lib/templates';
+import { useAuth } from '@/lib/auth-client';
 
 // Code-split heavy components
 const PaneGitHubPreview = lazy(() => import('@/components/PaneGitHubPreview').then(m => ({ default: m.PaneGitHubPreview })));
@@ -122,6 +125,87 @@ function HomeInner() {
   const activeTitle =
     mode === 'profile' ? profileData.name || profileData.username : projectData.repo;
 
+  // ---- Deploy extras config (mirrors /deploy selections) ----
+  // The GitHub App appends extra sections (animated badges, composite card,
+  // auto-sync workflow, footer) on deploy. Read the same config so the Studio
+  // preview renders exactly what gets written to the profile repo.
+  const [deployConfig, setDeployConfig] = useState<{ badges: string[]; autoSync: boolean }>({
+    badges: DEPLOY_DEFAULT_BADGES,
+    autoSync: false,
+  });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('readmecraft-deploy-config');
+      if (raw) {
+        const cfg = JSON.parse(raw);
+        setDeployConfig({
+          badges:
+            Array.isArray(cfg.badges) && cfg.badges.length > 0
+              ? cfg.badges
+              : DEPLOY_DEFAULT_BADGES,
+          autoSync: !!cfg.autoSync,
+        });
+      }
+    } catch {
+      /* ignore malformed config */
+    }
+  }, []);
+
+  const previewMarkdown = useMemo(() => {
+    if (mode !== 'profile') return markdown;
+    return appendDeployExtras(markdown, {
+      username: profileData.username || activeUsername,
+      theme,
+      badges: deployConfig.badges,
+      autoSync: deployConfig.autoSync,
+    });
+  }, [mode, markdown, profileData.username, activeUsername, theme, deployConfig]);
+
+  // ---- Hydrate real GitHub data for signed-in users ----
+  // The default view ships with SAMPLE_PROFILE; once we know who is signed in,
+  // replace the sample with their real data (e.g. correct "since" year).
+  const { session, status } = useAuth();
+  const authHydratedRef = useRef(false);
+  useEffect(() => {
+    if (authHydratedRef.current) return;
+    if (status !== 'authenticated') return;
+    // Never override a deep-linked template.
+    if (urlTemplate) {
+      authHydratedRef.current = true;
+      return;
+    }
+    const login = (session?.user as any)?.login;
+    if (!login) return;
+    const untouchedSample =
+      profileData.username === SAMPLE_PROFILE.username &&
+      profileData.createdAt === SAMPLE_PROFILE.createdAt;
+    if (!untouchedSample) {
+      authHydratedRef.current = true;
+      return;
+    }
+    authHydratedRef.current = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/ingest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'profile', target: login }),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setProfileData(data.data);
+          const newSecs = getProfileSections(data.data, profilePreset, theme);
+          setSections(newSecs);
+          setMarkdown(compileSectionsToMarkdown(newSecs));
+        }
+      } catch {
+        /* keep the sample fallback if ingestion fails */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session, urlTemplate]);
+
   // Sync theme from localStorage after hydration (client-only)
   useEffect(() => {
     setIsHydrated(true);
@@ -180,7 +264,7 @@ function HomeInner() {
         setIsCommandPaletteOpen((prev) => !prev);
       } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' });
+        const blob = new Blob([previewMarkdown], { type: 'text/markdown;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -191,7 +275,7 @@ function HomeInner() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [markdown, activeTitle]);
+  }, [previewMarkdown, activeTitle]);
 
   // Handler: Change Badge Theme
   const handleThemeChange = (newTheme: string) => {
@@ -597,7 +681,7 @@ function HomeInner() {
         >
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-[#090d16]"><div className="text-center text-slate-500 font-mono text-sm">Loading preview…</div></div>}>
             <PaneGitHubPreview
-              markdown={markdown}
+              markdown={previewMarkdown}
               repoOrUserTitle={activeTitle}
               mode={mode}
               profileData={profileData}
@@ -612,7 +696,7 @@ function HomeInner() {
 
       {/* Persistent Export Toolbar */}
       <ExportToolbar
-        markdown={markdown}
+        markdown={previewMarkdown}
         filename={`${activeTitle.toLowerCase().replace(/[^a-z0-9_-]/g, '-')}-README.md`}
         activeUsername={activeUsername}
       />
@@ -631,7 +715,7 @@ function HomeInner() {
           setProfilePreset={handleProfilePresetChange}
           setProjectPreset={handleProjectPresetChange}
           onDownload={() => {
-            const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' });
+            const blob = new Blob([previewMarkdown], { type: 'text/markdown;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -640,7 +724,7 @@ function HomeInner() {
             URL.revokeObjectURL(url);
           }}
           onCopyMarkdown={() => {
-            navigator.clipboard.writeText(markdown);
+            navigator.clipboard.writeText(previewMarkdown);
           }}
         />
       </Suspense>
