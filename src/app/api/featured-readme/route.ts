@@ -3,20 +3,20 @@ import { NextResponse } from 'next/server';
 // The homepage shows the maintainer's final, already-deployed README. Reading
 // the raw file is CDN-served (no GitHub API token, no rate limit) and this route
 // is cached, so visitors never trigger a fresh profile ingestion.
-export const revalidate = 3600;
+export const revalidate = 300;
 
 const MAINTAINER = 'ErBharatMalhotra';
 const RAW_README_URL = `https://raw.githubusercontent.com/${MAINTAINER}/${MAINTAINER}/main/README.md`;
 
 const CACHE_HEADERS = {
-  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
 };
 
 export async function GET() {
   try {
     const res = await fetch(RAW_README_URL, {
       headers: { Accept: 'text/plain', 'User-Agent': 'ReadmeCraft' },
-      next: { revalidate: 3600 },
+      next: { revalidate: 300 },
     });
 
     if (!res.ok) {
