@@ -71,7 +71,7 @@ function getLanguageBadge(lang: LanguageStat, bgHex: string, accentHex: string):
 }
 
 export function getProfileSections(data: ProfileData, preset: ProfilePreset, theme: string = 'gta6'): Section[] {
-  const username = data.username || 'ErBharatMalhotra';
+  const username = data.username || 'developer';
   const name = data.name || username;
   const themeObj = getThemeById(theme);
   const themeParam = `&theme=${themeObj.id}`;
