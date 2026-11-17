@@ -945,7 +945,7 @@ function introPhrases(username: string, bio?: string): string[] {
   const parts = clean
     .split(/[|•·/]|,|\.\s+|;\s+/)
     .map((p) => p.trim())
-    .filter((p) => p.length >= 3 && p.length <= 42);
+    .filter((p) => p.length >= 12 && p.length <= 42);
   const phrases = [`Hi, I'm ${username}`];
   for (const part of parts.slice(0, 2)) {
     if (!phrases.some((p) => p.toLowerCase() === part.toLowerCase())) phrases.push(part);
@@ -1037,18 +1037,20 @@ function generateTypingSvg(username: string, bio?: string, theme?: Theme): strin
       `@keyframes tp-${i}{0%,${start.toFixed(2)}%{opacity:0}` +
       `${fadeIn.toFixed(2)}%,${fadeOut.toFixed(2)}%{opacity:1}` +
       `${end.toFixed(2)}%,100%{opacity:0}}` +
-      `.tp-${i}{animation:tp-${i} ${cycleTime}s linear infinite}`;
+      `.tp-${i}{opacity:0;animation:tp-${i} ${cycleTime}s linear infinite}`;
 
     const textWidth = Math.max(24, phrase.length * charWidth);
     const cursorX = cx + textWidth / 2 + 8;
-    groups += `<g class="tp-${i}" style="opacity:0">
+    groups += `<g class="tp-${i}">
       <text x="${cx}" y="${baseline}" text-anchor="middle" fill="${i % 2 === 0 ? c.emerald : c.gold || c.emerald}" font-family="${FONTS.mono}" font-size="${fontSize}" font-weight="bold">${escapeXmlText(phrase)}</text>
       <rect class="typing-caret" x="${cursorX}" y="${baseline - 15}" width="9" height="19" fill="${c.emerald}"/>
     </g>`;
   });
   animationCss +=
     '@keyframes typing-blink{0%,49%{opacity:1}50%,100%{opacity:0}}' +
-    '.typing-caret{animation:typing-blink 1s steps(1,end) infinite}';
+    '.typing-caret{animation:typing-blink 1s steps(1,end) infinite}' +
+    // Respect users who ask their OS to reduce motion: show a stable line.
+    '@media (prefers-reduced-motion: reduce){.tp-0{animation:none;opacity:1}.typing-caret{animation:none;opacity:1}}';
 
   return createSvg(width, height, `${username}'s animated intro`, `
     ${styleBlock(
