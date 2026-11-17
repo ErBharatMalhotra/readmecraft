@@ -27,7 +27,6 @@ import { ExportToolbar } from '@/components/ExportToolbar';
 import { Footer } from '@/components/Footer';
 import { Layers, FileCode, Eye } from 'lucide-react';
 import { COMMUNITY_TEMPLATES, applyTemplate } from '@/lib/templates';
-import { useAuth } from '@/lib/auth-client';
 
 // Code-split heavy components
 const PaneGitHubPreview = lazy(() => import('@/components/PaneGitHubPreview').then(m => ({ default: m.PaneGitHubPreview })));
@@ -152,7 +151,35 @@ function HomeInner() {
     }
   }, []);
 
+  // ---- Featured README (homepage default) ----
+  // No per-visitor ingestion: one cached server route returns the maintainer's
+  // final README, and it stays on screen until the user starts editing.
+  const [featuredMarkdown, setFeaturedMarkdown] = useState('');
+  const initialMarkdownRef = useRef(markdown);
+
+  useEffect(() => {
+    if (urlTemplate) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/featured-readme');
+        const data = await res.json();
+        if (!cancelled && typeof data.markdown === 'string' && data.markdown.trim()) {
+          setFeaturedMarkdown(data.markdown);
+        }
+      } catch {
+        /* keep the local sample if the README is unavailable */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [urlTemplate]);
+
+  const showFeatured = !!featuredMarkdown && markdown === initialMarkdownRef.current;
+
   const previewMarkdown = useMemo(() => {
+    if (mode === 'profile' && showFeatured) return featuredMarkdown;
     if (mode !== 'profile') return markdown;
     return appendDeployExtras(markdown, {
       username: profileData.username || activeUsername,
@@ -160,58 +187,7 @@ function HomeInner() {
       badges: deployConfig.badges,
       autoSync: deployConfig.autoSync,
     });
-  }, [mode, markdown, profileData.username, activeUsername, theme, deployConfig]);
-
-  // ---- Hydrate real GitHub data for signed-in users ----
-  // The default view ships with SAMPLE_PROFILE; once we know who is signed in,
-  // replace the sample with their real data (e.g. correct "since" year).
-  const { session, status } = useAuth();
-  const authHydratedRef = useRef(false);
-  useEffect(() => {
-    if (authHydratedRef.current) return;
-    // Wait for auth to resolve so signed-in users get their own profile and
-    // guests fall through to the maintainer's public README.
-    if (status === 'loading') return;
-    // Never override a deep-linked template.
-    if (urlTemplate) {
-      authHydratedRef.current = true;
-      return;
-    }
-    // Signed-in users see their own profile; guests see the maintainer's
-    // public README so the homepage never shows the stale sample data.
-    const login = (session?.user as any)?.login || SAMPLE_PROFILE.username;
-    if (!login) {
-      authHydratedRef.current = true;
-      return;
-    }
-    const untouchedSample =
-      profileData.username === SAMPLE_PROFILE.username &&
-      profileData.createdAt === SAMPLE_PROFILE.createdAt;
-    if (!untouchedSample) {
-      authHydratedRef.current = true;
-      return;
-    }
-    authHydratedRef.current = true;
-    (async () => {
-      try {
-        const res = await fetch('/api/ingest', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'profile', target: login }),
-        });
-        const data = await res.json();
-        if (data.success && data.data) {
-          setProfileData(data.data);
-          const newSecs = getProfileSections(data.data, profilePreset, theme);
-          setSections(newSecs);
-          setMarkdown(compileSectionsToMarkdown(newSecs));
-        }
-      } catch {
-        /* keep the sample fallback if ingestion fails */
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session, urlTemplate]);
+  }, [mode, markdown, profileData.username, activeUsername, theme, deployConfig, showFeatured, featuredMarkdown]);
 
   // Sync theme from localStorage after hydration (client-only)
   useEffect(() => {
