@@ -5,7 +5,7 @@
   "type": "module",
   "description": "ReadmeCraft - The Intelligent Dual-Mode GitHub README Studio for Developer Profiles & Repositories",
   "author": "Bharat Malhotra (ErBharatMalhotra)",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "next dev",
     "build": "next build --turbopack",

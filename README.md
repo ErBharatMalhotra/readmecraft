@@ -19,12 +19,12 @@
 | **Dual-Mode Studio** | Profile READMEs + Repository READMEs in one tool |
 | **Zero-Typing Ingestion** | Username → real language bytes, pinned repos, live stats; Repo URL → package.json/Cargo.toml inspection |
 | **6 Design Presets** | Bento Grid, Minimalist, Titan (Profile) · Standard, API, CLI (Project) |
-| **Native SVG Badges** | 11 badge types via `/api/badges` — no external deps, zero rate-limit issues |
+| **Native SVG Badges** | 39 badge types via `/api/badges` — no external deps, zero rate-limit issues |
 | **GitHub OAuth** | "Sign in with GitHub" → your personal 5,000 req/hr token used automatically |
 | **Star Button** | Native "Star Repo" in header — direct API call, no redirect |
 | **🚀 Deploy Button** | One-click GitHub App install → auto-pushes README to your profile repo |
 | **🧙 Project README Wizard** | `/craft` — analyzes repo, detects type, generates tailored markdown + badges |
-| **🎨 Themes System** | 9 built-in themes (tokyonight, dracula, nord, catppuccin, rosepine, github-dark, gruvbox, solarized, default) |
+| **🎨 Themes System** | 63 themes in 8 categories (gaming, anime, aesthetic, dev classics, cyberpunk, retro, nature, minimal) |
 | **🧩 Composite Card** | `?type=composite&include=stats,trophies,snake,heatmap&theme=tokyonight` |
 | **Ecosystem Widgets** | 1-click GitHolo 3D Cards + GitChronicle Cadence badges |
 | **Export Ready** | Copy Markdown, Download README.md, JSON Import/Export, localStorage persistence |
@@ -79,61 +79,110 @@
 
 ## 📦 Native Badge API (`/api/badges`)
 
-All badges are **self-contained SVGs** — no shields.io, no external dependencies.
+Self-contained SVG badges — no shields.io, no external dependencies, no client-side JS. **39 badge types** across 8 theme categories (**63 themes**).
 
-| Type | Endpoint | Description |
-|------|----------|-------------|
-| `repos` | `?username=X&type=repos` | Public repo count |
-| `followers` | `?username=X&type=followers` | Follower count |
-| `following` | `?username=X&type=following` | Following count |
-| `language` | `?username=X&type=language` | Top language |
-| `streak` | `?username=X&type=streak` | Contribution streak |
-| `contributions` | `?username=X&type=contributions` | Total contributions |
-| `trophy` | `?username=X&type=trophy` | 🏆 Developer trophies card |
-| `activity` | `?username=X&type=activity` | 📈 30-day commit activity graph |
-| `visitor` | `?username=X&type=visitor` | 👀 Visitor analytics card |
-| `heatmap` | `?username=X&type=heatmap` | 🗓️ GitHub-style contribution calendar |
-| `snake` | `?username=X&type=snake` | 🐍 Animated contribution snake |
-| `typing` | `?username=X&type=typing` | ⌨️ Animated typing SVG |
-| `star-history` | `?username=X&type=star-history` | ⭐ Stars by repository (real counts) |
-| `repo-card` | `?username=X&type=repo-card&repo=Y` | 📦 Rich repo embed card |
-| `language-donut` | `?username=X&type=language-donut` | 🍩 Animated language donut |
-| `skill-bubbles` | `?username=X&type=skill-bubbles` | 🫧 Animated tech stack bubbles |
-| `ascii` | `?username=X&type=ascii&text=Y` | 🎨 ASCII banner generator |
-| `streak-calendar` | `?username=X&type=streak-calendar` | 🔥 Compact streak calendar |
+```
+https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme-id>
+```
 
-### 🎨 Themes System (9 themes)
+### Profile badges
 
-All badges accept `&theme=` parameter:
+| Type | Description |
+|------|-------------|
+| `repos` | Public repository count |
+| `followers` / `following` | Follower / following counts |
+| `language` | Top language by bytes |
+| `streak` | Current contribution streak (days) |
+| `contributions` | Total contributions in the last year |
+| `stars` | Stars the user has given |
+| `blog` | Blog presence badge |
 
-| Theme | Preview | Description |
-|-------|---------|-------------|
-| `tokyonight` | 🌃 | Tokyo Night — deep blues, vibrant purples |
-| `dracula` | 🧛 | Dracula — dark with cyan/pink accents |
-| `nord` | ❄️ | Nord — arctic, north-bluish tones |
-| `catppuccin` | ☕ | Catppuccin Mocha — warm coffee tones |
-| `rosepine` | 🌹 | Rose Pine — pine/rose natural palette |
-| `github-dark` | 🐙 | GitHub Dark — matches GitHub's dark mode |
-| `gruvbox` | 📦 | Gruvbox — retro groove, earthy tones |
-| `solarized` | ☀️ | Solarized Dark — precision colors |
-| `default` | ⚫ | ReadmeCraft signature (obsidian + emerald) |
+### Visual cards
 
-**Usage:** `https://readme.bharatdn.com/api/badges?username=ErBharatMalhotra&type=snake&theme=tokyonight`
+| Type | Description |
+|------|-------------|
+| `trophy` | 🏆 Trophy shelf |
+| `activity` | 📈 30-day commit activity |
+| `heatmap` | 🗓️ 52-week contribution heatmap |
+| `snake` | 🐍 Animated contribution snake |
+| `star-history` | ⭐ Real star counts per repository (top 6 + total) |
+| `repo-card` | 📦 Rich repository card — `&repo=<name>` |
+| `language-donut` | 🍩 Language donut |
+| `language-race` | 🏁 Animated language race |
+| `skill-bubbles` / `skill-radar` | 🫧 Bubble / radar charts |
+| `repo-constellation` | ✨ Repository constellation |
+| `contribution-flow` | 🌊 Contribution flow |
+| `contribution-mountain` | ⛰️ 52-week contribution mountain |
+| `code-pulse` | 💓 Live code pulse |
+| `code-time-heatmap` | 🕒 Coding-time heatmap |
+| `tech-galaxy` | 🌌 Tech-stack galaxy |
+| `streak-calendar` | 🔥 Compact streak calendar |
+| `visitor` | 👀 Visitor card |
+| `typing` | ⌨️ Animated typing SVG |
+| `name-banner` | 🏷️ Name banner — `&name=<text>` |
+| `ascii` | 🎨 ASCII banner — `&text=<text>` |
+| `composite` | 🧩 Multi-badge card (see below) |
+
+### Repository badges
+
+Pass the owner as `username` and the repository as `repo`:
+
+```
+?username=owner&repo=name&type=stars
+```
+
+| Type | Description |
+|------|-------------|
+| `stars` | Repository stars |
+| `forks` | Forks |
+| `issues` | Open issues |
+| `license` | SPDX license id |
+| `size` | Repository size |
+| `last-commit` | Time since last commit |
+
+### Integration badges
+
+Read server-side credentials; show `Token Required` until configured:
+
+| Type | Credential |
+|------|------------|
+| `spotify` | `SPOTIFY_REFRESH_TOKEN` |
+| `youtube` | `YOUTUBE_API_KEY` |
+| `wakatime` | `WAKATIME_API_KEY` |
+| `leetcode` | `LEETCODE_SESSION` |
+| `codeforces` | `&handle=` or `CODEFORCES_HANDLE` |
+
+### 🎨 Themes (63)
+
+Every badge accepts `&theme=<id>`. Unknown ids fall back to `gta6`.
+
+| Category | Themes |
+|---|---|
+| Gaming | `gta6` `cyberpunk2077` `elden-ring` `witcher3` `hollow-knight` `bloodborne` `minecraft` `valorant` `apex-legends` `league-of-legends` |
+| Anime | `tokyonight` `tokyonight-storm` `evangelion` `akira` `ghost-in-shell` `chainsaw-man` `jjk` `demon-slayer` `spy-x-family` `one-piece` `naruto` |
+| Aesthetic | `synthwave` `vaporwave` `lofi` `cottagecore` `dark-academia` `y2k` `sunset` `midnight-purple` `space` |
+| Dev classics | `dracula` `nord` `gruvbox` `github` `github-light` `monokai` `solarized-dark` `solarized-light` `one-dark` `material-oceanic` `vscode-dark` `catppuccin` `catppuccin-latte` `rose-pine` `rose-pine-dawn` |
+| Cyberpunk | `matrix` `tron` `hacker` `amber-terminal` `blade-runner` `ghostrunner` |
+| Retro | `gameboy` `nes` `windows95` `winamp` `ms-dos` `c64` |
+| Nature | `forest` `ocean` `aurora` |
+| Minimal | `minimal-dark` `minimal-light` `high-contrast` |
+
+**Usage:** `https://readme.bharatdn.com/api/badges?username=octocat&type=snake&theme=tokyonight`
 
 ### 🧩 Composite Card
 
-Single endpoint for multi-badge cards:
+One request, several badges:
 
 ```
-https://readme.bharatdn.com/api/badges?type=composite&username=ErBharatMalhotra&include=stats,trophies,snake,heatmap&theme=tokyonight
+https://readme.bharatdn.com/api/badges?type=composite&username=octocat&include=stats,trophies,snake,heatmap&theme=gta6
 ```
 
 **Params:**
 - `include` — comma-separated: `stats`, `trophies`, `snake`, `heatmap`, `activity`, `language`, `followers`, `repos`
-- `theme` — any of the 9 themes
+- `theme` — any of the 63 theme ids
 - `layout` — `grid` (2×2) or `stack` (vertical)
 
-**Cache-bust:** Add `&v=<timestamp>` (edge cache 6h)
+**Cache-bust:** append `&v=<anything>` (edge cache is 6h)
 
 ---
 
@@ -300,7 +349,7 @@ Badges detect viewer via edge headers (Vercel/Cloudflare):
 
 ### Text Safety System
 
-All 21 badge generators use comprehensive text handling:
+All 39 badge generators use comprehensive text handling:
 
 ```typescript
 // Font metrics → truncation → wrapping → overflow prevention
@@ -313,7 +362,6 @@ const { lines, width, height } = measureText(text, fontSize, maxWidth);
 - Per-segment keyframes: `sn-move-0` … `sn-move-4`
 - Serpentines through contribution cells only
 - Falls back to demo calendar when GraphQL rate-limited
-- 18+ snake types supported
 
 ---
 
@@ -359,7 +407,7 @@ src/
 │   │   │   └── github-app/
 │   │   │       ├── install/route.ts        # GitHub App install URL
 │   │   │       └── callback/route.ts       # Installation token → push README
-│   │   ├── badges/route.ts                 # Native SVG badge generator (21 types)
+│   │   ├── badges/route.ts                 # Native SVG badge generator (39 types)
 │   │   ├── ingest/route.ts                 # GitHub profile/repo ingestion
 │   │   └── star/route.ts                   # Star repo via OAuth token
 │   ├── deploy/page.tsx                     # Deploy UI (theme + badge picker)
@@ -382,8 +430,14 @@ src/
 │   ├── github-api.ts                       # GraphQL + caching + ETag + dedup
 │   ├── github.ts                           # fetchGitHubProfile / Project
 │   ├── generators.ts                       # Section → Markdown compilers
-│   ├── utils.ts                            # cn() helper
-│   └── badge-generators/                   # 21 individual badge generators
+│   ├── emoji.ts                            # Emoji shortcode → unicode
+│   ├── themes.ts                           # 63 theme palettes
+│   ├── templates.ts                        # Presets + starter sections
+│   ├── score.ts                            # Profile scoring
+│   ├── analytics.ts                        # Telemetry helpers
+│   ├── action-generator.ts                 # GitHub Action scaffolding
+│   ├── ai-assistant.ts                     # Writing assistant helpers
+│   └── utils.ts                            # cn() helper
 └── types/
     └── readmecraft.ts                      # TypeScript interfaces
 ```

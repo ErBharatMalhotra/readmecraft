@@ -52,3 +52,4 @@ AI_DOCUMENTATION.md
 PROJECT_CONTEXT.md
 *.ai.md
 *.context.md
+*.log
