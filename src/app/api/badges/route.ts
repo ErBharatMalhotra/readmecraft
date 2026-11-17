@@ -1097,25 +1097,34 @@ function generateTypingSvg(displayName: string, bio?: string, theme?: Theme): st
 function generateStarHistorySvg(username: string, repos: any[], theme: Theme): string {
   const c = C(theme);
   const width = 600;
-  const height = 220;
-  const margin = { top: 40, right: 20, bottom: 40, left: 60 };
+  const height = 240;
+  const margin = { top: 40, right: 24, bottom: 48, left: 60 };
   const chartW = width - margin.left - margin.right;
   const chartH = height - margin.top - margin.bottom;
 
   const totalStars = repos.reduce((s, r) => s + (r.stargazerCount || 0), 0);
-  // Deterministic growth curve: a badge must render the same picture on every
-  // request, and a user with zero stars must not divide by zero.
+  // We only ever receive the CURRENT total star count: the GitHub API exposes
+  // no star timestamps, and paging every stargazer is not possible at this
+  // scale. So the curve is a labelled estimate, never presented as real data.
+  // Deterministic so the badge is identical on every request (CDN friendly),
+  // and clamped so a user with zero stars never divides by zero.
   const curve = [0.06, 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.62, 0.72, 0.83, 0.92, 1];
   const dataPoints = curve.map((factor, i) => ({
-    month: new Date(2024, i, 1).toLocaleString('default', { month: 'short' }),
+    // Relative ages, not calendar months: we do not know real star dates.
+    ageLabel: i === 11 ? 'now' : `~${11 - i}mo ago`,
     stars: Math.round(totalStars * factor),
   }));
   const maxStars = Math.max(1, ...dataPoints.map(d => d.stars));
+  const hasStars = totalStars > 0;
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 28, content: `${username}'s Star History`, cls: 'badge-title',
+    x: width / 2, y: 26, content: `${username}'s Star History (estimated)`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+  });
+  inner += safeText({
+    x: width / 2, y: 38, content: hasStars ? 'Estimated trend from the current total' : 'No stars yet', cls: 'muted',
+    maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
   });
 
   inner += translate(margin.left, margin.top, `
@@ -1142,15 +1151,18 @@ function generateStarHistorySvg(username: string, repos: any[], theme: Theme): s
       return `<circle cx="${x}" cy="${y}" r="4" fill="${c.gold}" stroke="${c.bg}" stroke-width="2"/>
         ${safeText({ x, y: y - 12, content: d.stars.toLocaleString(), cls: 'muted',
           maxWidth: chartW / 12, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
-        ${safeText({ x, y: chartH + 18, content: d.month, cls: 'muted',
-          maxWidth: chartW / 12, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}`;
+        ${[0, 3, 6, 9, 11].includes(i) ? safeText({ x, y: chartH + 16, content: d.ageLabel, cls: 'muted',
+          maxWidth: chartW / 3, fontSize: 8.5, fontFamily: 'mono',
+          textAnchor: i === 0 ? 'start' : i === 11 ? 'end' : 'middle', truncate: true }) : ''}`;
     }).join('')}
   `);
 
-  inner += safeText({ x: width / 2, y: height - 8, content: `Total: ${totalStars.toLocaleString()} stars across ${repos.length} repos`, cls: 'muted',
+  inner += safeText({ x: width / 2, y: height - 20, content: `Current total: ${totalStars.toLocaleString()} stars across ${repos.length} repos`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 11, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
+  inner += safeText({ x: width / 2, y: height - 6, content: 'Estimated only — GitHub exposes no star timestamps', cls: 'muted',
+    maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
 
-  return createSvg(width, height, `${username}'s Star History`, inner, theme);
+  return createSvg(width, height, `${username}'s estimated star history`, inner, theme);
 }
 
 // ============================================================================

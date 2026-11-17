@@ -95,7 +95,7 @@ All badges are **self-contained SVGs** — no shields.io, no external dependenci
 | `heatmap` | `?username=X&type=heatmap` | 🗓️ GitHub-style contribution calendar |
 | `snake` | `?username=X&type=snake` | 🐍 Animated contribution snake |
 | `typing` | `?username=X&type=typing` | ⌨️ Animated typing SVG |
-| `star-history` | `?username=X&type=star-history` | ⭐ Star history graph |
+| `star-history` | `?username=X&type=star-history` | ⭐ Estimated star trend (labelled: GitHub exposes no star timestamps) |
 | `repo-card` | `?username=X&type=repo-card&repo=Y` | 📦 Rich repo embed card |
 | `language-donut` | `?username=X&type=language-donut` | 🍩 Animated language donut |
 | `skill-bubbles` | `?username=X&type=skill-bubbles` | 🫧 Animated tech stack bubbles |
