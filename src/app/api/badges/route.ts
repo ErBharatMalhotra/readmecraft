@@ -339,6 +339,14 @@ ${styleBlock(
   css('badge-title', { fill: c.emerald, 'font-family': FONTS.display, 'font-weight': 'bold', 'font-size': 16 }),
 )}
 <rect width="${width}" height="${height}" class="bg"/>
+<defs>
+  <linearGradient id="rc-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="${theme.purple || c.emerald}" stop-opacity="0.16"/>
+    <stop offset="55%" stop-color="${c.bg}" stop-opacity="0"/>
+    <stop offset="100%" stop-color="${c.emerald}" stop-opacity="0.1"/>
+  </linearGradient>
+</defs>
+<rect width="${width}" height="${height}" rx="${RADIUS.lg}" fill="url(#rc-glow)"/>
 ${inner}
 </svg>`;
 }
@@ -1368,7 +1376,8 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
   weeks.slice(-7).forEach((week: any, weekIndex: number) => {
     week.contributionDays.forEach((day: any, dayIndex: number) => {
       const count = day.contributionCount;
-      const color = count === 0 ? c.bgElevated : count <= 2 ? '#0e4429' : count <= 4 ? '#006d32' : '#26a641';
+      const color =
+        count === 0 ? c.bgElevated : count <= 2 ? c.border : count <= 4 ? c.emeraldDim : c.emerald;
       const x = startX + weekIndex * (cellSize + cellGap);
       const y = startY + dayIndex * (cellSize + cellGap);
       inner += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${color}"/>`;
@@ -1383,7 +1392,7 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
   });
 
   inner += safeText({
-    x: width / 2, y: height - 20, content: 'Last 7 weeks | Green = active day', cls: 'muted',
+    x: width / 2, y: height - 20, content: 'Last 7 weeks | Active days', cls: 'muted',
     maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
   });
 
@@ -1783,16 +1792,16 @@ function generateCodePulseSvg(username: string, stats: any, theme: Theme, viewer
 // ============================================================================
 function generateContributionMountainSvg(displayName: string, calendar: any, theme: Theme): string {
   const c = C(theme);
-  const width = 600;
-  const height = 300;
+  const width = 1000;
+  const height = 330;
   const weeks = calendar?.weeks || [];
-  const cols = Math.min(weeks.length, 26); // Last 26 weeks
+  const cols = Math.min(weeks.length, 52); // Full year
   const rows = 7;
-  const cellW = 16;
-  const cellH = 9; // isometric depth
-  const maxHeight3D = 54;
-  const startX = 76;
-  const startY = 212;
+  const cellW = 15;
+  const cellH = 8; // isometric depth
+  const maxHeight3D = 62;
+  const startY = 258;
+  const startX = Math.max(70, Math.round((width - (cols * cellW + rows * (cellW / 2))) / 2));
 
   const maxCount = Math.max(
     1,
@@ -1822,9 +1831,13 @@ function generateContributionMountainSvg(displayName: string, calendar: any, the
       const level = ratio <= 0.25 ? 1 : ratio <= 0.5 ? 2 : ratio <= 0.75 ? 3 : 4;
       // Continuous height keeps the terrain smooth instead of a field of spikes.
       const height3D = 8 + ratio * (maxHeight3D - 8);
-      const color = level === 1 ? c.border : level === 2 ? c.emeraldDim : level === 3 ? c.emerald : c.gold;
-      const colorLight = level === 1 ? c.borderLight : level === 2 ? c.emerald : level === 3 ? c.emeraldLight : c.gold;
-      const colorDark = level === 1 ? c.bgElevated : level === 2 ? c.border : level === 3 ? c.emeraldDim : c.goldDim;
+      // Peaks use the theme's secondary accent (GTA VI's neon purple) so the
+      // mountain matches the banner instead of staying pure orange.
+      const peak = theme.purple || c.gold;
+      const color = level === 1 ? c.border : level === 2 ? c.emeraldDim : level === 3 ? c.emerald : peak;
+      const colorLight = level === 1 ? c.borderLight : level === 2 ? c.emerald : level === 3 ? c.emeraldLight : peak;
+      const colorDark =
+        level === 1 ? c.bgElevated : level === 2 ? c.border : level === 3 ? c.emeraldDim : theme.purpleDim || c.goldDim;
 
       // Isometric coordinates: (isoX, baseY) is the centre of the cell's base
       // diamond, so the column rises *up* from the ground plane.
@@ -1890,7 +1903,7 @@ function generateContributionMountainSvg(displayName: string, calendar: any, the
     { color: c.border, label: 'Low' },
     { color: c.emeraldDim, label: 'Medium' },
     { color: c.emerald, label: 'High' },
-    { color: c.gold, label: 'Peak' },
+    { color: theme.purple || c.gold, label: 'Peak' },
   ];
   legendData.forEach((item, i) => {
     const x = 30;
