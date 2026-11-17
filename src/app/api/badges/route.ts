@@ -1135,7 +1135,10 @@ function generateStarHistorySvg(username: string, repos: any[], theme: Theme): s
   // (e.g. "190,000 ★") are never truncated, instead of guessing a fixed width.
   const countFontSize = 10;
   const countLabels = rows.map(r => `${r.stars.toLocaleString()} \u2605`);
-  const countWidth = Math.min(120, Math.ceil(Math.max(...countLabels.map(l => estimateTextWidth(l, countFontSize, 'mono')))) + 4);
+  // Measured glyphs render wider than estimateTextWidth predicts (the star glyph
+  // plus letter spacing), so reserve ~8.7px per character: "256,001 ★" needs 78px.
+  const maxCountChars = Math.max(...countLabels.map(l => l.length));
+  const countWidth = Math.min(120, Math.ceil(maxCountChars * 8.7) + 8);
   const barMax = width - pad - countWidth - barX - 12;
   const maxStars = Math.max(1, ...rows.map(r => r.stars));
   const height = top + rows.length * rowH + 34;
