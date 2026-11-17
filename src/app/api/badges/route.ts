@@ -1360,12 +1360,13 @@ function generateAsciiBannerSvg(text_content: string, theme: Theme): string {
 function generateStreakCalendarSvg(username: string, calendar: any, streak: number, theme: Theme): string {
   const c = C(theme);
   const width = 400;
-  const height = 180;
+  const height = 220;
   const weeks = calendar?.weeks || [];
-  const cellSize = 10;
-  const cellGap = 2;
-  const startX = 30;
-  const startY = 50;
+  const cellSize = 18;
+  const cellGap = 4;
+  const gridWidth = 7 * (cellSize + cellGap) - cellGap;
+  const startX = Math.round((width - gridWidth) / 2) + 16;
+  const startY = 56;
 
   let inner = '';
   inner += safeText({
