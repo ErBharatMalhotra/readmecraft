@@ -382,21 +382,37 @@ function calculateLanguagesFromRepoData(languages: any[]): LanguageStat[] {
 
 function extractSkillsFromData(data: any, languages: LanguageStat[]): string[] {
   const skills = new Set<string>();
-  
+  const seen = new Set<string>();
+  // Repo topics like "news", "tools" or "case-study" are not skills.
+  const GENERIC_TOPICS = new Set([
+    'ai', 'ai agents', 'artificial intelligence', 'analytics', 'news', 'tools',
+    'benchmarks', 'dashboard', 'developer analytics', 'developer tools',
+    'github api', 'case study', 'cloudflare', 'programmatic seo', 'static site',
+    'pipeline', 'automation', 'llm', 'apps', 'web', 'website', 'readme',
+  ]);
+  const add = (value: string) => {
+    const text = String(value || '').trim();
+    if (!text) return;
+    const key = text.toLowerCase();
+    if (seen.has(key) || GENERIC_TOPICS.has(key)) return;
+    seen.add(key);
+    skills.add(text);
+  };
+
   // Add top languages as skills
-  languages.slice(0, 6).forEach(l => skills.add(l.name));
-  
+  languages.slice(0, 6).forEach(l => add(l.name));
+
   // Add skills from repo topics
   data.reposList?.nodes?.forEach((repo: any) => {
     repo.repositoryTopics?.nodes?.forEach((t: any) => {
       const topic = t.topic?.name || '';
       if (topic && topic.length > 1) {
         // Convert kebab-case to Title Case for skills
-        skills.add(topic.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
+        add(topic.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
       }
     });
   });
-  
+
   // Add common developer skills
   const commonSkills = [
     'Git', 'Docker', 'REST APIs', 'GraphQL', 'CI/CD', 'Testing',
@@ -404,8 +420,8 @@ function extractSkillsFromData(data: any, languages: LanguageStat[]): string[] {
     'Redis', 'WebSockets', 'TypeScript', 'React', 'Node.js',
     'Performance Optimization', 'Security', 'Observability'
   ];
-  commonSkills.forEach(s => skills.add(s));
-  
+  commonSkills.forEach(s => add(s));
+
   return Array.from(skills).slice(0, 25);
 }
 
@@ -422,17 +438,22 @@ export async function fetchGitHubProfile(
     const { data } = await fetchProfileData(username, { token, userToken });
     const userData = data;
 
-    const repos = userData.reposList?.nodes || [];
-    const languages = calculateLanguages(repos);
+    // Filter out private repos for all public display
+    const publicRepos = (userData.reposList?.nodes || []).filter((r: any) => !r.isPrivate);
+    const repos = publicRepos;
+    const languages = calculateLanguages(publicRepos);
     const skills = extractSkillsFromData(userData, languages);
 
     let pinnedRepos = userData.pinnedItems?.nodes || [];
     if (pinnedRepos.length === 0) {
       const sortedRepos = repos
-        .filter((r: any) => !r.isFork && !r.isArchived)
+        .filter((r: any) => !r.isFork && !r.isArchived && !r.isPrivate)
         .sort((a: any, b: any) => b.stargazerCount - a.stargazerCount)
         .slice(0, 6);
       pinnedRepos = sortedRepos;
+    } else {
+      // Filter out private repos from pinned items too
+      pinnedRepos = pinnedRepos.filter((r: any) => !r.isPrivate);
     }
 
     const finalPinned: PinnedRepo[] = pinnedRepos.map((r: any) => ({
@@ -442,7 +463,7 @@ export async function fetchGitHubProfile(
       url: r.url,
       stargazersCount: r.stargazerCount,
       forksCount: r.forkCount,
-      language: r.primaryLanguage?.name || 'Code',
+      language: r.primaryLanguage?.name || 'Text',
       topics: r.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || [],
       license: r.licenseInfo?.spdxId || undefined,
       isFork: r.isFork,
@@ -457,13 +478,16 @@ export async function fetchGitHubProfile(
       })) || [],
     }));
 
-    // Process top repositories
-    const topRepos: TopRepository[] = (userData.topRepositories?.nodes || []).map((r: any) => ({
-      name: r.name,
-      stargazerCount: r.stargazerCount,
-      url: r.url,
-      primaryLanguage: r.primaryLanguage,
-    }));
+    // Process top repositories (filter private)
+    const topRepos: TopRepository[] = (userData.topRepositories?.nodes || [])
+      .filter((r: any) => !r.isPrivate)
+      .map((r: any) => ({
+        name: r.name,
+        stargazerCount: r.stargazerCount,
+        url: r.url,
+        primaryLanguage: r.primaryLanguage,
+        description: r.description || undefined,
+      }));
 
     // Process contribution calendar
     const calendar = userData.contributionsCollection?.contributionCalendar || { totalContributions: 0, weeks: [] };
@@ -672,7 +696,7 @@ export async function fetchGitHubProfile(
         url: r.html_url,
         stargazersCount: r.stargazers_count,
         forksCount: r.forks_count,
-        language: r.language || 'Code',
+        language: r.language || 'Text',
         topics: r.topics || [],
         license: r.license?.spdx_id,
         isFork: r.fork,

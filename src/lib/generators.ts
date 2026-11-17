@@ -38,8 +38,35 @@ function formatDate(dateStr: string): string {
   }
 }
 
+// shields.io static badge text: `-` is the label/message separator, `_` is a
+// space and `__` is a literal underscore. Escaping names keeps hyphens (e.g.
+// "open-source-ai-radar") from turning the badge into "404: badge not found".
+function shieldsEscape(text: string): string {
+  return String(text ?? '')
+    .replace(/-/g, '--')
+    .replace(/_/g, '__')
+    .replace(/ /g, '_')
+    .replace(/\//g, '%2F');
+}
+
+// Simple-icons slugs differ from display names for a few common entries.
+const LOGO_SLUGS: Record<string, string> = {
+  html: 'html5',
+  'github actions': 'githubactions',
+  'ci/cd': 'githubactions',
+  'c++': 'cplusplus',
+  'c#': 'csharp',
+  'rest apis': '',
+};
+
+function logoSlug(name: string): string {
+  const key = (name || '').toLowerCase();
+  if (key in LOGO_SLUGS) return LOGO_SLUGS[key];
+  return key.replace(/[^a-z0-9]/g, '');
+}
+
 function getLanguageBadge(lang: LanguageStat, bgHex: string, accentHex: string): string {
-  return `<img src="https://img.shields.io/badge/-${encodeURIComponent(lang.name)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(lang.name.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${lang.name} ${lang.percentage}%" />`;
+  return `<img src="https://img.shields.io/badge/-${shieldsEscape(lang.name)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(logoSlug(lang.name))}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${lang.name} ${lang.percentage}%" />`;
 }
 
 export function getProfileSections(data: ProfileData, preset: ProfilePreset, theme: string = 'gta6'): Section[] {
@@ -160,7 +187,7 @@ export function getProfileSections(data: ProfileData, preset: ProfilePreset, the
       title: 'Contribution Breakdown',
       enabled: data.githubStatsEnabled,
       order: 12,
-      content: generateContributionDetailsSection(data, bgHex, accentHex),
+      content: generateContributionDetailsSection(data, bgHex, accentHex, themeParam),
     },
 
     // Repositories contributed to
@@ -348,11 +375,25 @@ ${(data.languages ?? []).map(l => `| **${l.name}** | ${l.percentage}% | ${l.byte
 function generateSkillsEnhancedSection(data: ProfileData, bgHex: string, accentHex: string): string {
   if ((data.skills?.length ?? 0) === 0) return '';
 
-  // Group skills by category
-  const skills = data.skills ?? [];
-  const langSkills = skills.filter(s => ['TypeScript', 'JavaScript', 'Python', 'Rust', 'Go', 'Java', 'C', 'C++', 'C#', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'Dart', 'Scala', 'Ruby', 'PHP', 'HTML', 'CSS', 'Shell', 'SQL', 'GraphQL'].includes(s));
-  const frameworkSkills = skills.filter(s => ['React', 'Next.js', 'Vue', 'Svelte', 'Express', 'FastAPI', 'Django', 'Spring', 'Rails', 'Laravel', 'TailwindCSS', 'Node.js', 'Deno', 'Bun'].some(f => s.toLowerCase().includes(f.toLowerCase())));
-  const infraSkills = skills.filter(s => ['Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Terraform', 'Ansible', 'CI/CD', 'GitHub Actions', 'GitLab CI', 'Jenkins', 'Linux', 'Nginx', 'PostgreSQL', 'Redis', 'MongoDB', 'MySQL', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Prometheus', 'Grafana', 'Jaeger'].some(f => s.toLowerCase().includes(f.toLowerCase())));
+  // Group skills by category. Repo topics are noisy, so drop generic ones and
+  // dedupe case-insensitively (avoids "JavaScript" + "Javascript" duplicates).
+  const GENERIC_TOPICS = new Set([
+    'ai', 'ai agents', 'artificial intelligence', 'analytics', 'news', 'tools',
+    'benchmarks', 'dashboard', 'developer analytics', 'developer tools',
+    'github api', 'case study', 'cloudflare', 'programmatic seo', 'static site',
+    'pipeline', 'automation', 'llm', 'apps', 'web', 'website', 'readme',
+  ]);
+  const seen = new Set<string>();
+  const skills = (data.skills ?? []).filter((s) => {
+    const k = String(s || '').trim().toLowerCase();
+    if (!k || seen.has(k) || GENERIC_TOPICS.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  const LANG_SET = new Set(['typescript', 'javascript', 'python', 'rust', 'go', 'java', 'c', 'c++', 'c#', 'ruby', 'php', 'swift', 'kotlin', 'dart', 'scala', 'html', 'css', 'shell', 'sql', 'graphql']);
+  const langSkills = skills.filter(s => LANG_SET.has(s.toLowerCase()));
+  const frameworkSkills = skills.filter(s => !langSkills.includes(s) && ['React', 'Next.js', 'Vue', 'Svelte', 'Express', 'FastAPI', 'Django', 'Spring', 'Rails', 'Laravel', 'TailwindCSS', 'Node.js', 'Deno', 'Bun'].some(f => s.toLowerCase().includes(f.toLowerCase())));
+  const infraSkills = skills.filter(s => !langSkills.includes(s) && !frameworkSkills.includes(s) && ['Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Terraform', 'Ansible', 'CI/CD', 'GitHub Actions', 'GitLab CI', 'Jenkins', 'Linux', 'Nginx', 'PostgreSQL', 'Redis', 'MongoDB', 'MySQL', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Prometheus', 'Grafana', 'Jaeger'].some(f => s.toLowerCase().includes(f.toLowerCase())));
   const otherSkills = skills.filter(s => !langSkills.includes(s) && !frameworkSkills.includes(s) && !infraSkills.includes(s));
 
   let content = `### ⚔️ Technology Arsenal
@@ -395,7 +436,8 @@ function generatePinnedReposDetailedSection(data: ProfileData, bgHex: string, ac
 
 ${data.pinnedRepos
   .map(
-    (repo) => `[![${repo.name}](${repo.language ? `https://img.shields.io/badge/${repo.name}-${repo.language}-${accentHex}?style=for-the-badge&logo=github&logoColor=white&labelColor=${bgHex}` : `https://img.shields.io/badge/${repo.name}-${accentHex}?style=for-the-badge&logo=github&logoColor=white&labelColor=${bgHex}`})](${repo.url})`
+    (repo) =>
+      `[![${repo.name}](https://img.shields.io/badge/${shieldsEscape(repo.name)}${repo.language ? `-${shieldsEscape(repo.language)}` : ''}-${accentHex}?style=for-the-badge&logo=github&logoColor=white&labelColor=${bgHex})](${repo.url})`
   )
   .join(' ')}
 
@@ -488,7 +530,7 @@ function generateSponsorsSection(data: ProfileData, bgHex: string, accentHex: st
   return content;
 }
 
-function generateContributionDetailsSection(data: ProfileData, bgHex: string, accentHex: string): string {
+function generateContributionDetailsSection(data: ProfileData, bgHex: string, accentHex: string, themeParam: string = ''): string {
   return `### 📊 Contribution Breakdown
 
 <details open>
@@ -508,11 +550,11 @@ function generateContributionDetailsSection(data: ProfileData, bgHex: string, ac
 <summary><b>Contribution Calendar (Heatmap)</b></summary>
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${data.username}&type=heatmap" alt="Contribution Heatmap" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${data.username}&type=heatmap${themeParam}" alt="Contribution Heatmap" />
 </div>
 
 <div align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${data.username}&type=snake&v=14" alt="Contribution Snake" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${data.username}&type=snake&v=14${themeParam}" alt="Contribution Snake" />
 </div>
 
 <details open>
@@ -531,7 +573,8 @@ function generateWeeklyBreakdown(calendar: any): string {
   return recentWeeks.map((week: any, i: number) => {
     const weekTotal = week.contributionDays.reduce((sum: number, d: any) => sum + (d.contributionCount || 0), 0);
     const startDate = week.contributionDays[0]?.date;
-    const endDate = week.contributionDays[6]?.date;
+    const endDate =
+      week.contributionDays[week.contributionDays.length - 1]?.date || startDate || 'N/A';
     return `- **Week ${recentWeeks.length - i}** (${startDate} to ${endDate}): ${weekTotal} contributions`;
   }).join('\n');
 }
@@ -590,13 +633,7 @@ function generateContactSection(data: ProfileData, username: string, bgHex: stri
 ${showTwitter ? `- **Twitter / 𝕏:** [@${twitter}](https://twitter.com/${twitter})` : ''}
 ${data.email ? `- **Email:** [${data.email}](mailto:${data.email})` : ''}
 ${data.company ? `- **Company:** ${data.company}` : ''}
-${data.location ? `- **Location:** ${data.location}` : ''}
-
----
-
-<div align="center">
-<sub>Generated with ❤️ by <a href="https://readme.bharatdn.com">ReadmeCraft</a> • Part of the <a href="https://bharatdn.com">BharatDN</a> Developer Ecosystem</sub>
-</div>`;
+${data.location ? `- **Location:** ${data.location}` : ''}`;
 }
 
 // ============================================================================
@@ -945,8 +982,8 @@ function generateCLIHeader(data: ProjectData, bgHex: string, accentHex: string):
 > ${data.description}
 
 [![Stars](https://img.shields.io/github/stars/${data.owner}/${data.repo}?style=flat-square&color=${accentHex}&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
-[![License](https://img.shields.io/badge/License-${data.license}-${accentHex}?style=flat-square&labelColor=${bgHex})](https://opensource.org/licenses/${data.license})
-[![Language](https://img.shields.io/badge/Language-${encodeURIComponent(data.language)}-${accentHex}?style=flat-square&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
+[![License](https://img.shields.io/badge/License-${shieldsEscape(data.license)}-${accentHex}?style=flat-square&labelColor=${bgHex})](https://opensource.org/licenses/${data.license})
+[![Language](https://img.shields.io/badge/Language-${shieldsEscape(data.language)}-${accentHex}?style=flat-square&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
 [![Version](https://img.shields.io/badge/Version-Latest-${accentHex}?style=flat-square&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/releases)
 ${data.homepageUrl ? `[![Demo](https://img.shields.io/badge/Demo-Live-${accentHex}?style=flat-square&labelColor=${bgHex})](${data.homepageUrl})` : ''}`;
 }
@@ -990,7 +1027,7 @@ function generateAPIHeader(data: ProjectData, bgHex: string, accentHex: string):
 > ${data.description}
 
 [![Stars](https://img.shields.io/github/stars/${data.owner}/${data.repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
-[![License: ${data.license}](https://img.shields.io/badge/License-${data.license}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](LICENSE)
+[![License: ${data.license}](https://img.shields.io/badge/License-${shieldsEscape(data.license)}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](LICENSE)
 [![Version](https://img.shields.io/badge/Version-Latest-${accentHex}?style=for-the-badge&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/releases)
 ${data.homepageUrl ? `[![Docs](https://img.shields.io/badge/Docs-Live-${accentHex}?style=for-the-badge&labelColor=${bgHex})](${data.homepageUrl})` : ''}`;
 }
@@ -1046,8 +1083,8 @@ function generateStandardHeader(data: ProjectData, bgHex: string, accentHex: str
 
 [![Stars](https://img.shields.io/github/stars/${data.owner}/${data.repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/stargazers)
 [![Forks](https://img.shields.io/github/forks/${data.owner}/${data.repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/network/members)
-[![License: ${data.license}](https://img.shields.io/badge/License-${data.license}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](LICENSE)
-[![Built With](https://img.shields.io/badge/Stack-${encodeURIComponent(data.language)}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
+[![License: ${data.license}](https://img.shields.io/badge/License-${shieldsEscape(data.license)}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](LICENSE)
+[![Built With](https://img.shields.io/badge/Stack-${shieldsEscape(data.language)}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
 [![Version](https://img.shields.io/badge/Version-Latest-${accentHex}?style=for-the-badge&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/releases)
 ${data.homepageUrl ? `[**Explore Live Demo 🚀**](${data.homepageUrl})` : ''}
 
@@ -1112,7 +1149,7 @@ function generateTechStackSection(data: ProjectData, bgHex: string, accentHex: s
 
 <div align="left">
 
-${data.techStack.map((t) => `<img src="https://img.shields.io/badge/-${encodeURIComponent(t)}-${bgHex}?style=flat-square&logoColor=${accentHex}&labelColor=${bgHex}" alt="${t}" />`).join(' ')}
+${data.techStack.map((t) => `<img src="https://img.shields.io/badge/-${shieldsEscape(t)}-${bgHex}?style=flat-square&logoColor=${accentHex}&labelColor=${bgHex}" alt="${t}" />`).join(' ')}
 
 </div>`;
 }
@@ -1155,7 +1192,7 @@ function generateTopicsSection(data: ProjectData, bgHex: string, accentHex: stri
 
 ${topics
   .map(
-    (topic) => `<img src="https://img.shields.io/badge/-${encodeURIComponent(topic.name)}-${bgHex}?style=flat-square&logo=github&logoColor=${accentHex}&labelColor=${bgHex}" alt="${topic.name}" />`
+    (topic) => `<img src="https://img.shields.io/badge/-${shieldsEscape(topic.name)}-${bgHex}?style=flat-square&logo=github&logoColor=${accentHex}&labelColor=${bgHex}" alt="${topic.name}" />`
   )
   .join(' ')}
 

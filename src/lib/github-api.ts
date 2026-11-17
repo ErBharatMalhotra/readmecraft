@@ -197,7 +197,7 @@ const UNIFIED_PROFILE_QUERY = `
         }
       }
       topRepositories(first: 10, orderBy: {field: STARGAZERS, direction: DESC}) {
-        nodes { name stargazerCount url isPrivate primaryLanguage { name color } }
+        nodes { name stargazerCount url isPrivate description primaryLanguage { name color } }
       }
       status { emoji message expiresAt }
       pronouns
@@ -410,6 +410,7 @@ export interface ProfileDataRaw {
       name: string;
       stargazerCount: number;
       url: string;
+      description?: string | null;
       primaryLanguage: { name: string; color: string } | null;
     }>;
   };

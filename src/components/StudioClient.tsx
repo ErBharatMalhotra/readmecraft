@@ -169,14 +169,21 @@ function HomeInner() {
   const authHydratedRef = useRef(false);
   useEffect(() => {
     if (authHydratedRef.current) return;
-    if (status !== 'authenticated') return;
+    // Wait for auth to resolve so signed-in users get their own profile and
+    // guests fall through to the maintainer's public README.
+    if (status === 'loading') return;
     // Never override a deep-linked template.
     if (urlTemplate) {
       authHydratedRef.current = true;
       return;
     }
-    const login = (session?.user as any)?.login;
-    if (!login) return;
+    // Signed-in users see their own profile; guests see the maintainer's
+    // public README so the homepage never shows the stale sample data.
+    const login = (session?.user as any)?.login || SAMPLE_PROFILE.username;
+    if (!login) {
+      authHydratedRef.current = true;
+      return;
+    }
     const untouchedSample =
       profileData.username === SAMPLE_PROFILE.username &&
       profileData.createdAt === SAMPLE_PROFILE.createdAt;
