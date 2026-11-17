@@ -940,13 +940,13 @@ function escapeXmlText(value: string): string {
 }
 
 // Turn the profile bio into a few short typing lines, keeping the intro personal.
-function introPhrases(username: string, bio?: string): string[] {
+function introPhrases(displayName: string, bio?: string): string[] {
   const clean = (bio || '').replace(/\r\n?/g, ' ').replace(/\s+/g, ' ').trim();
   const parts = clean
     .split(/[|•·/]|,|\.\s+|;\s+/)
     .map((p) => p.trim())
     .filter((p) => p.length >= 12 && p.length <= 42);
-  const phrases = [`Hi, I'm ${username}`];
+  const phrases = [`Hi, I'm ${displayName}`];
   for (const part of parts.slice(0, 2)) {
     if (!phrases.some((p) => p.toLowerCase() === part.toLowerCase())) phrases.push(part);
   }
@@ -994,7 +994,6 @@ function generateNameBannerSvg(name: string, theme?: Theme): string {
     c.bg
   );
   const nameC = readableAccent([c.emeraldLight, c.emeraldDim, c.emerald, c.textPrimary], c.bg);
-  const subtitleColor = readableAccent([c.textSecondary, c.textMuted, c.textPrimary], c.bg, 2.5);
   const wavePath =
     'M0 188 Q 125 158 250 188 T 500 188 T 750 188 T 1000 188 T 1250 188 T 1500 188 L1500 220 L0 220 Z';
 
@@ -1018,29 +1017,19 @@ function generateNameBannerSvg(name: string, theme?: Theme): string {
       </path>
     </g>
 
-    <text x="${width / 2}" y="100" text-anchor="middle" fill="url(#nb-name)"
+    <text x="${width / 2}" y="118" text-anchor="middle" fill="url(#nb-name)"
       font-family="${FONTS.display}" font-size="${fontSize}" font-weight="bold"
       letter-spacing="1" opacity="0">
       <animate attributeName="opacity" values="0;1" dur="0.9s" fill="freeze"/>
       <animateTransform attributeName="transform" type="translate" values="0 14;0 0" dur="0.9s" fill="freeze"/>
       ${escapeXmlText(displayName)}
     </text>
-
-    <text x="${width / 2}" y="158" text-anchor="middle" fill="${subtitleColor}"
-      font-family="${FONTS.mono}" font-size="13" letter-spacing="4" opacity="0">
-      <animate attributeName="opacity" values="0;1" dur="0.7s" begin="0.55s" fill="freeze"/>
-      ANIMATED PROFILE INTRO
-    </text>
-
-    <circle cx="${width / 2}" cy="178" r="3" fill="${c.emerald}">
-      <animate attributeName="opacity" values="1;0.15;1" dur="2s" repeatCount="indefinite"/>
-    </circle>
   `, activeTheme);
 }
 
 // Real typing effect: each phrase is revealed character by character with a
 // clip-path and a blinking cursor (SMIL, works inside GitHub's <img>).
-function generateTypingSvg(username: string, bio?: string, theme?: Theme): string {
+function generateTypingSvg(displayName: string, bio?: string, theme?: Theme): string {
   const activeTheme = theme || getTheme('gta6');
   const c = C(activeTheme);
   const width = 700;
@@ -1049,7 +1038,7 @@ function generateTypingSvg(username: string, bio?: string, theme?: Theme): strin
   const charWidth = fontSize * 0.62;
   const cx = width / 2;
   const baseline = height / 2 + 7;
-  const phrases = introPhrases(username, bio);
+  const phrases = introPhrases(displayName, bio);
   const phraseDuration = Math.max(3, 1.2 + Math.max(...phrases.map((p) => p.length)) * 0.11);
   const cycleTime = phrases.length * phraseDuration;
   // Each phrase lives in its own group and CSS keyframes give it a exclusive
@@ -1085,7 +1074,7 @@ function generateTypingSvg(username: string, bio?: string, theme?: Theme): strin
     // Respect users who ask their OS to reduce motion: show a stable line.
     '@media (prefers-reduced-motion: reduce){.tp-0{animation:none;opacity:1}.typing-caret{animation:none;opacity:1}}';
 
-  return createSvg(width, height, `${username}'s animated intro`, `
+  return createSvg(width, height, `${displayName}'s animated intro`, `
     ${styleBlock(
       css('typing-text', { fill: c.textPrimary, 'font-family': FONTS.mono, 'font-size': fontSize, 'font-weight': 'bold' }),
     )}
@@ -2708,7 +2697,7 @@ export async function GET(req: NextRequest) {
     else if (type === 'visitor') badgeSvg = generateVisitorCardSvg(username, userData.followers, userData.public_repos, stats.totalContributions, theme);
     else if (type === 'heatmap') badgeSvg = generateHeatmapSvg(username, demoCalendar, theme, viewer);
     else if (type === 'snake') badgeSvg = generateSnakeSvg(username, demoCalendar, theme);
-    else if (type === 'typing') badgeSvg = generateTypingSvg(username, userData.bio, theme);
+    else if (type === 'typing') badgeSvg = generateTypingSvg(searchParams.get('name') || username, userData.bio, theme);
     else if (type === 'name-banner') badgeSvg = generateNameBannerSvg(searchParams.get('name') || username, theme);
     else if (type === 'star-history') badgeSvg = generateStarHistorySvg(username, reposData, theme);
     else if (type === 'repo-card') {

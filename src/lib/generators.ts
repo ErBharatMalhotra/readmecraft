@@ -256,7 +256,7 @@ function generateHeaderSection(data: ProfileData, username: string, name: string
 </p>
 
 <p align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=typing&theme=${themeObj.id}" alt="Animated typing intro" />
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=typing&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="Animated typing intro" />
 </p>
 
 # ${name}${accountAge}
@@ -279,7 +279,7 @@ ${data.pronouns ? `> **Pronouns:** ${data.pronouns}` : ''}
 }
 
 function generateEcosystemSection(data: ProfileData, username: string, themeObj: any, bgHex: string, accentHex: string): string {
-  return `### 🌌 Holographic Telemetry & Live Cadence
+  return `### 🛰️ Live Ecosystem
 
 <div align="center">
 
@@ -291,12 +291,23 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bhar
 }
 
 function generateStatusSocialSection(data: ProfileData, username: string, bgHex: string, accentHex: string): string {
-  let content = `### 🎯 Current Status & Social Presence
+  const hasSocial = (data.socialAccounts?.length ?? 0) > 0;
+  let content = `### 🎯 ${hasSocial ? 'Current Status & Social Presence' : 'Current Status'}
 
 `;
 
   if (data.status) {
-    content += `**${data.status.emoji} ${data.status.message}**${data.status.expiresAt ? ` (expires ${formatDate(data.status.expiresAt)})` : ''}\n\n`;
+    // GitHub can return emoji shortcodes (e.g. `:exploding_head:`) which do not
+    // render in README markdown. Drop shortcodes but keep real unicode emoji.
+    const statusEmoji =
+      data.status.emoji && !data.status.emoji.startsWith(':') ? `${data.status.emoji} ` : '';
+    const statusMessage = (data.status.message || '')
+      .replace(/:[a-z0-9_+-]+:/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (statusMessage) {
+      content += `**${statusEmoji}${statusMessage}**${data.status.expiresAt ? ` (expires ${formatDate(data.status.expiresAt)})` : ''}\n\n`;
+    }
   }
 
   if ((data.socialAccounts?.length ?? 0) > 0) {
@@ -350,8 +361,6 @@ ${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges
 | **PR Review Contributions** | ${formatNumber(data.totalPullRequestReviewContributions ?? 0)} |
 | **Repos Contributed To** | ${formatNumber(data.totalRepositoriesWithContributedCommits ?? 0)} |
 | **Account Created** | ${data.createdAt ? formatDate(data.createdAt) : 'Unknown'} |
-| **Profile View Type** | ${data.userViewType ?? 'Unknown'} |
-| **Sponsorable** | ${data.isSponsorable ? '✅ Yes' : '❌ No'} |
 
 </details>`;
 }
@@ -457,7 +466,7 @@ ${data.pinnedRepos.length > 0 ? `
 
 ${data.pinnedRepos
   .map(
-    (repo) => '- **[' + repo.name + '](' + repo.url + ')** ' + (repo.description ? '\u2014 ' + repo.description : '') + ' ' + (repo.language ? '`' + repo.language + '`' : '') + ' ' + (repo.topics && repo.topics.length > 0 ? '[' + repo.topics.slice(0, 5).join(', ') + ']' : '') + ' \u2B50 ' + repo.stargazersCount + ' ' + (repo.forksCount ? '\uD83C\uDF74 ' + repo.forksCount : '') + ' ' + (repo.license ? '\uD83D\uDCC4 ' + repo.license : '') + ' ' + (repo.isFork ? '\uD83C\uDF74 Fork' : '') + ' ' + (repo.isArchived ? '\uD83D\uDCE6 Archived' : '') + ' ' + (repo.homepageUrl ? '\uD83D\uDD17 [Demo](' + repo.homepageUrl + ')' : '') + ' ' + (repo.releases && repo.releases.length > 0 ? '\uD83C\uDFF7\uFE0F Latest: ' + repo.releases[0].tagName : '')
+    (repo) => '- **[' + repo.name + '](' + repo.url + ')** ' + (repo.description && repo.description !== 'No description provided.' ? '\u2014 ' + repo.description : '') + ' ' + (repo.language ? '`' + repo.language + '`' : '') + ' ' + (repo.topics && repo.topics.length > 0 ? '[' + repo.topics.slice(0, 5).join(', ') + ']' : '') + ' \u2B50 ' + repo.stargazersCount + ' ' + (repo.forksCount ? '\uD83C\uDF74 ' + repo.forksCount : '') + ' ' + (repo.license ? '\uD83D\uDCC4 ' + repo.license : '') + ' ' + (repo.isFork ? '\uD83C\uDF74 Fork' : '') + ' ' + (repo.isArchived ? '\uD83D\uDCE6 Archived' : '') + ' ' + (repo.homepageUrl ? '\uD83D\uDD17 [Demo](' + repo.homepageUrl + ')' : '') + ' ' + (repo.releases && repo.releases.length > 0 ? '\uD83C\uDFF7\uFE0F Latest: ' + repo.releases[0].tagName : '')
   )
   .join('\n')}
 
@@ -1499,12 +1508,12 @@ export function compileSectionsToMarkdown(sections: Section[]): string {
 // the README that is actually written to the user's profile repository.
 
 export const DEPLOY_ANIMATED_BADGES: Array<{ id: string; title: string }> = [
-  { id: 'skill-radar', title: '🎯 Skill Radar' },
+  { id: 'skill-radar', title: '🧭 Skill Radar' },
   { id: 'language-race', title: '🏁 Language Evolution Race' },
   { id: 'repo-constellation', title: '🌌 Repository Constellation' },
   { id: 'code-pulse', title: '💓 Code Pulse' },
   { id: 'contribution-mountain', title: '🏔️ Contribution Mountain' },
-  { id: 'tech-galaxy', title: '🌌 Tech Stack Galaxy' },
+  { id: 'tech-galaxy', title: '🛠️ Tech Stack Galaxy' },
   { id: 'contribution-flow', title: '🌊 Contribution Flow' },
   { id: 'code-time-heatmap', title: '🕐 Code Time Heatmap' },
 ];
@@ -1546,7 +1555,7 @@ export function appendDeployExtras(markdown: string, options: DeployExtrasOption
   if (enabled.has('composite')) {
     const include =
       badges.filter((b) => b !== 'composite').join(',') || 'stats,trophies,snake,heatmap';
-    out += `\n\n## 🎯 GitHub Pulse (Composite)\n\n<img src="${baseUrl}?username=${username}&type=composite&include=${include}${themeParam}" alt="GitHub Pulse Composite" />`;
+    out += `\n\n## 🧬 GitHub Pulse\n\n<img src="${baseUrl}?username=${username}&type=composite&include=${include}${themeParam}" alt="GitHub Pulse" />`;
   }
 
   // Scheduled auto-update workflow
