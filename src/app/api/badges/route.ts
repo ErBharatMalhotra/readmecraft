@@ -1357,7 +1357,7 @@ function generateAsciiBannerSvg(text_content: string, theme: Theme): string {
 // ============================================================================
 // 12. CONTRIBUTION STREAK CALENDAR (Compact)
 // ============================================================================
-function generateStreakCalendarSvg(username: string, calendar: any, streak: number, theme: Theme): string {
+function generateStreakCalendarSvg(displayName: string, calendar: any, streak: number, theme: Theme): string {
   const c = C(theme);
   const width = 280;
   const height = 244;
@@ -1369,8 +1369,8 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 28, content: `${username}'s Streak: ${streak} Days`, cls: 'badge-title',
-    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+    x: width / 2, y: 26, content: `${displayName} · ${streak} days`, cls: 'badge-title',
+    maxWidth: width - 24, fontSize: 13, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
   weeks.slice(-7).forEach((week: any, weekIndex: number) => {
@@ -1396,7 +1396,7 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
     maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
   });
 
-  return createSvg(width, height, `${username}'s Streak Calendar`, inner, theme);
+  return createSvg(width, height, `${displayName}'s Streak Calendar`, inner, theme);
 }
 
 // ============================================================================
@@ -2725,7 +2725,7 @@ export async function GET(req: NextRequest) {
       const text = searchParams.get('text') || username;
       badgeSvg = generateAsciiBannerSvg(text, theme);
     }
-    else if (type === 'streak-calendar') badgeSvg = generateStreakCalendarSvg(username, demoCalendar, stats.streak, theme);
+    else if (type === 'streak-calendar') badgeSvg = generateStreakCalendarSvg(searchParams.get('name') || username, demoCalendar, stats.streak, theme);
 
     // ===== NEW ANIMATED GRAPH BADGES =====
     else if (type === 'skill-radar') badgeSvg = generateSkillRadarSvg([
