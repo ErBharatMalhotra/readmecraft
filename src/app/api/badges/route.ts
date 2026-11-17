@@ -955,6 +955,28 @@ function introPhrases(username: string, bio?: string): string[] {
   return phrases;
 }
 
+function relativeLuminance(hex: string): number {
+  const clean = String(hex || '').replace('#', '');
+  if (clean.length < 6) return 0;
+  const [r, g, b] = [0, 2, 4]
+    .map((i) => parseInt(clean.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(a: string, b: string): number {
+  const l1 = relativeLuminance(a);
+  const l2 = relativeLuminance(b);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+// Pick the first accent that stays readable on the theme background, preferring
+// the theme's own hue so every theme still feels like itself.
+function readableAccent(candidates: Array<string | undefined | null>, bg: string, min = 3): string {
+  const valid = candidates.filter((c): c is string => Boolean(c));
+  return valid.find((c) => contrastRatio(c, bg) >= min) || valid[0] || '#ffffff';
+}
+
 // Animated hero banner: the name rises and fades in over drifting gradient
 // waves, so the generated README opens with motion instead of plain text.
 function generateNameBannerSvg(name: string, theme?: Theme): string {
@@ -965,15 +987,23 @@ function generateNameBannerSvg(name: string, theme?: Theme): string {
   const displayName = name || 'Developer';
   const fontSize = Math.min(68, Math.max(34, Math.floor(880 / Math.max(6, displayName.length))));
   const mid = activeTheme.purple || c.gold;
+  // Light themes need their dim shades (or plain text) to stay legible.
+  const nameA = readableAccent([c.emeraldDim, c.emerald, c.textPrimary], c.bg);
+  const nameB = readableAccent(
+    [activeTheme.purple, activeTheme.goldDim || c.goldDim, c.gold, c.textPrimary],
+    c.bg
+  );
+  const nameC = readableAccent([c.emeraldLight, c.emeraldDim, c.emerald, c.textPrimary], c.bg);
+  const subtitleColor = readableAccent([c.textSecondary, c.textMuted, c.textPrimary], c.bg, 2.5);
   const wavePath =
     'M0 188 Q 125 158 250 188 T 500 188 T 750 188 T 1000 188 T 1250 188 T 1500 188 L1500 220 L0 220 Z';
 
   return createSvg(width, height, `${displayName} — animated banner`, `
     <defs>
       <linearGradient id="nb-name" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color="${c.emerald}"/>
-        <stop offset="50%" stop-color="${mid}"/>
-        <stop offset="100%" stop-color="${c.emeraldLight || c.emerald}"/>
+        <stop offset="0%" stop-color="${nameA}"/>
+        <stop offset="50%" stop-color="${nameB}"/>
+        <stop offset="100%" stop-color="${nameC}"/>
         <animate attributeName="x1" values="-40%;100%" dur="7s" repeatCount="indefinite"/>
         <animate attributeName="x2" values="0%;140%" dur="7s" repeatCount="indefinite"/>
       </linearGradient>
@@ -996,7 +1026,7 @@ function generateNameBannerSvg(name: string, theme?: Theme): string {
       ${escapeXmlText(displayName)}
     </text>
 
-    <text x="${width / 2}" y="158" text-anchor="middle" fill="${c.textMuted}"
+    <text x="${width / 2}" y="158" text-anchor="middle" fill="${subtitleColor}"
       font-family="${FONTS.mono}" font-size="13" letter-spacing="4" opacity="0">
       <animate attributeName="opacity" values="0;1" dur="0.7s" begin="0.55s" fill="freeze"/>
       ANIMATED PROFILE INTRO
@@ -1025,6 +1055,9 @@ function generateTypingSvg(username: string, bio?: string, theme?: Theme): strin
   // Each phrase lives in its own group and CSS keyframes give it a exclusive
   // slice of the cycle, so lines can never overlap. CSS animations (unlike
   // clip-path/SMIL) render reliably when this SVG is embedded via <img>.
+  // Keep the typing line readable on light and dark themes alike.
+  const typingColor = readableAccent([c.emerald, c.emeraldDim, c.textPrimary], c.bg);
+  const typingAlt = readableAccent([c.gold, activeTheme.orangeDim || c.goldDim, c.textPrimary], c.bg);
   const slice = 100 / phrases.length;
   let animationCss = '';
   let groups = '';
@@ -1042,8 +1075,8 @@ function generateTypingSvg(username: string, bio?: string, theme?: Theme): strin
     const textWidth = Math.max(24, phrase.length * charWidth);
     const cursorX = cx + textWidth / 2 + 8;
     groups += `<g class="tp-${i}">
-      <text x="${cx}" y="${baseline}" text-anchor="middle" fill="${i % 2 === 0 ? c.emerald : c.gold || c.emerald}" font-family="${FONTS.mono}" font-size="${fontSize}" font-weight="bold">${escapeXmlText(phrase)}</text>
-      <rect class="typing-caret" x="${cursorX}" y="${baseline - 15}" width="9" height="19" fill="${c.emerald}"/>
+      <text x="${cx}" y="${baseline}" text-anchor="middle" fill="${i % 2 === 0 ? typingColor : typingAlt}" font-family="${FONTS.mono}" font-size="${fontSize}" font-weight="bold">${escapeXmlText(phrase)}</text>
+      <rect class="typing-caret" x="${cursorX}" y="${baseline - 15}" width="9" height="19" fill="${typingColor}"/>
     </g>`;
   });
   animationCss +=
