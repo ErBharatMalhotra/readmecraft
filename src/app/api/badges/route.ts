@@ -1097,72 +1097,76 @@ function generateTypingSvg(displayName: string, bio?: string, theme?: Theme): st
 function generateStarHistorySvg(username: string, repos: any[], theme: Theme): string {
   const c = C(theme);
   const width = 600;
-  const height = 240;
-  const margin = { top: 40, right: 24, bottom: 48, left: 60 };
-  const chartW = width - margin.left - margin.right;
-  const chartH = height - margin.top - margin.bottom;
+  const pad = 24;
 
-  const totalStars = repos.reduce((s, r) => s + (r.stargazerCount || 0), 0);
-  // We only ever receive the CURRENT total star count: the GitHub API exposes
-  // no star timestamps, and paging every stargazer is not possible at this
-  // scale. So the curve is a labelled estimate, never presented as real data.
-  // Deterministic so the badge is identical on every request (CDN friendly),
-  // and clamped so a user with zero stars never divides by zero.
-  const curve = [0.06, 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.62, 0.72, 0.83, 0.92, 1];
-  const dataPoints = curve.map((factor, i) => ({
-    // Relative ages, not calendar months: we do not know real star dates.
-    ageLabel: i === 11 ? 'now' : `~${11 - i}mo ago`,
-    stars: Math.round(totalStars * factor),
-  }));
-  const maxStars = Math.max(1, ...dataPoints.map(d => d.stars));
-  const hasStars = totalStars > 0;
+  // Real data only: the per-repository star counts GitHub actually returns.
+  // No estimated curve, no invented dates - if a repo is not listed it has 0 stars.
+  const ranked = repos
+    .map((r: any) => ({ name: String(r?.name || 'repository'), stars: Number(r?.stargazerCount) || 0 }))
+    .filter(r => r.stars > 0)
+    .sort((a, b) => b.stars - a.stars);
+  const totalStars = repos.reduce((s: number, r: any) => s + (Number(r?.stargazerCount) || 0), 0);
+  const repoCount = repos.length;
+
+  if (ranked.length === 0) {
+    const height = 132;
+    let empty = safeText({
+      x: width / 2, y: 48, content: `${username}'s Stars by Repository`, cls: 'badge-title',
+      maxWidth: width - pad * 2, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+    });
+    empty += safeText({
+      x: width / 2, y: 74, content: 'No starred repositories yet', cls: 'muted',
+      maxWidth: width - pad * 2, fontSize: 11, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+    });
+    empty += safeText({
+      x: width / 2, y: 96, content: `0 stars across ${repoCount} ${repoCount === 1 ? 'repo' : 'repos'}`, cls: 'muted',
+      maxWidth: width - pad * 2, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+    });
+    return createSvg(width, height, `${username}'s stars by repository`, empty, theme);
+  }
+
+  const rows = ranked.slice(0, 6);
+  const rowH = 26;
+  const top = 64;
+  const rowStart = 64;
+  const nameWidth = 176;
+  const barX = pad + nameWidth + 16;
+  const countWidth = 52;
+  const barMax = width - pad - countWidth - barX - 12;
+  const maxStars = Math.max(1, ...rows.map(r => r.stars));
+  const height = top + rows.length * rowH + 34;
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 26, content: `${username}'s Star History (estimated)`, cls: 'badge-title',
-    maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
+    x: width / 2, y: 26, content: `${username}'s Stars by Repository`, cls: 'badge-title',
+    maxWidth: width - pad * 2, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
   inner += safeText({
-    x: width / 2, y: 38, content: hasStars ? 'Estimated trend from the current total' : 'No stars yet', cls: 'muted',
-    maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+    x: width / 2, y: 42, content: `Real star counts from GitHub - top ${rows.length} of ${ranked.length} starred ${ranked.length === 1 ? 'repo' : 'repos'}`,
+    cls: 'muted', maxWidth: width - pad * 2, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
   });
 
-  inner += translate(margin.left, margin.top, `
-    ${rect(0, 0, chartW, chartH, c.bgElevated, RADIUS.sm, c.border)}
-    <defs>
-      <linearGradient id="starGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="${c.gold}" stop-opacity="0.25"/>
-        <stop offset="100%" stop-color="${c.bg}" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    ${dataPoints.map((d, i) => {
-      const x = (i / 11) * chartW;
-      const y = chartH - (d.stars / maxStars) * chartH;
-      const prev = i > 0 ? dataPoints[i - 1] : d;
-      const prevX = (Math.max(0, i - 1) / 11) * chartW;
-      const prevY = chartH - (prev.stars / maxStars) * chartH;
-      return i === 0 
-        ? `<path d="M ${x} ${y}" stroke="${c.gold}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
-        : `<path d="M ${prevX} ${prevY} Q ${(prevX + x) / 2} ${prevY} ${x} ${y}" stroke="${c.gold}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-    }).join('')}
-    ${dataPoints.map((d, i) => {
-      const x = (i / 11) * chartW;
-      const y = chartH - (d.stars / maxStars) * chartH;
-      return `<circle cx="${x}" cy="${y}" r="4" fill="${c.gold}" stroke="${c.bg}" stroke-width="2"/>
-        ${safeText({ x, y: y - 12, content: d.stars.toLocaleString(), cls: 'muted',
-          maxWidth: chartW / 12, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
-        ${[0, 3, 6, 9, 11].includes(i) ? safeText({ x, y: chartH + 16, content: d.ageLabel, cls: 'muted',
-          maxWidth: chartW / 3, fontSize: 8.5, fontFamily: 'mono',
-          textAnchor: i === 0 ? 'start' : i === 11 ? 'end' : 'middle', truncate: true }) : ''}`;
-    }).join('')}
-  `);
+  inner += rows.map((r, i) => {
+    const y = rowStart + i * rowH;
+    const barW = Math.max(6, Math.round((r.stars / maxStars) * barMax));
+    return safeText({
+      x: pad, y: y + 12, content: r.name, cls: 'label-lg',
+      maxWidth: nameWidth, fontSize: 11, fontFamily: 'mono', truncate: true
+    }) +
+      rect(barX, y + 3, barMax, 11, c.bgElevated, 3, c.border) +
+      rect(barX, y + 3, barW, 11, c.gold, 3) +
+      safeText({
+        x: width - pad, y: y + 12, content: `${r.stars.toLocaleString()} \u2605`, cls: 'badge-title',
+        maxWidth: countWidth, fontSize: 11, fontFamily: 'mono', textAnchor: 'end', truncate: true
+      });
+  }).join('');
 
-  inner += safeText({ x: width / 2, y: height - 20, content: `Current total: ${totalStars.toLocaleString()} stars across ${repos.length} repos`, cls: 'badge-title',
-    maxWidth: width - 40, fontSize: 11, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
-  inner += safeText({ x: width / 2, y: height - 6, content: 'Estimated only — GitHub exposes no star timestamps', cls: 'muted',
-    maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
+  inner += safeText({
+    x: width / 2, y: height - 14, content: `Total: ${totalStars.toLocaleString()} stars across ${repoCount} ${repoCount === 1 ? 'repo' : 'repos'}`,
+    cls: 'muted', maxWidth: width - pad * 2, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+  });
 
-  return createSvg(width, height, `${username}'s estimated star history`, inner, theme);
+  return createSvg(width, height, `${username}'s stars by repository`, inner, theme);
 }
 
 // ============================================================================
