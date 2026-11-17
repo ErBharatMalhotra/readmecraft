@@ -251,6 +251,14 @@ function generateHeaderSection(data: ProfileData, username: string, name: string
 
   return `<div align="center">
 
+<p align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=name-banner&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="${name} — animated banner" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=typing&theme=${themeObj.id}" alt="Animated typing intro" />
+</p>
+
 # ${name}${accountAge}
 ### ${cleanBio}
 

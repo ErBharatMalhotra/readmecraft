@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { fetchProfileData, checkETag, createETagResponse, createNotModifiedResponse } from '@/lib/github-api';
+import { fetchProfileData, fetchRepoData, checkETag, createETagResponse, createNotModifiedResponse } from '@/lib/github-api';
 
 // ============================================================================
 // DESIGN SYSTEM CONSTANTS
@@ -49,8 +49,20 @@ function C(theme: Theme) {
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
+// Properties that must stay unitless in CSS
+const CSS_UNITLESS = new Set([
+  'font-weight', 'opacity', 'fill-opacity', 'stroke-opacity', 'z-index', 'line-height',
+]);
+
 function css(cls: string, props: Record<string, string | number>): string {
-  const body = Object.entries(props).map(([k, v]) => `${k}: ${v};`).join(' ');
+  const body = Object.entries(props)
+    .map(([k, v]) => {
+      // Numbers need a unit in CSS, otherwise the declaration is invalid and the
+      // browser silently drops it (e.g. `font-size: 9` -> falls back to 16px).
+      const value = typeof v === 'number' && !CSS_UNITLESS.has(k) ? `${v}px` : v;
+      return `${k}: ${value};`;
+    })
+    .join(' ');
   return `.${cls} { ${body} }`;
 }
 
@@ -105,7 +117,7 @@ function estimateTextHeight(fontSize: number, lineHeightMultiplier = 1.3): numbe
  * Truncate text with ellipsis to fit within maxWidth
  */
 function truncateText(text: string, maxWidth: number, fontSize: number, fontFamily: FontFamily = 'mono'): string {
-  const ellipsis = '…';
+  const ellipsis = '...'; // ASCII ellipsis to avoid UTF-8 double-encoding issues
   const ellipsisWidth = estimateTextWidth(ellipsis, fontSize, fontFamily);
   const availableWidth = maxWidth - ellipsisWidth;
   
@@ -370,14 +382,14 @@ function generateTrophySvg(username: string, reposCount: number, followersCount:
   const maxValueWidth = cardW - cardPadding * 2;
 
   const cards = [
-    { icon: '⭐', label: 'OPEN SOURCE', value: `${reposCount.toLocaleString()} Repos`, accent: c.emerald },
-    { icon: '🔥', label: 'COMMUNITY', value: `${followersCount.toLocaleString()} Followers`, accent: c.gold },
-    { icon: '⚡', label: 'VELOCITY', value: 'Elite Tier', accent: c.red },
+    { label: 'OPEN SOURCE', value: `${reposCount.toLocaleString()} Repos`, accent: c.emerald },
+    { label: 'COMMUNITY', value: `${followersCount.toLocaleString()} Followers`, accent: c.gold },
+    { label: 'VELOCITY', value: 'Elite Tier', accent: c.red },
   ];
 
   let inner = '';
   // Safe title with truncation
-  const titleText = `🏆 ${username}'s Developer Trophies`;
+  const titleText = `${username}'s Developer Trophies`;
   inner += safeText({
     x: width / 2, y: 30, content: titleText, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle'
@@ -388,14 +400,14 @@ function generateTrophySvg(username: string, reposCount: number, followersCount:
     const y = 50;
     inner += translate(x, y, `
       ${rect(0, 0, cardW, 70, c.bgElevated, RADIUS.md, c.borderLight)}
-      <text x="${cardW / 2}" y="24" text-anchor="middle" font-size="22">${card.icon}</text>
+      <rect x="0" y="0" width="4" height="70" rx="2" fill="${card.accent}" opacity="0.8"/>
       ${safeText({
-        x: cardW / 2, y: 42, content: card.label, cls: 'label',
+        x: cardW / 2, y: 26, content: card.label, cls: 'label',
         maxWidth: maxValueWidth, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true
       })}
       ${safeText({
-        x: cardW / 2, y: 58, content: card.value, cls: 'value-sm',
-        maxWidth: maxValueWidth, fontSize: 12, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+        x: cardW / 2, y: 50, content: card.value, cls: 'value-sm',
+        maxWidth: maxValueWidth, fontSize: 13, fontFamily: 'mono', textAnchor: 'middle', truncate: true
       })}
     `);
   });
@@ -406,7 +418,7 @@ function generateTrophySvg(username: string, reposCount: number, followersCount:
 // ============================================================================
 // 2. COMMIT ACTIVITY GRAPH
 // ============================================================================
-function generateActivityGraphSvg(username: string, theme: Theme): string {
+function generateActivityGraphSvg(username: string, calendar: any, theme: Theme): string {
   const c = C(theme);
   const width = 560;
   const height = 200;
@@ -414,9 +426,17 @@ function generateActivityGraphSvg(username: string, theme: Theme): string {
   const chartW = width - margin.left - margin.right;
   const chartH = height - margin.top - margin.bottom;
 
-  const points = Array.from({ length: 30 }, (_, i) => ({
-    x: margin.left + (i / 29) * chartW,
-    y: margin.top + chartH - (Math.random() * 0.6 + 0.2) * chartH,
+  // Real daily contribution counts for the last 30 days (was Math.random, which
+  // redrew a different fake curve on every request).
+  const allDays: any[] = (calendar?.weeks || []).flatMap((w: any) => w.contributionDays || []);
+  const recent = allDays.slice(-30);
+  const counts = recent.length > 0 ? recent.map((d: any) => d.contributionCount || 0) : new Array(30).fill(0);
+  const peak = Math.max(1, ...counts);
+
+  const points = counts.map((count, i) => ({
+    x: margin.left + (i / Math.max(counts.length - 1, 1)) * chartW,
+    y: margin.top + chartH - (count / peak) * chartH * 0.9,
+    count,
   }));
 
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
@@ -424,7 +444,7 @@ function generateActivityGraphSvg(username: string, theme: Theme): string {
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 28, content: `📈 ${username}'s Commit Activity (30 Days)`, cls: 'badge-title',
+    x: width / 2, y: 28, content: `${username}'s Commit Activity (30 Days)`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -441,17 +461,33 @@ function generateActivityGraphSvg(username: string, theme: Theme): string {
     ${points.map((p, i) => i % 4 === 0 ? `<circle cx="${p.x - margin.left}" cy="${p.y - margin.top}" r="3" fill="${c.emerald}" stroke="${c.bg}" stroke-width="2"/>` : '').join('')}
   `);
 
-  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach((day, i) => {
-    const x = margin.left + (i / 6) * chartW;
+  // X axis: first / middle / last real dates instead of weekday names, since the
+  // series is a continuous 30-day window rather than a single week.
+  const labelDays = [0, Math.floor((counts.length - 1) / 2), counts.length - 1].filter((v, i, a) => a.indexOf(v) === i);
+  labelDays.forEach((idx) => {
+    const day = recent[idx];
+    const date = day?.date ? new Date(day.date) : null;
+    const label = date && !isNaN(date.getTime())
+      ? `${date.getMonth() + 1}/${date.getDate()}`
+      : `-${counts.length - 1 - idx}d`;
+    const x = margin.left + (idx / Math.max(counts.length - 1, 1)) * chartW;
     inner += safeText({
-      x, y: height - 12, content: day, cls: 'muted',
-      maxWidth: chartW / 7, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+      x, y: height - 12, content: label, cls: 'muted',
+      maxWidth: 60, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
     });
   });
 
   inner += safeText({
-    x: 12, y: height / 2, content: 'Commits', cls: 'muted',
-    maxWidth: margin.left - 16, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+    x: margin.left - 6, y: margin.top + 8, content: `${peak}`, cls: 'muted',
+    maxWidth: 36, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
+  });
+  inner += safeText({
+    x: margin.left - 6, y: margin.top + chartH, content: '0', cls: 'muted',
+    maxWidth: 36, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
+  });
+  inner += safeText({
+    x: margin.left - 6, y: height / 2, content: 'Commits', cls: 'muted',
+    maxWidth: 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
   });
 
   return createSvg(width, height, `${username}'s Commit Activity`, inner, theme);
@@ -468,9 +504,9 @@ function generateVisitorCardSvg(username: string, followers: number, repos: numb
   const impactScore = Math.min(99, Math.max(1, Math.floor(contributions / 50 + followers / 20)));
 
   const cards = [
-    { icon: '👁️', label: 'Profile Views', value: views.toLocaleString(), trend: '+12%' },
-    { icon: '📊', label: 'Contributions', value: contributions.toLocaleString(), trend: '+8%' },
-    { icon: '🏆', label: 'Impact Score', value: `Top ${100 - impactScore}%`, trend: '↑' },
+    { label: 'Profile Views', value: views.toLocaleString(), trend: 'estimated', accent: c.emerald },
+    { label: 'Contributions', value: contributions.toLocaleString(), trend: 'this year', accent: c.gold },
+    { label: 'Impact Score', value: `Top ${100 - impactScore}%`, trend: `${impactScore}/100`, accent: c.red },
   ];
 
   const cardW = 148;
@@ -481,7 +517,7 @@ function generateVisitorCardSvg(username: string, followers: number, repos: numb
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 30, content: `👀 ${username}'s Visitor Analytics`, cls: 'badge-title',
+    x: width / 2, y: 30, content: `${username}'s Visitor Analytics`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle'
   });
 
@@ -490,17 +526,17 @@ function generateVisitorCardSvg(username: string, followers: number, repos: numb
     const y = 50;
     inner += translate(x, y, `
       ${rect(0, 0, cardW, 80, c.bgElevated, RADIUS.md, c.borderLight)}
-      <text x="${cardW / 2}" y="22" text-anchor="middle" font-size="20">${card.icon}</text>
+      <rect x="0" y="0" width="4" height="80" rx="2" fill="${card.accent}" opacity="0.8"/>
       ${safeText({
-        x: cardW / 2, y: 42, content: card.label, cls: 'label',
+        x: cardW / 2, y: 28, content: card.label, cls: 'label',
         maxWidth: maxValueWidth, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true
       })}
       ${safeText({
-        x: cardW / 2, y: 62, content: card.value, cls: 'value',
+        x: cardW / 2, y: 52, content: card.value, cls: 'value',
         maxWidth: maxValueWidth, fontSize: 14, fontFamily: 'mono', textAnchor: 'middle', truncate: true
       })}
       ${safeText({
-        x: cardW / 2, y: 76, content: card.trend, cls: 'muted',
+        x: cardW / 2, y: 68, content: card.trend, cls: 'muted',
         maxWidth: maxValueWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
       })}
     `);
@@ -520,7 +556,7 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme, viewe
   const cellSize = 11;
   const cellGap = 2;
   const startX = 55;
-  const startY = 40;
+  const startY = 44;
 
   const allDays = weeks.flatMap((w: any) => w.contributionDays);
   const maxCount = Math.max(...allDays.map((d: any) => d.contributionCount), 1);
@@ -543,7 +579,7 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme, viewe
 
   let inner = '';
   inner += safeText({
-    x: 30, y: 24, content: `🗓️ ${username}'s Contribution Calendar`, cls: 'badge-title',
+    x: 30, y: 22, content: `${username}'s Contribution Calendar`, cls: 'badge-title',
     maxWidth: width - 80, fontSize: 14, fontFamily: 'display', truncate: true
   });
   const viewerHour = viewer ? getViewerHour(viewer.timezone) : -1;
@@ -552,7 +588,7 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme, viewe
     const greeting = getTimeGreeting(viewerHour);
     const tz = viewer.timezone || 'UTC';
     inner += safeText({
-      x: width - 30, y: 24, content: `${greeting.emoji} ${greeting.text} • ${tz} • ${viewerHour.toString().padStart(2, '0')}:00`, cls: 'muted',
+      x: width - 30, y: 22, content: `${greeting.text} | ${tz} | ${viewerHour.toString().padStart(2, '0')}:00`, cls: 'muted',
       maxWidth: width / 2, fontSize: 10, fontFamily: 'mono', textAnchor: 'end', truncate: true
     });
   }
@@ -608,7 +644,7 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme, viewe
     }
   });
 
-  const legendY = height - 15;
+  const legendY = height - 16;
   inner += translate(startX, legendY, `
     ${safeText({ x: 0, y: 5, content: 'Less', cls: 'muted', maxWidth: 30, fontSize: 9, fontFamily: 'mono', truncate: true })}
     ${[0, 1, 2, 3, 4, 5].map(i => rect(35 + i * 14, -3, 10, 10, getColor(i === 0 ? 0 : maxCount * i / 5), 2)).join('')}
@@ -618,14 +654,14 @@ function generateHeatmapSvg(username: string, calendar: any, theme: Theme, viewe
   if (viewer && currentHour >= 0) {
     const tz = viewer.timezone || 'UTC';
     inner += safeText({
-      x: startX, y: height - 5, content: `◼ Current hour (${currentHour}:00 ${tz}) highlighted in gold`, cls: 'muted',
-      maxWidth: width - startX - 20, fontSize: 8, fontFamily: 'mono', truncate: true
+      x: startX + 130, y: height - 7, content: `[Current hour (${currentHour}:00 ${tz}) highlighted in gold]`, cls: 'muted',
+      maxWidth: width - startX - 260, fontSize: 8, fontFamily: 'mono', truncate: true
     });
   }
 
   const total = calendar?.totalContributions || allDays.reduce((s: number, d: any) => s + d.contributionCount, 0);
   inner += safeText({
-    x: width - 30, y: 24, content: `${total.toLocaleString()} contributions in ${new Date().getFullYear()}`, cls: 'muted',
+    x: width - 30, y: height - 7, content: `${total.toLocaleString()} contributions in ${new Date().getFullYear()}`, cls: 'muted',
     maxWidth: width / 2, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
   });
 
@@ -674,11 +710,11 @@ function generateSnakeSvg(username: string, calendar: any, theme: Theme): string
 
   let inner = '';
   inner += safeText({
-    x: 24, y: 26, content: `🐍 ${username}'s Contribution Snake`, cls: 'badge-title',
+    x: 24, y: 26, content: `${username}'s Contribution Snake`, cls: 'badge-title',
     maxWidth: width - 100, fontSize: 16, fontFamily: 'display', truncate: true
   });
   inner += safeText({
-    x: width - 24, y: 26, content: `${activeCount} active days • ${total.toLocaleString()} contributions`, cls: 'muted',
+    x: width - 24, y: 26, content: `${activeCount} active days | ${total.toLocaleString()} contributions`, cls: 'muted',
     maxWidth: width / 2 - 30, fontSize: 9, fontFamily: 'mono', textAnchor: 'end', truncate: true
   });
 
@@ -894,43 +930,124 @@ function buildSnakeHead(size: number, c: any): string {
 // ============================================================================
 // 6. TYPING SVG ANIMATION (Viral - pure SVG)
 // ============================================================================
+function escapeXmlText(value: string): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// Turn the profile bio into a few short typing lines, keeping the intro personal.
+function introPhrases(username: string, bio?: string): string[] {
+  const clean = (bio || '').replace(/\r\n?/g, ' ').replace(/\s+/g, ' ').trim();
+  const parts = clean
+    .split(/[|•·/]|,|\.\s+|;\s+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length >= 3 && p.length <= 42);
+  const phrases = [`Hi, I'm ${username}`];
+  for (const part of parts.slice(0, 2)) {
+    if (!phrases.some((p) => p.toLowerCase() === part.toLowerCase())) phrases.push(part);
+  }
+  if (phrases.length < 2) phrases.push('Full-Stack Developer');
+  if (phrases.length < 3) phrases.push('Building Developer Tools');
+  return phrases;
+}
+
+// Animated hero banner: the name rises and fades in over drifting gradient
+// waves, so the generated README opens with motion instead of plain text.
+function generateNameBannerSvg(name: string, theme?: Theme): string {
+  const activeTheme = theme || getTheme('gta6');
+  const c = C(activeTheme);
+  const width = 1000;
+  const height = 220;
+  const displayName = name || 'Developer';
+  const fontSize = Math.min(76, Math.max(36, Math.floor(900 / Math.max(6, displayName.length))));
+  const mid = activeTheme.purple || c.gold;
+  const wavePath =
+    'M0 188 Q 125 158 250 188 T 500 188 T 750 188 T 1000 188 T 1250 188 T 1500 188 L1500 220 L0 220 Z';
+
+  return createSvg(width, height, `${displayName} — animated banner`, `
+    <defs>
+      <linearGradient id="nb-name" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="${c.emerald}"/>
+        <stop offset="50%" stop-color="${mid}"/>
+        <stop offset="100%" stop-color="${c.emeraldLight || c.emerald}"/>
+        <animate attributeName="x1" values="-40%;100%" dur="7s" repeatCount="indefinite"/>
+        <animate attributeName="x2" values="0%;140%" dur="7s" repeatCount="indefinite"/>
+      </linearGradient>
+    </defs>
+
+    <g>
+      <path d="${wavePath}" fill="${c.emerald}" opacity="0.08">
+        <animateTransform attributeName="transform" type="translate" values="0 0;-500 0" dur="9s" repeatCount="indefinite"/>
+      </path>
+      <path d="${wavePath}" fill="${mid}" opacity="0.1">
+        <animateTransform attributeName="transform" type="translate" values="0 10;-500 10" dur="13s" repeatCount="indefinite"/>
+      </path>
+    </g>
+
+    <text x="${width / 2}" y="112" text-anchor="middle" fill="url(#nb-name)"
+      font-family="${FONTS.display}" font-size="${fontSize}" font-weight="bold"
+      letter-spacing="1" opacity="0">
+      <animate attributeName="opacity" values="0;1" dur="0.9s" fill="freeze"/>
+      <animateTransform attributeName="transform" type="translate" values="0 14;0 0" dur="0.9s" fill="freeze"/>
+      ${escapeXmlText(displayName)}
+    </text>
+
+    <text x="${width / 2}" y="152" text-anchor="middle" fill="${c.textMuted}"
+      font-family="${FONTS.mono}" font-size="13" letter-spacing="4" opacity="0">
+      <animate attributeName="opacity" values="0;1" dur="0.7s" begin="0.55s" fill="freeze"/>
+      ANIMATED PROFILE INTRO
+    </text>
+
+    <circle cx="${width / 2}" cy="172" r="3" fill="${c.emerald}">
+      <animate attributeName="opacity" values="1;0.15;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  `, activeTheme);
+}
+
+// Real typing effect: each phrase is revealed character by character with a
+// clip-path and a blinking cursor (SMIL, works inside GitHub's <img>).
 function generateTypingSvg(username: string, bio?: string, theme?: Theme): string {
   const activeTheme = theme || getTheme('gta6');
   const c = C(activeTheme);
-  const width = 600;
-  const height = 100;
-  const phrases = [
-    `Hi, I'm ${username} 👋`,
-    'Full-Stack Developer',
-    'Building Developer Tools',
-    'Open Source Enthusiast',
-    'Coffee Powered ☕',
-  ];
-  const cycleTime = phrases.length * 3;
-  const phraseDuration = 3;
+  const width = 700;
+  const height = 92;
+  const fontSize = 20;
+  const charWidth = fontSize * 0.62;
+  const cx = width / 2;
+  const baseline = height / 2 + 7;
+  const phrases = introPhrases(username, bio);
+  const phraseDuration = Math.max(3, 1.2 + Math.max(...phrases.map((p) => p.length)) * 0.11);
+  const cycleTime = phrases.length * phraseDuration;
+  const maxWidth = Math.max(...phrases.map((p) => p.length * charWidth));
 
-  let inner = '';
-  inner += safeText({
-    x: width / 2, y: height / 2 - 8, content: '', cls: 'typing-text',
-    maxWidth: width - 40, fontSize: 18, fontFamily: 'mono', textAnchor: 'middle', truncate: true
-  });
-
+  let defs = '';
+  let texts = '';
   phrases.forEach((phrase, i) => {
+    const textWidth = Math.max(24, phrase.length * charWidth);
+    const x = cx - textWidth / 2;
     const start = i * phraseDuration;
-    inner += `<text x="${width / 2}" y="${height / 2 + 6}" text-anchor="middle" class="typing-text" fill="${c.emerald}" font-family="${FONTS.mono}" font-size="18" font-weight="bold" opacity="0">
-      <animate attributeName="opacity" values="0;1;1;0" dur="${cycleTime}s" begin="${start}s" repeatCount="indefinite" keyTimes="0;0.1;0.9;1" keySplines="0 0 1 1;0 0 1 1;0 0 1 1"/>
-      ${phrase}
-    </text>`;
+    defs += `<clipPath id="typing-clip-${i}"><rect x="${x}" y="0" width="0" height="${height}">
+      <animate attributeName="width" values="0;0;${textWidth};${textWidth};0" keyTimes="0;0.04;0.7;0.98;1" dur="${cycleTime}s" begin="${start}s" repeatCount="indefinite"/>
+    </rect></clipPath>`;
+    texts += `<text x="${cx}" y="${baseline}" text-anchor="middle" clip-path="url(#typing-clip-${i})" fill="${i % 2 === 0 ? c.emerald : c.gold || c.emerald}" font-family="${FONTS.mono}" font-size="${fontSize}" font-weight="bold">${escapeXmlText(phrase)}</text>`;
   });
 
-  inner += `<text x="${width / 2 + 2}" y="${height / 2 + 6}" text-anchor="start" class="cursor" fill="${c.emerald}" font-family="${FONTS.mono}" font-size="18" font-weight="bold">|</text>`;
+  const cursorX = cx + maxWidth / 2 + 8;
+  const cursor = `<rect x="${cursorX}" y="${baseline - 16}" width="9" height="20" fill="${c.emerald}">
+    <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="1s" repeatCount="indefinite"/>
+  </rect>`;
 
-  return createSvg(width, height, `${username}'s Typing Animation`, `
+  return createSvg(width, height, `${username}'s animated intro`, `
     ${styleBlock(
-      css('typing-text', { fill: c.textPrimary, 'font-family': FONTS.mono, 'font-size': 20, 'font-weight': 'bold' }),
-      css('cursor', { fill: c.emerald, 'font-family': FONTS.mono, 'font-size': 20, 'font-weight': 'bold' })
+      css('typing-text', { fill: c.textPrimary, 'font-family': FONTS.mono, 'font-size': fontSize, 'font-weight': 'bold' }),
     )}
-    ${inner}
+    <defs>${defs}</defs>
+    ${texts}
+    ${cursor}
   `, activeTheme);
 }
 
@@ -954,7 +1071,7 @@ function generateStarHistorySvg(username: string, repos: any[], theme: Theme): s
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 28, content: `⭐ ${username}'s Star History`, cls: 'badge-title',
+    x: width / 2, y: 28, content: `${username}'s Star History`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -1060,9 +1177,9 @@ function generateLanguageDonutSvg(languages: any[], theme: Theme): string {
   const width = 400;
   const height = 400;
   const centerX = width / 2;
-  const centerY = height / 2;
-  const radius = 120;
-  const strokeWidth = 24;
+  const centerY = 180;
+  const radius = 100;
+  const strokeWidth = 22;
 
   const total = languages.reduce((s, l) => s + (l.percentage || 0), 0);
   const sorted = [...languages].sort((a, b) => (b.percentage || 0) - (a.percentage || 0)).slice(0, 6);
@@ -1092,12 +1209,17 @@ function generateLanguageDonutSvg(languages: any[], theme: Theme): string {
       <animate attributeName="stroke-dasharray" values="0 ${2 * Math.PI * radius}; ${sweepAngle / 360 * 2 * Math.PI * radius} ${2 * Math.PI * radius}" dur="1.5s" begin="${i * 0.2}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </path>`;
 
-    const legendY = 180 + i * 22;
+    // Legend: 2 columns x 3 rows, below the donut so it never collides with
+    // the centre label.
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const legendX = col === 0 ? 26 : 208;
+    const legendY = 312 + row * 22;
     const legendText = `${lang.name} ${lang.percentage.toFixed(1)}%`;
-    inner += translate(60, legendY, `
+    inner += translate(legendX, legendY, `
       ${rect(0, 0, 14, 14, color, RADIUS.sm)}
       ${safeText({ x: 22, y: 11, content: legendText, cls: 'label-lg',
-        maxWidth: width - 100, fontSize: 11, fontFamily: 'mono', truncate: true })}
+        maxWidth: 150, fontSize: 11, fontFamily: 'mono', truncate: true })}
     `);
 
     currentAngle = endAngle;
@@ -1131,20 +1253,31 @@ function generateSkillBubblesSvg(skills: string[], theme: Theme): string {
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
+  // Fixed 5x3 grid: the old radial layout put bubbles at y=-30..230, outside
+  // the 200px canvas, and stacked their labels on top of each other.
+  const cols = 5;
+  const bubbleW = 104;
+  const bubbleH = 34;
+  const colGap = 11;
+  const rowGap = 18;
+  const gridX = 20;
+  const gridY = 52;
+
   displaySkills.forEach((skill, i) => {
-    const angle = (i / displaySkills.length) * Math.PI * 2;
-    const radius = 70 + (i % 3) * 30;
-    const x = width / 2 + radius * Math.cos(angle);
-    const y = height / 2 + radius * Math.sin(angle);
-    const w = Math.min(skill.length * 8 + 24, 180);
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = gridX + col * (bubbleW + colGap);
+    const y = gridY + row * (bubbleH + rowGap);
     const delay = i * 0.1;
 
-    inner += translate(x - w / 2, y - 18, `
-      ${rect(0, 0, w, 36, c.bgElevated, RADIUS.lg, c.borderLight, 1)}
-      ${safeText({ x: w / 2, y: 22, content: skill, cls: 'label-lg',
-        maxWidth: w - 8, fontSize: 11, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
-      <animate attributeName="opacity" values="0;1" dur="0.6s" begin="${delay}s" fill="freeze"/>
-    `);
+    inner += `
+      <g opacity="1">
+        <animate attributeName="opacity" values="0;1" dur="0.6s" begin="${delay}s" fill="freeze"/>
+        ${rect(x, y, bubbleW, bubbleH, c.bgElevated, RADIUS.lg, c.borderLight, 1)}
+        ${safeText({ x: x + bubbleW / 2, y: y + 22, content: skill, cls: 'label-lg',
+          maxWidth: bubbleW - 8, fontSize: 11, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
+      </g>
+    `;
   });
 
   return createSvg(width, height, 'Tech Stack Bubbles', inner, theme);
@@ -1196,7 +1329,7 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 28, content: `🔥 ${username}'s Streak: ${streak} Days`, cls: 'badge-title',
+    x: width / 2, y: 28, content: `${username}'s Streak: ${streak} Days`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -1218,7 +1351,7 @@ function generateStreakCalendarSvg(username: string, calendar: any, streak: numb
   });
 
   inner += safeText({
-    x: width / 2, y: height - 20, content: 'Last 7 weeks • Green = active day', cls: 'muted',
+    x: width / 2, y: height - 20, content: 'Last 7 weeks | Green = active day', cls: 'muted',
     maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
   });
 
@@ -1234,7 +1367,7 @@ function generateSkillRadarSvg(skills: Array<{ name: string; level: number; cate
   const height = 400;
   const centerX = width / 2;
   const centerY = height / 2;
-  const maxRadius = 140;
+  const maxRadius = 110;
   const levels = 5;
 
   // Default skills if none provided
@@ -1303,11 +1436,28 @@ function generateSkillRadarSvg(skills: Array<{ name: string; level: number; cate
     const radius = (skill.level / 100) * maxRadius;
     const x = centerX + radius * Math.cos(angle);
     const y = centerY + radius * Math.sin(angle);
-    const labelRadius = maxRadius + 25;
-    const labelX = centerX + labelRadius * Math.cos(angle);
-    const labelY = centerY + labelRadius * Math.sin(angle);
-    const textAnchor = angle > -Math.PI/2 && angle < Math.PI/2 ? 'start' : angle > Math.PI/2 || angle < -Math.PI/2 ? 'end' : 'middle';
-    const dx = angle > -Math.PI/2 && angle < Math.PI/2 ? 8 : angle > Math.PI/2 || angle < -Math.PI/2 ? -8 : 0;
+    const labelRadius = maxRadius + 6;
+    const lx = centerX + labelRadius * Math.cos(angle);
+    const ly = centerY + labelRadius * Math.sin(angle);
+    const sinA = Math.sin(angle);
+    const cosA = Math.cos(angle);
+    let textAnchor: 'start' | 'middle' | 'end' = 'middle';
+    let labelX = lx;
+    let labelY = ly;
+    if (sinA < -0.6) {
+      // Top spoke: keep clear of the badge title
+      labelX = centerX;
+      labelY = ly + 2;
+    } else if (sinA > 0.6) {
+      labelX = centerX;
+      labelY = ly + 12;
+    } else if (cosA > 0) {
+      textAnchor = 'start';
+      labelX = lx + 8;
+    } else {
+      textAnchor = 'end';
+      labelX = lx - 8;
+    }
 
     // Dot (animated)
     inner += `<circle cx="${x}" cy="${y}" r="5" fill="${areaColor}" stroke="${c.bg}" stroke-width="2">
@@ -1315,11 +1465,12 @@ function generateSkillRadarSvg(skills: Array<{ name: string; level: number; cate
       <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${i * 0.1}s" fill="freeze"/>
     </circle>`;
 
-    // Label - safe with truncation
-    const maxLabelWidth = 80;
+    // Label - safe with truncation. The "%" is dropped: it is what pushed long
+    // names like "Architecture 80%" past the 400px canvas edge.
+    const maxLabelWidth = 84;
     inner += safeText({
-      x: labelX, y: labelY, content: `${skill.name} ${skill.level}%`, cls: 'label',
-      maxWidth: maxLabelWidth, fontSize: 10, fontFamily: 'mono', textAnchor, truncate: true
+      x: labelX, y: labelY, content: `${skill.name} ${skill.level}`, cls: 'label',
+      maxWidth: maxLabelWidth, fontSize: 9, fontFamily: 'mono', textAnchor, truncate: true
     });
   });
 
@@ -1327,10 +1478,13 @@ function generateSkillRadarSvg(skills: Array<{ name: string; level: number; cate
   for (let l = 1; l <= levels; l++) {
     const radius = (l / levels) * maxRadius;
     const y = centerY - radius;
-    inner += safeText({
-      x: centerX - 5, y: y + 4, content: `${Math.round((l / levels) * 100)}%`, cls: 'muted',
-      maxWidth: 40, fontSize: 8, fontFamily: 'mono', textAnchor: 'end', truncate: true
-    });
+    // Skip the outer marker: it sits right under the top skill label.
+    if (l < levels) {
+      inner += safeText({
+        x: centerX - 5, y: y + 4, content: `${Math.round((l / levels) * 100)}%`, cls: 'muted',
+        maxWidth: 40, fontSize: 8, fontFamily: 'mono', textAnchor: 'end', truncate: true
+      });
+    }
     inner += `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="${c.borderLight}" stroke-width="0.5" opacity="0.3"/>`;
   }
 
@@ -1363,7 +1517,7 @@ function generateLanguageRaceSvg(username: string, languages: Array<{ name: stri
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 30, content: `📈 ${username}'s Language Evolution`, cls: 'badge-title',
+    x: width / 2, y: 30, content: `${username}'s Language Evolution`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -1371,7 +1525,10 @@ function generateLanguageRaceSvg(username: string, languages: Array<{ name: stri
     ${sortedLangs.map((lang, i) => {
       const barH = 24;
       const y = i * (barH + 8);
-      const targetWidth = (lang.percentage / maxPct) * chartW;
+      // Reserve room at the right edge for the percentage label so it never
+      // spills outside the 600px canvas.
+      const maxBarWidth = chartW - 56;
+      const targetWidth = (lang.percentage / maxPct) * maxBarWidth;
       
       return `
         <g transform="translate(0, ${y})">
@@ -1423,11 +1580,18 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
   const centerX = width / 2;
   const centerY = height / 2;
 
-  // Simulate force-directed layout
-  const displayRepos = repos.slice(0, 12).map((repo, i) => {
+  // Deterministic two-ring orbit layout. Dividing by `repos.length` (which is
+  // the full repo count, often 30+) collapsed every node into one tiny arc and
+  // made the labels pile up on top of each other.
+  const orbitRepos = repos.slice(0, 12);
+  const ringSplit = Math.min(orbitRepos.length, 4);
+  const displayRepos = orbitRepos.map((repo, i) => {
     const stars = repo.stargazerCount || 0;
-    const angle = (i / repos.length) * Math.PI * 2;
-    const radius = 80 + (stars / 100) * 120;
+    const isInner = i < ringSplit;
+    const idx = isInner ? i : i - ringSplit;
+    const perRing = isInner ? ringSplit : Math.max(orbitRepos.length - ringSplit, 1);
+    const angle = (idx / perRing) * Math.PI * 2 - Math.PI / 2 + (isInner ? 0 : Math.PI / 8);
+    const radius = isInner ? 88 : 152;
     return {
       name: repo.name,
       stars,
@@ -1440,7 +1604,7 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 30, content: `🌌 ${username}'s Repo Constellation`, cls: 'badge-title',
+    x: width / 2, y: 30, content: `${username}'s Repo Constellation`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -1454,8 +1618,8 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
 
   // Repo nodes
   displayRepos.forEach((repo, i) => {
-    const size = Math.max(12, Math.min(40, 12 + Math.log10(repo.stars + 1) * 8));
-    const maxNameWidth = size * 4;
+    const size = Math.max(13, Math.min(30, 13 + Math.log10(repo.stars + 1) * 7));
+    const maxNameWidth = 104;
     
     inner += `<g transform="translate(${repo.x}, ${repo.y})">
       <!-- Orbit ring -->
@@ -1470,10 +1634,10 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
       </circle>
       
       <!-- Star count -->
-      ${safeText({ x: 0, y: 4, content: `⭐ ${repo.stars.toLocaleString()}`, cls: 'value-sm',
-        maxWidth: size * 2, fontSize: Math.max(8, size * 0.4), fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
+      ${safeText({ x: 0, y: 4, content: repo.stars.toLocaleString(), cls: 'value-sm',
+        maxWidth: size * 2 - 4, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
       
-      <!-- Repo name (on hover area) -->
+      <!-- Repo name -->
       ${safeText({ x: 0, y: -size - 6, content: repo.name, cls: 'label',
         maxWidth: maxNameWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
     </g>`;
@@ -1484,11 +1648,17 @@ function generateRepoConstellationSvg(username: string, repos: any[], theme: The
     <circle r="25" fill="${c.emerald}" stroke="${c.bg}" stroke-width="3">
       <animate attributeName="r" values="22;28;22" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </circle>
-    ${safeText({ x: 0, y: 4, content: username, cls: 'value',
-      maxWidth: 45, fontSize: 14, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
-    ${safeText({ x: 0, y: 22, content: `${displayRepos.length} Repos`, cls: 'muted',
-      maxWidth: 45, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
+    ${safeText({ x: 0, y: 2, content: String(displayRepos.length), cls: 'value',
+      maxWidth: 44, fontSize: 16, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
+    ${safeText({ x: 0, y: 18, content: 'Repos', cls: 'muted',
+      maxWidth: 44, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
   </g>`;
+
+  // Caption explaining what the numbers inside the nodes mean
+  inner += safeText({
+    x: width / 2, y: height - 13, content: 'Node size and number = stars', cls: 'muted',
+    maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
+  });
 
   return createSvg(width, height, `${username}'s Repo Constellation`, inner, theme);
 }
@@ -1501,7 +1671,7 @@ function generateCodePulseSvg(username: string, stats: any, theme: Theme, viewer
   const width = 400;
   const height = 200;
   const centerX = width / 2;
-  const centerY = height / 2;
+  const centerY = height / 2 + 18;
 
   const commits = stats.totalContributions || 1234;
   const streak = stats.streak || 42;
@@ -1509,24 +1679,20 @@ function generateCodePulseSvg(username: string, stats: any, theme: Theme, viewer
 
   // Viewer-aware greeting
   const viewerHour = viewer ? getViewerHour(viewer.timezone) : -1;
-  let greetingText = 'Code Pulse';
-  let greetingEmoji = '💓';
-  if (viewer && viewerHour >= 0) {
-    const greeting = getTimeGreeting(viewerHour);
-    greetingText = greeting.text;
-    greetingEmoji = greeting.emoji;
-  }
+  const greetingText = 'Code Pulse';
+  const viewerGreeting = viewer && viewerHour >= 0 ? getTimeGreeting(viewerHour).text : '';
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 30, content: `${greetingEmoji} ${username}'s ${greetingText}`, cls: 'badge-title',
+    x: width / 2, y: 30, content: `${username}'s ${greetingText}`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
   if (viewer && viewerHour >= 0) {
     const location = viewer.city || viewer.region || viewer.country || 'Unknown';
     const tz = viewer.timezone || 'UTC';
+    const prefix = viewerGreeting ? `${viewerGreeting} | ` : '';
     inner += safeText({
-      x: width / 2, y: 48, content: `Viewer: ${location} • ${tz} • ${viewerHour.toString().padStart(2, '0')}:00`, cls: 'muted',
+      x: width / 2, y: 48, content: `${prefix}${location} | ${tz} | ${viewerHour.toString().padStart(2, '0')}:00`, cls: 'muted',
       maxWidth: width - 40, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true
     });
   }
@@ -1534,40 +1700,40 @@ function generateCodePulseSvg(username: string, stats: any, theme: Theme, viewer
   // Pulse rings
   for (let i = 0; i < 4; i++) {
     const delay = i * 0.4;
-    inner += `<circle cx="${centerX}" cy="${centerY}" r="30" fill="none" stroke="${c.emerald}" stroke-width="2" stroke-opacity="0.6">
-      <animate attributeName="r" values="30;100" dur="2s" begin="${delay}s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1"/>
+    inner += `<circle cx="${centerX}" cy="${centerY}" r="24" fill="none" stroke="${c.emerald}" stroke-width="2" stroke-opacity="0.6">
+      <animate attributeName="r" values="24;60" dur="2s" begin="${delay}s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1"/>
       <animate attributeName="stroke-opacity" values="0.6;0" dur="2s" begin="${delay}s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1"/>
     </circle>`;
   }
 
   // Core pulse
-  inner += `<circle cx="${centerX}" cy="${centerY}" r="25" fill="${c.emerald}" fill-opacity="0.2" stroke="${c.emerald}" stroke-width="3">
-    <animate attributeName="r" values="20;30;20" dur="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+  inner += `<circle cx="${centerX}" cy="${centerY}" r="22" fill="${c.emerald}" fill-opacity="0.2" stroke="${c.emerald}" stroke-width="3">
+    <animate attributeName="r" values="18;24;18" dur="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
     <animate attributeName="fill-opacity" values="0.1;0.3;0.1" dur="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
   </circle>`;
 
-  // Stats around the pulse
+  // Stats in two columns flanking the pulse (kept inside the 400x200 canvas)
   const statData = [
-    { icon: '💚', value: commits.toLocaleString(), label: 'Commits', angle: -Math.PI/2 - 0.5, dist: 130 },
-    { icon: '🔥', value: streak, label: 'Streak', angle: -Math.PI/2 + 0.5, dist: 130 },
-    { icon: '📦', value: repos, label: 'Repos', angle: Math.PI/2, dist: 130 },
-    { icon: '⚡', value: 'Live', label: 'Status', angle: Math.PI, dist: 130 },
+    { value: commits.toLocaleString(), label: 'Commits', x: 132, y: 89 },
+    { value: streak, label: 'Streak', x: 268, y: 89 },
+    { value: repos, label: 'Repos', x: 132, y: 147 },
+    { value: 'Live', label: 'Status', x: 268, y: 147 },
   ];
 
   statData.forEach((stat, i) => {
-    const x = centerX + stat.dist * Math.cos(stat.angle);
-    const y = centerY + stat.dist * Math.sin(stat.angle);
+    const x = stat.x;
+    const y = stat.y;
     const delay = i * 0.2;
-    const statRadius = 35;
-    const maxStatWidth = statRadius * 2 - 8;
+    const statRadius = 28;
+    const maxStatWidth = statRadius * 2 - 6;
 
-    inner += `<g transform="translate(${x}, ${y})" opacity="0">
+    inner += `<g transform="translate(${x}, ${y})" opacity="1">
       <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${0.8 + delay}s" fill="freeze"/>
       <animate attributeName="transform" values="translate(${centerX}, ${centerY});translate(${x}, ${y})" dur="0.6s" begin="${0.8 + delay}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
       
       <circle r="${statRadius}" fill="${c.bgElevated}" stroke="${c.border}" stroke-width="1" rx="8"/>
       ${safeText({
-        x: 0, y: -8, content: `${stat.icon} ${stat.value}`, cls: 'value',
+        x: 0, y: -8, content: String(stat.value), cls: 'value',
         maxWidth: maxStatWidth, fontSize: 14, fontFamily: 'mono', textAnchor: 'middle', truncate: true
       })}
       ${safeText({
@@ -1576,36 +1742,6 @@ function generateCodePulseSvg(username: string, stats: any, theme: Theme, viewer
       })}
     </g>`;
   });
-
-  // Heartbeat line (EKG style)
-  inner += `<polyline fill="none" stroke="${c.red}" stroke-width="2" points="
-    20,${height - 30} 
-    60,${height - 30} 
-    70,${height - 50} 
-    80,${height - 10} 
-    90,${height - 50} 
-    100,${height - 30} 
-    140,${height - 30}
-    150,${height - 30}
-    160,${height - 50}
-    170,${height - 10}
-    180,${height - 50}
-    190,${height - 30}
-    230,${height - 30}
-    240,${height - 50}
-    250,${height - 10}
-    260,${height - 50}
-    270,${height - 30}
-    310,${height - 30}
-    320,${height - 50}
-    330,${height - 10}
-    340,${height - 50}
-    350,${height - 30}
-    380,${height - 30}
-  ">
-    <animate attributeName="stroke-dashoffset" values="1000;0" dur="3s" repeatCount="indefinite" calcMode="linear"/>
-    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
-  </polyline>`;
 
   return createSvg(width, height, `${username}'s Code Pulse`, inner, theme);
 }
@@ -1620,14 +1756,20 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
   const weeks = calendar?.weeks || [];
   const cols = Math.min(weeks.length, 26); // Last 26 weeks
   const rows = 7;
-  const cellW = 14;
-  const cellH = 7; // isometric height
-  const startX = width / 2 - (cols * cellW) / 2;
-  const startY = height - 50;
+  const cellW = 16;
+  const cellH = 9; // isometric depth
+  const maxHeight3D = 54;
+  const startX = 76;
+  const startY = 212;
+
+  const maxCount = Math.max(
+    1,
+    ...weeks.slice(-cols).flatMap((w: any) => (w.contributionDays || []).map((d: any) => d.contributionCount || 0)),
+  );
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 30, content: `🏔️ ${username}'s Contribution Mountain`, cls: 'badge-title',
+    x: width / 2, y: 30, content: `${username}'s Contribution Mountain`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -1642,35 +1784,41 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
       const count = day.contributionCount || 0;
       if (count === 0) continue;
       
-      const level = count <= 2 ? 1 : count <= 4 ? 2 : count <= 8 ? 3 : 4;
-      const height3D = level * 12;
+      // Level relative to the busiest day so the mountain shows a real gradient
+      // instead of turning into a solid gold wall.
+      const ratio = count / maxCount;
+      const level = ratio <= 0.25 ? 1 : ratio <= 0.5 ? 2 : ratio <= 0.75 ? 3 : 4;
+      // Continuous height keeps the terrain smooth instead of a field of spikes.
+      const height3D = 8 + ratio * (maxHeight3D - 8);
       const color = level === 1 ? c.border : level === 2 ? c.emeraldDim : level === 3 ? c.emerald : c.gold;
       const colorLight = level === 1 ? c.borderLight : level === 2 ? c.emerald : level === 3 ? c.emeraldLight : c.gold;
       const colorDark = level === 1 ? c.bgElevated : level === 2 ? c.border : level === 3 ? c.emeraldDim : c.goldDim;
-      
-      // Isometric coordinates
+
+      // Isometric coordinates: (isoX, baseY) is the centre of the cell's base
+      // diamond, so the column rises *up* from the ground plane.
       const isoX = startX + colIdx * cellW + r * (cellW / 2);
-      const isoY = startY - r * (cellH / 2) - height3D;
+      const baseY = startY - r * (cellH / 2);
+      const topY = baseY - height3D;
 
       // Delay based on position for wave animation
       const delay = (colIdx * 0.02 + r * 0.03);
 
-      inner += `<g transform="translate(${isoX}, ${isoY})">
-        <!-- Top face -->
-        <polygon points="0,0 ${cellW},0 ${cellW/2},${cellH/2} ${-cellW/2},${cellH/2}" 
+      inner += `<g transform="translate(${isoX}, ${topY})">
+        <!-- Top face (diamond) -->
+        <polygon points="0,${-cellH/2} ${cellW/2},0 0,${cellH/2} ${-cellW/2},0"
           fill="${colorLight}">
           <animate attributeName="opacity" values="0;1" dur="0.4s" begin="${delay}s" fill="freeze"/>
           <animate attributeName="transform" values="translate(0,20);translate(0,0)" dur="0.5s" begin="${delay}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
         </polygon>
-        
+
         <!-- Right face -->
-        <polygon points="${cellW},0 ${cellW},${-height3D} ${cellW/2},${cellH/2 - height3D} ${cellW/2},${cellH/2}" 
+        <polygon points="0,${cellH/2} ${cellW/2},0 ${cellW/2},${height3D} 0,${cellH/2 + height3D}"
           fill="${color}">
           <animate attributeName="opacity" values="0;1" dur="0.4s" begin="${delay}s" fill="freeze"/>
         </polygon>
-        
+
         <!-- Left face -->
-        <polygon points="0,0 ${0},${-height3D} ${-cellW/2},${cellH/2 - height3D} ${-cellW/2},${cellH/2}" 
+        <polygon points="0,${cellH/2} ${-cellW/2},0 ${-cellW/2},${height3D} 0,${cellH/2 + height3D}"
           fill="${colorDark}">
           <animate attributeName="opacity" values="0;1" dur="0.4s" begin="${delay}s" fill="freeze"/>
         </polygon>
@@ -1694,8 +1842,10 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
     inner += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c.borderLight}" stroke-width="0.3" opacity="0.3"/>`;
   }
 
-  // Day labels
-  ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((label, i) => {
+  // Day labels - only the two ends: the 7 isometric rows are only 3.5px apart
+  // vertically, so labelling every row made the text overlap into a blob.
+  ['Mon', 'Sun'].forEach((label, n) => {
+    const i = n === 0 ? 0 : rows - 1;
     const x = startX + i * (cellW / 2) - 20;
     const y = startY - i * (cellH / 2) + 10;
     inner += safeText({ x, y, content: label, cls: 'muted',
@@ -1704,16 +1854,16 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
 
   // Legend
   const legendData = [
-    { color: c.border, label: '1-2' },
-    { color: c.emeraldDim, label: '3-4' },
-    { color: c.emerald, label: '5-8' },
-    { color: c.gold, label: '9+' },
+    { color: c.border, label: 'Low' },
+    { color: c.emeraldDim, label: 'Medium' },
+    { color: c.emerald, label: 'High' },
+    { color: c.gold, label: 'Peak' },
   ];
   legendData.forEach((item, i) => {
     const x = 30;
     const y = 60 + i * 20;
     inner += `<rect x="${x}" y="${y}" width="14" height="10" rx="2" fill="${item.color}"/>`;
-    inner += safeText({ x: x + 20, y: y + 7, content: `${item.label} contributions`, cls: 'muted',
+    inner += safeText({ x: x + 20, y: y + 8, content: item.label, cls: 'muted',
       maxWidth: 100, fontSize: 9, fontFamily: 'mono', truncate: true });
   });
 
@@ -1741,56 +1891,54 @@ function generateTechGalaxySvg(skills: string[], theme: Theme): string {
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 30, content: '🌌 Tech Stack Galaxy', cls: 'badge-title',
+    x: width / 2, y: 30, content: 'Tech Stack Galaxy', cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
   // Orbit rings
-  for (let ring = 1; ring <= 3; ring++) {
-    const radius = 80 + ring * 70;
+  const ringRadii = [90, 150, 195];
+  ringRadii.forEach((radius, idx) => {
     inner += `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="${c.borderLight}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.3">
-      <animate attributeName="stroke-dashoffset" values="0;${radius * 2 * Math.PI}" dur="${20 + ring * 5}s" repeatCount="indefinite" calcMode="linear"/>
+      <animate attributeName="stroke-dashoffset" values="0;${radius * 2 * Math.PI}" dur="${20 + (idx + 1) * 5}s" repeatCount="indefinite" calcMode="linear"/>
     </circle>`;
-  }
+  });
 
-  // Skills as orbiting planets
+  // Skills as planets. Positions are fixed (no rotate animation) so the labels
+  // cannot swing outside the 500x500 frame, and every label sits below its
+  // planet with a 86px budget.
   displaySkills.slice(0, skillCount).forEach((skill, i) => {
-    const ring = Math.floor(i / 5) + 1;
-    const radius = 80 + ring * 70;
-    const angleStart = (i % 5) * (Math.PI * 2 / 5);
-    const speed = 15 + ring * 5 + (i % 3) * 3;
-    const size = 14 + (i % 3) * 6;
+    const ringIdx = Math.min(Math.floor(i / 5), ringRadii.length - 1);
+    const radius = ringRadii[ringIdx];
+    const angle = ((i % 5) / 5) * Math.PI * 2 - Math.PI / 2 + ringIdx * (Math.PI / 5);
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    const size = 12 + (i % 3) * 4;
     const colors = [c.emerald, c.gold, '#8b5cf6', c.red, '#06b6d4'];
     const color = colors[i % colors.length];
 
-    inner += `<g>
-      <animateTransform attributeName="transform" type="rotate" 
-        from="0 ${centerX} ${centerY}" to="360 ${centerX} ${centerY}" 
-        dur="${speed}s" repeatCount="indefinite" calcMode="linear"/>
-      
-      <g transform="translate(${centerX + radius}, ${centerY})">
-        <!-- Planet -->
-        <circle r="${size}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="2">
-          <animate attributeName="r" values="${size};${size * 1.2};${size}" dur="${speed/2}s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
-        </circle>
-        
-        <!-- Core -->
-        <circle r="${size * 0.5}" fill="${color}"/>
-        
-        <!-- Label -->
-        ${safeText({ x: size + 6, y: 4, content: skill, cls: 'label',
-          maxWidth: 80, fontSize: 8, fontFamily: 'mono', truncate: true })}
-      </g>
+    inner += `<g transform="translate(${x}, ${y})">
+      <!-- Planet -->
+      <circle r="${size}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="2">
+        <animate attributeName="r" values="${size};${size * 1.15};${size}" dur="${3 + ringIdx}s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+      </circle>
+
+      <!-- Core -->
+      <circle r="${size * 0.45}" fill="${color}"/>
+
+      <!-- Label -->
+      ${safeText({ x: 0, y: size + 13, content: skill, cls: 'label',
+        maxWidth: 86, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
     </g>`;
   });
 
-  // Center star
+  // Center hub
   inner += `<g transform="translate(${centerX}, ${centerY})">
     <circle r="20" fill="${c.emerald}" fill-opacity="0.15" stroke="${c.emerald}" stroke-width="2">
       <animate attributeName="r" values="18;25;18" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1"/>
     </circle>
-    <text x="0" y="5" text-anchor="middle" class="value" font-size="12" fill="${c.emerald}">★</text>
-    ${safeText({ x: 0, y: 22, content: `${skillCount} Technologies`, cls: 'muted',
+    ${safeText({ x: 0, y: 5, content: String(skillCount), cls: 'value',
+      maxWidth: 36, fontSize: 13, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
+    ${safeText({ x: 0, y: 36, content: 'Technologies', cls: 'muted',
       maxWidth: 100, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
   </g>`;
 
@@ -1804,7 +1952,7 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
   const c = C(theme);
   const width = 600;
   const height = 300;
-  const margin = { top: 40, right: 150, bottom: 40, left: 150 };
+  const margin = { top: 58, right: 150, bottom: 40, left: 150 };
   const chartW = width - margin.left - margin.right;
   const chartH = height - margin.top - margin.bottom;
 
@@ -1812,7 +1960,7 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
   const categories = {
     time: ['Morning', 'Afternoon', 'Evening', 'Night'],
     language: ['TypeScript', 'JavaScript', 'Python', 'Rust', 'Go'],
-    repo: repos.slice(0, 6).map(r => r.name.length > 12 ? r.name.slice(0, 12) + '…' : r.name),
+    repo: repos.slice(0, 6).map(r => r.name.length > 12 ? r.name.slice(0, 12) + '...' : r.name),
   };
 
   // Simulated flow data
@@ -1823,7 +1971,7 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 28, content: `🌊 ${username}'s Contribution Flow`, cls: 'badge-title',
+    x: width / 2, y: 28, content: `${username}'s Contribution Flow`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -1832,14 +1980,13 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
     ${categories.time.map((cat, i) => {
       const y = (i / (categories.time.length - 1)) * chartH;
       return `
-        <g transform="translate(0, ${y})" opacity="0">
+        <g transform="translate(0, ${y})" opacity="1">
           <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${i * 0.1}s" fill="freeze"/>
           <rect x="-140" y="-20" width="130" height="40" rx="6" fill="${c.bgElevated}" stroke="${c.emerald}" stroke-width="1">
             <animate attributeName="x" values="-200;-140" dur="0.6s" begin="${i * 0.1}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
           </rect>
           ${safeText({ x: -75, y: 7, content: cat, cls: 'label',
             maxWidth: 120, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
-          <text x="-75" y="22" text-anchor="middle" class="value-sm" font-size="10">🌅</text>
         </g>
       `;
     }).join('')}
@@ -1848,14 +1995,13 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
     ${categories.language.map((cat, i) => {
       const y = (i / (categories.language.length - 1)) * chartH;
       return `
-        <g transform="translate(${chartW / 2}, ${y})" opacity="0">
+        <g transform="translate(${chartW / 2}, ${y})" opacity="1">
           <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${0.5 + i * 0.1}s" fill="freeze"/>
           <rect x="-70" y="-20" width="140" height="40" rx="6" fill="${c.bgElevated}" stroke="${c.gold}" stroke-width="1">
             <animate attributeName="x" values="${chartW + 100};-70" dur="0.6s" begin="${0.5 + i * 0.1}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
           </rect>
           ${safeText({ x: 0, y: 7, content: cat, cls: 'label',
             maxWidth: 130, fontSize: 10, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
-          <text x="0" y="22" text-anchor="middle" class="value-sm" font-size="10">⚡</text>
         </g>
       `;
     }).join('')}
@@ -1864,14 +2010,13 @@ function generateContributionFlowSvg(username: string, repos: any[], theme: Them
     ${categories.repo.map((cat, i) => {
       const y = (i / (categories.repo.length - 1)) * chartH;
       return `
-        <g transform="translate(${chartW}, ${y})" opacity="0">
+        <g transform="translate(${chartW}, ${y})" opacity="1">
           <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${1 + i * 0.1}s" fill="freeze"/>
           <rect x="0" y="-20" width="130" height="40" rx="6" fill="${c.bgElevated}" stroke="${c.red}" stroke-width="1">
             <animate attributeName="x" values="${chartW + 200};0" dur="0.6s" begin="${1 + i * 0.1}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
           </rect>
           ${safeText({ x: 65, y: 7, content: cat, cls: 'label',
             maxWidth: 120, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true })}
-          <text x="65" y="22" text-anchor="middle" class="value-sm" font-size="9">📦</text>
         </g>
       `;
     }).join('')}
@@ -1904,10 +2049,10 @@ function generateCodeTimeHeatmapSvg(username: string, theme: Theme): string {
   const c = C(theme);
   const width = 500;
   const height = 280;
-  const cellSize = 24;
+  const cellSize = 14;
   const cellGap = 3;
-  const startX = 80;
-  const startY = 50;
+  const startX = 62;
+  const startY = 72;
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -1925,7 +2070,7 @@ function generateCodeTimeHeatmapSvg(username: string, theme: Theme): string {
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 28, content: `🕐 ${username}'s Code Time Heatmap`, cls: 'badge-title',
+    x: width / 2, y: 28, content: `${username}'s Code Time Heatmap`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -1955,7 +2100,7 @@ function generateCodeTimeHeatmapSvg(username: string, theme: Theme): string {
       const y = startY + dayIdx * (cellSize + cellGap);
       const delay = (dayIdx * 24 + hourIdx) * 0.005;
 
-      inner += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="3" fill="${color}" opacity="0">
+      inner += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="3" fill="${color}" opacity="1">
         <animate attributeName="opacity" values="0;1" dur="0.3s" begin="${delay}s" fill="freeze"/>
         <animate attributeName="transform" values="scale(0);scale(1)" dur="0.3s" begin="${delay}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1">
           <animateTransform type="scale" values="0;1" additive="sum"/>
@@ -1973,15 +2118,15 @@ function generateCodeTimeHeatmapSvg(username: string, theme: Theme): string {
     { color: c.gold, label: 'Peak' },
   ];
   legendColors.forEach((item, i) => {
-    const x = width - 100;
-    const y = 60 + i * 24;
+    const x = 62 + i * 105;
+    const y = height - 42;
     inner += `<rect x="${x}" y="${y}" width="16" height="16" rx="3" fill="${item.color}"/>`;
-    inner += safeText({ x: x + 22, y: y + 11, content: `${item.label} activity`, cls: 'muted',
-      maxWidth: 70, fontSize: 9, fontFamily: 'mono', truncate: true });
+    inner += safeText({ x: x + 22, y: y + 12, content: item.label, cls: 'muted',
+      maxWidth: 80, fontSize: 10, fontFamily: 'mono', truncate: true });
   });
 
   // Stats
-  inner += safeText({ x: width / 2, y: height - 15, content: 'Green = coding intensity • Gold pulse = peak hours', cls: 'muted',
+  inner += safeText({ x: width / 2, y: height - 6, content: 'Green = coding intensity | Gold pulse = peak hours', cls: 'muted',
     maxWidth: width - 40, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true });
 
   return createSvg(width, height, `${username}'s Code Time Heatmap`, inner, theme);
@@ -2019,13 +2164,13 @@ function generateCompositeSvg(
   
   // Header - safe title
   inner += safeText({
-    x: width / 2, y: 35, content: `🐍 ${username}'s GitHub Pulse`, cls: 'badge-title',
+    x: width / 2, y: 35, content: `${username}'s GitHub Pulse`, cls: 'badge-title',
     maxWidth: width - 80, fontSize: 16, fontFamily: 'display', textAnchor: 'middle'
   });
   
   // Header subtitle - safe
   inner += safeText({
-    x: width - 20, y: 35, content: `${new Date().getFullYear()} • ${stats.totalContributions.toLocaleString()} contributions`, cls: 'muted',
+    x: width - 20, y: 35, content: `${new Date().getFullYear()} | ${stats.totalContributions.toLocaleString()} contributions`, cls: 'muted',
     maxWidth: width / 2 - 30, fontSize: 11, fontFamily: 'mono', textAnchor: 'end', truncate: true
   });
   
@@ -2048,7 +2193,7 @@ function generateCompositeSvg(
   // Helper for safe stat rows (2-column layout)
   const statRow = (col: number, row: number, value: string, label: string, valueColor?: string, valueFontSize = 24) => {
     const x = panelPadding + col * (halfPanelW + 10);
-    const y = row * 55;
+    const y = row * 48;
     const colorAttr = valueColor ? ` fill="${valueColor}"` : '';
     return `
       ${safeText({
@@ -2073,18 +2218,18 @@ function generateCompositeSvg(
     ${statRow(0, 2, stats.totalContributions.toLocaleString(), 'Total Contributions', c.emerald)}
     ${statRow(1, 2, totalStars.toLocaleString(), 'Total Stars', c.gold)}
   `;
-  inner += panel(startX, startY, cardW, cardH, 'Stats', '📊', statsContent);
+  inner += panel(startX, startY, cardW, cardH, 'Stats', '', statsContent);
 
   // ===== PANEL 2: TROPHIES (top-right) =====
   const trophiesContent = `
     ${statRow(0, 0, userData.public_repos.toLocaleString(), 'Repositories', c.emerald, 22)}
-    ${statRow(1, 0, '★', 'Starstruck', c.emerald, 22)}
+    ${statRow(1, 0, totalStars.toLocaleString(), 'Stars Earned', c.gold, 22)}
     ${statRow(0, 1, userData.followers.toLocaleString(), 'Followers', c.gold, 22)}
-    ${statRow(1, 1, '🔥', 'Streak', c.gold, 22)}
-    ${statRow(0, 2, totalStars.toLocaleString(), 'Stars Earned', c.red, 22)}
-    ${statRow(1, 2, '💬', 'Pull Requests', c.red, 22)}
+    ${statRow(1, 1, `${stats.streak} days`, 'Current Streak', c.emerald, 22)}
+    ${statRow(0, 2, stats.totalContributions.toLocaleString(), 'Contributions', c.red, 22)}
+    ${statRow(1, 2, languagesData.length.toLocaleString(), 'Languages', c.red, 22)}
   `;
-  inner += panel(startX + cardW + gap, startY, cardW, cardH, 'Trophies', '🏆', trophiesContent);
+  inner += panel(startX + cardW + gap, startY, cardW, cardH, 'Trophies', '', trophiesContent);
 
   // ===== PANEL 3: SNAKE (bottom-left) =====
   const snakeGridSize = 8;
@@ -2145,15 +2290,20 @@ function generateCompositeSvg(
     }
   }
   
+  // Centre the mini grid in the panel instead of leaving it pinned top-left.
+  const snakeGridW = maxCols * (snakeCellSize + snakeGap) - snakeGap;
+  const snakeGridH = 7 * (snakeCellSize + snakeGap) - snakeGap;
+  const snakeOffsetX = Math.max(0, (panelContentWidth - snakeGridW) / 2) - snakeStartX;
+  const snakeOffsetY = Math.max(0, (140 - snakeGridH) / 2) - snakeStartY;
+
   const snakeContent = `
-    ${snakeGrid}
-    ${snakeAnim}
+    ${translate(snakeOffsetX, snakeOffsetY, snakeGrid + snakeAnim)}
     ${safeText({
-      x: cardW / 2, y: cardH - 20, content: `${activeDays.length} active days`, cls: 'muted',
+      x: cardW / 2, y: cardH - 48, content: `${activeDays.length} active days`, cls: 'muted',
       maxWidth: panelContentWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
     })}
   `;
-  inner += panel(startX, startY + cardH + gap, cardW, cardH, 'Snake', '🐍', snakeContent);
+  inner += panel(startX, startY + cardH + gap, cardW, cardH, 'Snake', '', snakeContent);
 
   // ===== PANEL 4: HEATMAP (bottom-right) =====
   const hmCellSize = 6;
@@ -2176,14 +2326,20 @@ function generateCompositeSvg(
   const totalContributions = calendar?.totalContributions || 
     weeks.flatMap((w: any) => w.contributionDays).reduce((s: number, d: any) => s + d.contributionCount, 0);
   
+  // Centre the mini heatmap grid in its panel too.
+  const hmGridW = hmWeeks.length * (hmCellSize + hmGap) - hmGap;
+  const hmGridH = 7 * (hmCellSize + hmGap) - hmGap;
+  const hmOffsetX = Math.max(0, (panelContentWidth - hmGridW) / 2) - hmStartX;
+  const hmOffsetY = Math.max(0, (140 - hmGridH) / 2) - hmStartY;
+
   const heatmapContent = `
-    ${hmGrid}
+    ${translate(hmOffsetX, hmOffsetY, hmGrid)}
     ${safeText({
-      x: cardW / 2, y: cardH - 20, content: `${totalContributions.toLocaleString()} contributions this year`, cls: 'muted',
+      x: cardW / 2, y: cardH - 48, content: `${totalContributions.toLocaleString()} contributions this year`, cls: 'muted',
       maxWidth: panelContentWidth, fontSize: 9, fontFamily: 'mono', textAnchor: 'middle', truncate: true
     })}
   `;
-  inner += panel(startX + cardW + gap, startY + cardH + gap, cardW, cardH, 'Heatmap', '📅', heatmapContent);
+  inner += panel(startX + cardW + gap, startY + cardH + gap, cardW, cardH, 'Heatmap', '', heatmapContent);
 
   return createSvg(width, height, `${username}'s GitHub Pulse`, inner, theme);
 }
@@ -2307,10 +2463,10 @@ function getViewerWeekday(timezone: string | undefined): number {
 
 // Get greeting based on viewer's local time
 function getTimeGreeting(hour: number): { text: string; emoji: string } {
-  if (hour >= 5 && hour < 12) return { text: 'Good morning', emoji: '🌅' };
-  if (hour >= 12 && hour < 17) return { text: 'Good afternoon', emoji: '☀️' };
-  if (hour >= 17 && hour < 22) return { text: 'Good evening', emoji: '🌆' };
-  return { text: 'Good night', emoji: '🌙' };
+  if (hour >= 5 && hour < 12) return { text: 'Good morning', emoji: '' };
+  if (hour >= 12 && hour < 17) return { text: 'Good afternoon', emoji: '' };
+  if (hour >= 17 && hour < 22) return { text: 'Good evening', emoji: '' };
+  return { text: 'Good night', emoji: '' };
 }
 
 // Highlight current hour in heatmap data
@@ -2368,10 +2524,85 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });
     }
 
+    // ===== REPOSITORY BADGES (stars, forks, issues, license, size, last-commit) =====
+    // These need a `repo` param and use the repository query instead of the profile query.
+    const repoName = searchParams.get('repo');
+    const REPO_BADGE_TYPES = ['stars', 'forks', 'issues', 'license', 'size', 'last-commit'];
+
+    if (repoName && REPO_BADGE_TYPES.includes(type)) {
+      const svgHeaders = (etagValue: string) => ({
+        'Content-Type': 'image/svg+xml',
+        'ETag': etagValue,
+        'Cache-Control': 'public, max-age=21600, stale-while-revalidate=21600',
+      });
+
+      let repoData: any = null;
+      let repoEtag = '';
+
+      try {
+        const result = await fetchRepoData(username, repoName, { token, userToken });
+        repoData = result.data;
+        repoEtag = result.etag;
+      } catch {
+        repoData = null;
+      }
+
+      if (!repoData) {
+        return new NextResponse(
+          generateBadge('Repo', 'not found', getTheme(themeName), 'red'),
+          { headers: svgHeaders('"repo-missing"') }
+        );
+      }
+
+      if (repoEtag && checkETag(req, repoEtag)) {
+        return createNotModifiedResponse(repoEtag);
+      }
+
+      const repoTheme = getTheme(themeName);
+
+      const formatSize = (bytes: number): string => {
+        if (!bytes) return '0 KB';
+        if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+        return `${bytes} B`;
+      };
+
+      const timeAgo = (iso: string): string => {
+        const diff = Date.now() - new Date(iso).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 60) return `${Math.max(mins, 1)}m ago`;
+        const hours = Math.floor(mins / 60);
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        if (days < 30) return `${days}d ago`;
+        const months = Math.floor(days / 30);
+        if (months < 12) return `${months}mo ago`;
+        return `${Math.floor(months / 12)}y ago`;
+      };
+
+      const lastCommit = repoData.defaultBranchRef?.target?.history?.nodes?.[0]?.committedDate;
+
+      let repoSvg: string;
+      if (type === 'stars') {
+        repoSvg = generateBadge('Stars', String(repoData.stargazerCount ?? 0), repoTheme, 'gold');
+      } else if (type === 'forks') {
+        repoSvg = generateBadge('Forks', String(repoData.forkCount ?? 0), repoTheme);
+      } else if (type === 'issues') {
+        repoSvg = generateBadge('Open Issues', String(repoData.openIssues?.totalCount ?? 0), repoTheme);
+      } else if (type === 'license') {
+        repoSvg = generateBadge('License', repoData.licenseInfo?.spdxId || 'None', repoTheme);
+      } else if (type === 'size') {
+        repoSvg = generateBadge('Size', formatSize(repoData.languages?.totalSize ?? 0), repoTheme);
+      } else {
+        repoSvg = generateBadge('Last Commit', lastCommit ? timeAgo(lastCommit) : 'n/a', repoTheme);
+      }
+
+      return new NextResponse(repoSvg, { headers: svgHeaders(repoEtag) });
+    }
+
     // Extract viewer context from edge headers (Vercel, Cloudflare)
     const viewer = extractViewerContext(req);
     const viewerHour = getViewerHour(viewer.timezone);
-    const greeting = getTimeGreeting(viewerHour);
 
     // Fetch profile data with caching and ETag support
     const { data: profileData, etag, fromCache } = await fetchProfileData(username, { token, userToken });
@@ -2414,6 +2645,7 @@ export async function GET(req: NextRequest) {
       topLanguage: languagesData[0]?.name || 'TypeScript',
       totalContributions: calendar?.totalContributions || demoCalendar.totalContributions,
       streak,
+      starsGiven: (profileData as any).starredRepositories?.totalCount || 0,
     };
 
     let badgeSvg: string;
@@ -2425,14 +2657,16 @@ export async function GET(req: NextRequest) {
     else if (type === 'language') badgeSvg = generateBadge('Top Language', stats.topLanguage, theme);
     else if (type === 'streak') badgeSvg = generateBadge('Streak', `${stats.streak} days`, theme, 'gold');
     else if (type === 'contributions') badgeSvg = generateBadge('Contributions', String(stats.totalContributions), theme);
+    else if (type === 'stars') badgeSvg = generateBadge('Stars Given', String(stats.starsGiven), theme);
 
     // ===== RICH SVG CARDS =====
     else if (type === 'trophy') badgeSvg = generateTrophySvg(username, userData.public_repos, userData.followers, reposData.reduce((s, r) => s + (r.stargazerCount || 0), 0), theme);
-    else if (type === 'activity') badgeSvg = generateActivityGraphSvg(username, theme);
+    else if (type === 'activity') badgeSvg = generateActivityGraphSvg(username, demoCalendar, theme);
     else if (type === 'visitor') badgeSvg = generateVisitorCardSvg(username, userData.followers, userData.public_repos, stats.totalContributions, theme);
     else if (type === 'heatmap') badgeSvg = generateHeatmapSvg(username, demoCalendar, theme, viewer);
     else if (type === 'snake') badgeSvg = generateSnakeSvg(username, demoCalendar, theme);
     else if (type === 'typing') badgeSvg = generateTypingSvg(username, userData.bio, theme);
+    else if (type === 'name-banner') badgeSvg = generateNameBannerSvg(searchParams.get('name') || username, theme);
     else if (type === 'star-history') badgeSvg = generateStarHistorySvg(username, reposData, theme);
     else if (type === 'repo-card') {
       const repoName = searchParams.get('repo');

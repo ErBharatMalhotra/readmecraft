@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({
               ReadmeCraft
             </span>
             <span className="ml-2 rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">
-              v2.0
+              v3.0
             </span>
           </div>
         </div>
