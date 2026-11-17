@@ -327,7 +327,13 @@ export async function GET(request: NextRequest) {
     const secret = new TextEncoder().encode(process.env.AUTH_SECRET || 'fallback-secret');
     const { payload } = await jwtVerify(state, secret);
     const { config } = payload as { config: any };
-    const username = config.username || 'ErBharatMalhotra';
+    const username = (config.username || '').trim();
+    if (!username) {
+      return new NextResponse(
+        `<html><body style="font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem;"><h1>Invalid Configuration</h1><p>No username was provided for this deploy.</p></body></html>`,
+        { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 400 }
+      );
+    }
 
     // Fetch installation for this user/account
     const appId = process.env.GITHUB_APP_ID;
@@ -425,7 +431,14 @@ export async function GET(request: NextRequest) {
     const octokit = new Octokit({ auth: token });
 
     // Find the profile repo (username/username)
-    const username = config.username || 'ErBharatMalhotra';
+    const username = (config.username || '').trim();
+    if (!username) {
+      cookieStore.delete(COOKIE_NAME);
+      return new NextResponse(
+        `<html><body style="font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem;"><h1>Invalid Configuration</h1><p>No username was provided for this deploy.</p></body></html>`,
+        { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 400 }
+      );
+    }
     const profileRepo = await findProfileRepo(octokit, username);
     
     if (!profileRepo) {

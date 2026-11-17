@@ -1103,11 +1103,14 @@ function generateStarHistorySvg(username: string, repos: any[], theme: Theme): s
   const chartH = height - margin.top - margin.bottom;
 
   const totalStars = repos.reduce((s, r) => s + (r.stargazerCount || 0), 0);
-  const dataPoints = Array.from({ length: 12 }, (_, i) => ({
+  // Deterministic growth curve: a badge must render the same picture on every
+  // request, and a user with zero stars must not divide by zero.
+  const curve = [0.06, 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.62, 0.72, 0.83, 0.92, 1];
+  const dataPoints = curve.map((factor, i) => ({
     month: new Date(2024, i, 1).toLocaleString('default', { month: 'short' }),
-    stars: Math.floor((totalStars / 12) * (i + 1) * (0.8 + Math.random() * 0.4)),
+    stars: Math.round(totalStars * factor),
   }));
-  const maxStars = Math.max(...dataPoints.map(d => d.stars));
+  const maxStars = Math.max(1, ...dataPoints.map(d => d.stars));
 
   let inner = '';
   inner += safeText({
@@ -2717,7 +2720,9 @@ export async function GET(req: NextRequest) {
     else if (type === 'repo-card') {
       const repoName = searchParams.get('repo');
       const repo = reposData.find((r: any) => r.name === repoName) || reposData[0];
-      badgeSvg = generateRepoCardSvg(repo, theme);
+      badgeSvg = repo
+        ? generateRepoCardSvg(repo, theme)
+        : generateBadge('Repo Card', 'No repositories', theme);
     }
     else if (type === 'language-donut') badgeSvg = generateLanguageDonutSvg(languagesData, theme);
     else if (type === 'skill-bubbles') badgeSvg = generateSkillBubblesSvg(['TypeScript', 'React', 'Next.js', 'Node.js', 'Rust', 'Go', 'Python', 'TailwindCSS', 'PostgreSQL', 'Docker', 'GraphQL', 'WebGL'], theme);

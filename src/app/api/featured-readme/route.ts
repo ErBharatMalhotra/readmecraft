@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 // is cached, so visitors never trigger a fresh profile ingestion.
 export const revalidate = 300;
 
-const MAINTAINER = 'ErBharatMalhotra';
+const MAINTAINER = process.env.FEATURED_README_USER || 'ErBharatMalhotra';
 const RAW_README_URL = `https://raw.githubusercontent.com/${MAINTAINER}/${MAINTAINER}/main/README.md`;
 
 const CACHE_HEADERS = {

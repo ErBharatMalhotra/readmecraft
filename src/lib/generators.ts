@@ -17,6 +17,7 @@ import type {
   Release,
 } from '@/types/readmecraft';
 import { getThemeById } from '@/lib/themes';
+import { shortcodeToEmoji, stripShortcodes } from '@/lib/emoji';
 
 function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -229,18 +230,14 @@ export function getProfileSections(data: ProfileData, preset: ProfilePreset, the
 function generateHeaderSection(data: ProfileData, username: string, name: string, themeObj: any, bgHex: string, accentHex: string, goldHex: string): string {
   const location = data.location || 'Global';
   const website = data.website || `https://github.com/${username}`;
-  const twitter = data.twitter || username;
   const company = data.company ? `🏢 **${data.company}**` : '';
   const createdYear = data.createdAt ? new Date(data.createdAt).getFullYear() : '';
   const accountAge = createdYear ? ` (since ${createdYear})` : '';
 
-  // Denylist of Twitter handles that don't resolve (stale/renamed accounts)
-  // This avoids dead 404 links in the generated README without relying on
-  // external API checks at deploy time (which can fail from serverless envs).
-  const deadTwitterHandles = new Set([
-    'ErBharatMalhotra',
-  ]);
-  const showTwitter = twitter && !deadTwitterHandles.has(twitter);
+  // Only surface a handle that is backed by a linked account, so no user gets
+  // a dead Twitter link from a stale profile field.
+  const twitter = getTwitterHandle(data);
+  const showTwitter = !!twitter;
 
   // Sanitize the bio: GitHub sometimes returns trailing CR/LF characters which
   // otherwise leak a stray `\r` into the rendered heading on the profile.
@@ -297,14 +294,11 @@ function generateStatusSocialSection(data: ProfileData, username: string, bgHex:
 `;
 
   if (data.status) {
-    // GitHub can return emoji shortcodes (e.g. `:exploding_head:`) which do not
-    // render in README markdown. Drop shortcodes but keep real unicode emoji.
-    const statusEmoji =
-      data.status.emoji && !data.status.emoji.startsWith(':') ? `${data.status.emoji} ` : '';
-    const statusMessage = (data.status.message || '')
-      .replace(/:[a-z0-9_+-]+:/gi, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    // GitHub returns status emoji as a shortcode; convert it to a real emoji so
+    // it renders in the README instead of showing `:exploding_head:`.
+    const emoji = shortcodeToEmoji(data.status.emoji);
+    const statusEmoji = emoji ? `${emoji} ` : '';
+    const statusMessage = stripShortcodes(data.status.message || '');
     if (statusMessage) {
       content += `**${statusEmoji}${statusMessage}**${data.status.expiresAt ? ` (expires ${formatDate(data.status.expiresAt)})` : ''}\n\n`;
     }
@@ -635,13 +629,8 @@ function generateRecentActivitySection(data: ProfileData, bgHex: string, accentH
 
 function generateContactSection(data: ProfileData, username: string, bgHex: string, accentHex: string): string {
   const website = data.website || `https://github.com/${username}`;
-  const twitter = data.twitter || username;
-
-  // Denylist of Twitter handles that don't resolve
-  const deadTwitterHandles = new Set([
-    'ErBharatMalhotra',
-  ]);
-  const showTwitter = twitter && !deadTwitterHandles.has(twitter);
+  const twitter = getTwitterHandle(data);
+  const showTwitter = !!twitter;
 
   return `### 🤝 Connect & Collaborate
 
@@ -656,6 +645,18 @@ ${data.location ? `- **Location:** ${data.location}` : ''}`;
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+/** Resolve a usable Twitter/X handle from linked social accounts (universal). */
+function getTwitterHandle(data: ProfileData): string {
+  const accounts = data.socialAccounts ?? [];
+  const linked = accounts.find((acc) => acc.provider === 'TWITTER' && acc.url);
+  if (linked) {
+    const match = linked.url.match(/(?:twitter\.com|x\.com)\/([A-Za-z0-9_]+)/i);
+    if (match) return match[1];
+  }
+  // With no linked accounts the profile field is the only source available.
+  return accounts.length === 0 ? data.twitter || '' : '';
+}
 
 function calculateCurrentStreak(calendar: any): number {
   if (!calendar.weeks || calendar.weeks.length === 0) return 0;

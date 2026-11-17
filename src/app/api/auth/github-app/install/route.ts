@@ -63,7 +63,10 @@ const AVAILABLE_BADGES = [
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const username = searchParams.get('username') || 'ErBharatMalhotra';
+    const username = searchParams.get('username')?.trim();
+    if (!username) {
+      return NextResponse.json({ error: 'username is required' }, { status: 400 });
+    }
     const theme = searchParams.get('theme') || 'gta6';
     const badgesParam = searchParams.get('badges');
     const autoSync = searchParams.get('autosync') === 'true';
