@@ -12,6 +12,16 @@
 
 **ReadmeCraft** is a dual-mode GitHub README Studio for **Developer Profiles** and **Repositories**. Enter a GitHub username or repo URL → get a production-ready README in seconds with real data, native SVG badges, and 1-click ecosystem cross-pollination.
 
+## 📸 Screenshots
+
+![ReadmeCraft studio — blocks, markdown editor and live GitHub preview](docs/screenshots/studio.png)
+
+<p align="center"><em>Dual-mode studio: section blocks, raw markdown editor and an exact GitHub preview, with 63 themes.</em></p>
+
+![Native SVG badges rendered from real GitHub data](docs/screenshots/badges.png)
+
+<p align="center"><em>39 self-contained badge types, generated server-side from real GitHub data — no shields.io.</em></p>
+
 ### Key Capabilities
 
 | Feature | Description |

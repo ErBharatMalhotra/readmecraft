@@ -1,0 +1,30 @@
+name: Bug report
+description: Something broken in the studio or the badge API
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please include the exact URL you used — badge issues are almost always reproducible from it.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you expected vs. what you got.
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: URL or badge endpoint
+      placeholder: https://readme.bharatdn.com/api/badges?username=octocat&type=heatmap&theme=gta6
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / device
+      placeholder: Chrome 131, Windows 11
+  - type: textarea
+    id: logs
+    attributes:
+      label: Screenshot or console output
+      description: Drag an image in, or paste any error text.

@@ -78,7 +78,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search commands, 50 themes, presets, actions... (ESC to close)"
+            placeholder={`Search commands, ${THEMES.length} themes, presets, actions... (ESC to close)`}
             className="w-full bg-transparent font-mono text-sm text-white placeholder-slate-500 focus:outline-none"
           />
           <button
