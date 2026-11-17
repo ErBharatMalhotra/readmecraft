@@ -183,6 +183,7 @@ function HomeInner() {
     if (mode !== 'profile') return markdown;
     return appendDeployExtras(markdown, {
       username: profileData.username || activeUsername,
+      displayName: profileData.name || profileData.username || activeUsername,
       theme,
       badges: deployConfig.badges,
       autoSync: deployConfig.autoSync,

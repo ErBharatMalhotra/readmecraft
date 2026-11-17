@@ -1527,6 +1527,8 @@ export const DEPLOY_DEFAULT_BADGES: string[] = [
 
 export interface DeployExtrasOptions {
   username: string;
+  /** Human display name used by badges that print a title (typing, mountain). */
+  displayName?: string;
   theme: string;
   badges?: string[];
   autoSync?: boolean;
@@ -1534,6 +1536,7 @@ export interface DeployExtrasOptions {
 
 export function appendDeployExtras(markdown: string, options: DeployExtrasOptions): string {
   const username = options.username;
+  const displayName = options.displayName || username;
   const theme = options.theme || 'gta6';
   const badges =
     options.badges && options.badges.length > 0 ? options.badges : DEPLOY_DEFAULT_BADGES;
@@ -1547,7 +1550,7 @@ export function appendDeployExtras(markdown: string, options: DeployExtrasOption
   // Extra animated badges chosen on the deploy page (not part of core sections)
   for (const badge of DEPLOY_ANIMATED_BADGES) {
     if (enabled.has(badge.id)) {
-      out += `\n\n## ${badge.title}\n\n<img src="${baseUrl}?username=${username}&type=${badge.id}${themeParam}" alt="${badge.title}" />`;
+      out += `\n\n## ${badge.title}\n\n<img src="${baseUrl}?username=${username}&type=${badge.id}&name=${encodeURIComponent(displayName)}${themeParam}" alt="${badge.title}" />`;
     }
   }
 

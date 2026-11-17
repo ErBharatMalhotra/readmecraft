@@ -240,6 +240,7 @@ async function generateReadmeMarkdown(config: any, realProfileData?: ProfileData
   // README that is written to the user's profile repository.
   markdown = appendDeployExtras(markdown, {
     username,
+    displayName: profileData.name || username,
     theme,
     badges: config.badges as string[] | undefined,
     autoSync: config.autoSync as boolean | undefined,

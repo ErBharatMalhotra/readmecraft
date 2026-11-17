@@ -1781,7 +1781,7 @@ function generateCodePulseSvg(username: string, stats: any, theme: Theme, viewer
 // ============================================================================
 // 17. 3D CONTRIBUTION MOUNTAIN (Isometric View)
 // ============================================================================
-function generateContributionMountainSvg(username: string, calendar: any, theme: Theme): string {
+function generateContributionMountainSvg(displayName: string, calendar: any, theme: Theme): string {
   const c = C(theme);
   const width = 600;
   const height = 300;
@@ -1801,7 +1801,7 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
 
   let inner = '';
   inner += safeText({
-    x: width / 2, y: 30, content: `${username}'s Contribution Mountain`, cls: 'badge-title',
+    x: width / 2, y: 30, content: `${displayName}'s Contribution Mountain`, cls: 'badge-title',
     maxWidth: width - 40, fontSize: 16, fontFamily: 'display', textAnchor: 'middle', truncate: true
   });
 
@@ -1876,7 +1876,8 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
 
   // Day labels - only the two ends: the 7 isometric rows are only 3.5px apart
   // vertically, so labelling every row made the text overlap into a blob.
-  ['Mon', 'Sun'].forEach((label, n) => {
+  // GitHub weeks start on Sunday, so row 0 is Sunday and row 6 is Saturday.
+  ['Sun', 'Sat'].forEach((label, n) => {
     const i = n === 0 ? 0 : rows - 1;
     const x = startX + i * (cellW / 2) - 20;
     const y = startY - i * (cellH / 2) + 10;
@@ -1899,7 +1900,7 @@ function generateContributionMountainSvg(username: string, calendar: any, theme:
       maxWidth: 100, fontSize: 9, fontFamily: 'mono', truncate: true });
   });
 
-  return createSvg(width, height, `${username}'s Contribution Mountain`, inner, theme);
+  return createSvg(width, height, `${displayName}'s Contribution Mountain`, inner, theme);
 }
 
 // ============================================================================
@@ -2722,7 +2723,7 @@ export async function GET(req: NextRequest) {
     else if (type === 'language-race') badgeSvg = generateLanguageRaceSvg(username, languagesData, theme);
     else if (type === 'repo-constellation') badgeSvg = generateRepoConstellationSvg(username, reposData, theme);
     else if (type === 'code-pulse') badgeSvg = generateCodePulseSvg(username, stats, theme, viewer);
-    else if (type === 'contribution-mountain') badgeSvg = generateContributionMountainSvg(username, demoCalendar, theme);
+    else if (type === 'contribution-mountain') badgeSvg = generateContributionMountainSvg(searchParams.get('name') || username, demoCalendar, theme);
     else if (type === 'tech-galaxy') badgeSvg = generateTechGalaxySvg(['TypeScript', 'React', 'Next.js', 'Node.js', 'Rust', 'Go', 'Python', 'PostgreSQL', 'Docker', 'GraphQL', 'TailwindCSS', 'Kubernetes', 'AWS', 'Redis', 'WebGL'], theme);
     else if (type === 'contribution-flow') badgeSvg = generateContributionFlowSvg(username, reposData, theme);
     else if (type === 'code-time-heatmap') badgeSvg = generateCodeTimeHeatmapSvg(username, theme);
