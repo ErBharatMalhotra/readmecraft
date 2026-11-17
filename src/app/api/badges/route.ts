@@ -1131,7 +1131,11 @@ function generateStarHistorySvg(username: string, repos: any[], theme: Theme): s
   const rowStart = 64;
   const nameWidth = 176;
   const barX = pad + nameWidth + 16;
-  const countWidth = 52;
+  // Size the count column from the widest real label so 6-digit counts
+  // (e.g. "190,000 ★") are never truncated, instead of guessing a fixed width.
+  const countFontSize = 10;
+  const countLabels = rows.map(r => `${r.stars.toLocaleString()} \u2605`);
+  const countWidth = Math.min(120, Math.ceil(Math.max(...countLabels.map(l => estimateTextWidth(l, countFontSize, 'mono')))) + 4);
   const barMax = width - pad - countWidth - barX - 12;
   const maxStars = Math.max(1, ...rows.map(r => r.stars));
   const height = top + rows.length * rowH + 34;
@@ -1157,7 +1161,7 @@ function generateStarHistorySvg(username: string, repos: any[], theme: Theme): s
       rect(barX, y + 3, barW, 11, c.gold, 3) +
       safeText({
         x: width - pad, y: y + 12, content: `${r.stars.toLocaleString()} \u2605`, cls: 'badge-title',
-        maxWidth: countWidth, fontSize: 11, fontFamily: 'mono', textAnchor: 'end', truncate: true
+        maxWidth: countWidth, fontSize: countFontSize, fontFamily: 'mono', textAnchor: 'end', truncate: true
       });
   }).join('');
 
