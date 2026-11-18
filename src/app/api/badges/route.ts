@@ -3703,6 +3703,36 @@ export async function GET(req: NextRequest) {
     const userToken = searchParams.get('user_token') || undefined; // User's OAuth token from NextAuth
     const themeName = searchParams.get('theme') || 'default';
 
+    // ===== NATIVE GENERIC CHIP (no username needed) =====
+    // `/api/badges?type=chip&label=Portfolio&value=Live&theme=gta6`
+    // Used by generated READMEs for link chips that have no icon of their own.
+    if (type === 'chip') {
+      const chipTheme = getTheme(themeName);
+      const chipHeaders = {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      };
+      const label = (searchParams.get('label') || '').trim().slice(0, 32);
+      const value = (searchParams.get('value') || '').trim().slice(0, 40);
+
+      if (!label) {
+        return new NextResponse(generateBadge('Chip', 'label required', chipTheme, 'red'), {
+          status: 400,
+          headers: chipHeaders,
+        });
+      }
+
+      const accentParam = searchParams.get('accent');
+      const chipAccent =
+        accentParam === 'emerald' || accentParam === 'gold' || accentParam === 'red'
+          ? accentParam
+          : undefined;
+
+      return new NextResponse(generateBadge(label, value || label, chipTheme, chipAccent), {
+        headers: chipHeaders,
+      });
+    }
+
     // ===== NATIVE TASTE-SCORE BADGE (no username needed) =====
     // `/api/badges?type=score&value=92&grade=A&theme=gta6`
     if (type === 'score') {

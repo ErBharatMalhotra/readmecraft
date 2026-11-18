@@ -90,7 +90,7 @@
 
 ## 📦 Native Badge API (`/api/badges`)
 
-Badges are rendered server-side by ReadmeCraft's own SVG engine — **41 badge types** across 8 theme categories (**63 themes**), with no client-side JS. Stats, streak, contribution heatmap, snake, trophies, language charts, the composite card and every **tech-stack chip** are fully native and depend on no third-party image service. Only the profile header row (followers / website / social links) and a few repository-header badges are still generated through shields.io, and they are labelled as such in the docs.
+Badges are rendered server-side by ReadmeCraft's own SVG engine — **41 badge types** across 8 theme categories (**63 themes**), with no client-side JS. Stats, streak, contribution heatmap, snake, trophies, language charts, the composite card and every **tech-stack chip** are fully native and depend on no third-party image service. Generated READMEs contain **no shields.io URLs at all** — the profile header row (followers / portfolio / social / email), pinned-repo chips, repository-header badges (stars, forks, licence, stack, version) and topic tags are all rendered by this API, and a regression test (`native-badges.test.ts`) fails if a shields.io URL ever comes back.
 
 ```
 https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme-id>
@@ -110,6 +110,7 @@ https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme
 | `skill` | Native tech chip — `&name=React` (curated simple-icons subset) |
 | `skill-row` | Row of up to 12 native tech chips — `&skills=React,Docker,Redis` |
 | `score` | Taste Score badge — `&value=92&grade=A&label=ReadmeCraft%20Score` |
+| `chip` | Generic two-part chip for links — `&label=Portfolio&value=Live` (+ optional `&accent=emerald\|gold\|red`) |
 
 ### Visual cards
 

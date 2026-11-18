@@ -62,6 +62,23 @@ function skillChip(name: string, themeParam: string): string {
   return `<img src="${BADGE_API}?type=skill&name=${encodeURIComponent(name)}${themeParam}" alt="${name}" />`;
 }
 
+// Generic two-part chip from the same engine: `?type=chip&label=..&value=..`.
+// Covers the link chips (Portfolio, Twitter, Email, Demo, Version) that have
+// no icon of their own, so no generated README needs shields.io.
+function chipImg(label: string, value: string, themeParam: string): string {
+  const query = new URLSearchParams({ type: 'chip', label, value });
+  return `<img src="${BADGE_API}?${query.toString()}${themeParam}" alt="${label}: ${value}" />`;
+}
+
+// Repos with no detected language used to render "Language-undefined".
+function primaryTech(data: ProjectData): string {
+  return data.language || data.primaryLanguage?.name || 'Code';
+}
+
+function repoBadgeImg(owner: string, repo: string, type: string, themeParam: string): string {
+  return `<img src="${BADGE_API}?username=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&type=${type}${themeParam}" alt="${type}" />`;
+}
+
 function getLanguageBadge(lang: LanguageStat, themeParam: string): string {
   return skillChip(lang.name, themeParam);
 }
@@ -151,7 +168,7 @@ export function getProfileSections(
       title: 'Pinned Repositories (Detailed)',
       enabled: (data.pinnedRepos?.length ?? 0) > 0,
       order: 7,
-      content: generatePinnedReposDetailedSection(data, bgHex, accentHex),
+      content: generatePinnedReposDetailedSection(data, bgHex, accentHex, themeParam),
     },
 
     // Top repositories by stars
@@ -278,10 +295,10 @@ function generateHeaderSection(
 ${company}
 
 <p align="center">
-  <a href="https://github.com/${username}"><img src="https://img.shields.io/github/followers/${username}?label=Followers&style=for-the-badge&color=${accentHex}&labelColor=${bgHex}" alt="Followers" /></a>
-  <a href="${website}"><img src="https://img.shields.io/badge/Portfolio-Live-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Website" /></a>
-  ${showTwitter ? `<a href="https://twitter.com/${twitter}"><img src="https://img.shields.io/badge/Twitter-@${twitter}-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Twitter" /></a>` : ''}
-  ${data.email ? `<a href="mailto:${data.email}"><img src="https://img.shields.io/badge/Email-Contact-${accentHex}?style=for-the-badge&labelColor=${bgHex}" alt="Email" /></a>` : ''}
+  <a href="https://github.com/${username}"><img src="${BADGE_API}?username=${encodeURIComponent(username)}&type=followers&theme=${themeObj.id}" alt="Followers" /></a>
+  <a href="${website}">${chipImg('Portfolio', 'Live', `&theme=${themeObj.id}`)}</a>
+  ${showTwitter ? `<a href="https://twitter.com/${twitter}">${chipImg('Twitter', `@${twitter}`, `&theme=${themeObj.id}`)}</a>` : ''}
+  ${data.email ? `<a href="mailto:${data.email}">${chipImg('Email', 'Contact', `&theme=${themeObj.id}`)}</a>` : ''}
 </p>
 
 ${data.pronouns ? `> **Pronouns:** ${data.pronouns}` : ''}
@@ -579,7 +596,8 @@ function generateSkillsEnhancedSection(data: ProfileData, themeParam: string): s
 function generatePinnedReposDetailedSection(
   data: ProfileData,
   bgHex: string,
-  accentHex: string
+  accentHex: string,
+  themeParam: string
 ): string {
   if (data.pinnedRepos.length === 0) return '';
 
@@ -590,7 +608,7 @@ function generatePinnedReposDetailedSection(
 ${data.pinnedRepos
   .map(
     (repo) =>
-      `[![${repo.name}](https://img.shields.io/badge/${shieldsEscape(repo.name)}${repo.language ? `-${shieldsEscape(repo.language)}` : ''}-${accentHex}?style=for-the-badge&logo=github&logoColor=white&labelColor=${bgHex})](${repo.url})`
+      `<a href="${repo.url}">${chipImg(repo.name, repo.language || 'repository', themeParam)}</a>`
   )
   .join(' ')}
 
@@ -974,7 +992,7 @@ function getCLIProjectSections(
       title: 'Header & Badges',
       enabled: true,
       order: 1,
-      content: generateCLIHeader(data, bgHex, accentHex),
+      content: generateCLIHeader(data, bgHex, accentHex, themeParam),
     },
     {
       id: 'quickstart',
@@ -1042,7 +1060,7 @@ function getAPIProjectSections(
       title: 'API Title & Metadata',
       enabled: true,
       order: 1,
-      content: generateAPIHeader(data, bgHex, accentHex),
+      content: generateAPIHeader(data, bgHex, accentHex, themeParam),
     },
     {
       id: 'installation',
@@ -1152,7 +1170,7 @@ function getStandardProjectSections(
       title: 'Repository Topics',
       enabled: (data.repositoryTopics?.length ?? 0) > 0,
       order: 6,
-      content: generateTopicsSection(data, bgHex, accentHex),
+      content: generateTopicsSection(data, bgHex, accentHex, themeParam),
     },
     {
       id: 'architecture',
@@ -1251,16 +1269,21 @@ function getStandardProjectSections(
 // PROJECT SECTION GENERATORS
 // ============================================================================
 
-function generateCLIHeader(data: ProjectData, bgHex: string, accentHex: string): string {
+function generateCLIHeader(
+  data: ProjectData,
+  bgHex: string,
+  accentHex: string,
+  themeParam: string
+): string {
   return `# ⚡ ${data.title}
 
 > ${data.description}
 
-[![Stars](https://img.shields.io/github/stars/${data.owner}/${data.repo}?style=flat-square&color=${accentHex}&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
-[![License](https://img.shields.io/badge/License-${shieldsEscape(data.license)}-${accentHex}?style=flat-square&labelColor=${bgHex})](https://opensource.org/licenses/${data.license})
-[![Language](https://img.shields.io/badge/Language-${shieldsEscape(data.language)}-${accentHex}?style=flat-square&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
-[![Version](https://img.shields.io/badge/Version-Latest-${accentHex}?style=flat-square&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/releases)
-${data.homepageUrl ? `[![Demo](https://img.shields.io/badge/Demo-Live-${accentHex}?style=flat-square&labelColor=${bgHex})](${data.homepageUrl})` : ''}`;
+[![Stars](${BADGE_API}?username=${data.owner}&repo=${data.repo}&type=stars${themeParam})](https://github.com/${data.owner}/${data.repo})
+[![License](${BADGE_API}?username=${data.owner}&repo=${data.repo}&type=license${themeParam})](https://opensource.org/licenses/${data.license})
+[![Language](${BADGE_API}?type=skill&name=${encodeURIComponent(primaryTech(data))}${themeParam})](https://github.com/${data.owner}/${data.repo})
+[![Version](${BADGE_API}?type=chip&label=Version&value=Latest${themeParam})](https://github.com/${data.owner}/${data.repo}/releases)
+${data.homepageUrl ? `[![Demo](${BADGE_API}?type=chip&label=Demo&value=Live${themeParam})](${data.homepageUrl})` : ''}`;
 }
 
 function generateCLIQuickstart(data: ProjectData): string {
@@ -1296,15 +1319,20 @@ ${data.repo} --version
 \`\`\``;
 }
 
-function generateAPIHeader(data: ProjectData, bgHex: string, accentHex: string): string {
+function generateAPIHeader(
+  data: ProjectData,
+  bgHex: string,
+  accentHex: string,
+  themeParam: string
+): string {
   return `# 🔌 ${data.title} (Developer API)
 
 > ${data.description}
 
-[![Stars](https://img.shields.io/github/stars/${data.owner}/${data.repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
-[![License: ${data.license}](https://img.shields.io/badge/License-${shieldsEscape(data.license)}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](LICENSE)
-[![Version](https://img.shields.io/badge/Version-Latest-${accentHex}?style=for-the-badge&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/releases)
-${data.homepageUrl ? `[![Docs](https://img.shields.io/badge/Docs-Live-${accentHex}?style=for-the-badge&labelColor=${bgHex})](${data.homepageUrl})` : ''}`;
+[![Stars](${BADGE_API}?username=${data.owner}&repo=${data.repo}&type=stars${themeParam})](https://github.com/${data.owner}/${data.repo})
+[![License](${BADGE_API}?username=${data.owner}&repo=${data.repo}&type=license${themeParam})](LICENSE)
+[![Version](${BADGE_API}?type=chip&label=Version&value=Latest${themeParam})](https://github.com/${data.owner}/${data.repo}/releases)
+${data.homepageUrl ? `[![Docs](${BADGE_API}?type=chip&label=Docs&value=Live${themeParam})](${data.homepageUrl})` : ''}`;
 }
 
 function generateInstallationSection(data: ProjectData): string {
@@ -1361,11 +1389,11 @@ function generateStandardHeader(
 # 🛠️ ${data.title}
 > ${data.description}
 
-[![Stars](https://img.shields.io/github/stars/${data.owner}/${data.repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/stargazers)
-[![Forks](https://img.shields.io/github/forks/${data.owner}/${data.repo}?style=for-the-badge&color=${accentHex}&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/network/members)
-[![License: ${data.license}](https://img.shields.io/badge/License-${shieldsEscape(data.license)}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](LICENSE)
-[![Built With](https://img.shields.io/badge/Stack-${shieldsEscape(data.language)}-${accentHex}?style=for-the-badge&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo})
-[![Version](https://img.shields.io/badge/Version-Latest-${accentHex}?style=for-the-badge&labelColor=${bgHex})](https://github.com/${data.owner}/${data.repo}/releases)
+[![Stars](${BADGE_API}?username=${data.owner}&repo=${data.repo}&type=stars${themeParam})](https://github.com/${data.owner}/${data.repo}/stargazers)
+[![Forks](${BADGE_API}?username=${data.owner}&repo=${data.repo}&type=forks${themeParam})](https://github.com/${data.owner}/${data.repo}/network/members)
+[![License](${BADGE_API}?username=${data.owner}&repo=${data.repo}&type=license${themeParam})](LICENSE)
+[![Built With](${BADGE_API}?type=skill&name=${encodeURIComponent(primaryTech(data))}${themeParam})](https://github.com/${data.owner}/${data.repo})
+[![Version](${BADGE_API}?type=chip&label=Version&value=Latest${themeParam})](https://github.com/${data.owner}/${data.repo}/releases)
 ${data.homepageUrl ? `[**Explore Live Demo 🚀**](${data.homepageUrl})` : ''}
 
 </div>
@@ -1467,7 +1495,12 @@ ${languages.map((l) => `| **${l.name}** | ${l.percentage}% | ${formatBytes(l.byt
 </details>`;
 }
 
-function generateTopicsSection(data: ProjectData, bgHex: string, accentHex: string): string {
+function generateTopicsSection(
+  data: ProjectData,
+  bgHex: string,
+  accentHex: string,
+  themeParam: string
+): string {
   const topics = data.repositoryTopics ?? [];
   if (topics.length === 0) return '';
 
@@ -1475,12 +1508,7 @@ function generateTopicsSection(data: ProjectData, bgHex: string, accentHex: stri
 
 <div align="center">
 
-${topics
-  .map(
-    (topic) =>
-      `<img src="https://img.shields.io/badge/-${shieldsEscape(topic.name)}-${bgHex}?style=flat-square&logo=github&logoColor=${accentHex}&labelColor=${bgHex}" alt="${topic.name}" />`
-  )
-  .join(' ')}
+${topics.map((topic) => skillChip(topic.name, themeParam)).join(' ')}
 
 </div>
 
