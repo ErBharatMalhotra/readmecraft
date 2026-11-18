@@ -2,11 +2,13 @@
 
 GitHub Action to automatically update your profile README with live, theme-aware badges from [ReadmeCraft](https://readme.bharatdn.com).
 
+This action ships inside the [ReadmeCraft](https://github.com/ErBharatMalhotra/readmecraft) repository (folder `readmecraft-action/`), so reference it by path — there is no npm package to install and no marketplace listing to wait for.
+
 ## Features
 
 - 🎨 **9 Themes** — Tokyo Night, Dracula, Nord, GitHub Dark, Gruvbox, Rose Pine, Catppuccin, Synthwave, Default
 - 🔄 **Auto-updates** — Scheduled daily runs keep your README fresh
-- 📦 **20+ Badge Types** — Composite card, Snake animation, Heatmap, Trophies, Skill Radar, Language Race, and more
+- 📦 **Badge Types** — Composite card, Snake animation, Heatmap, Trophies, Skill Radar, Language Race, and more
 - 🛡️ **Zero Dependencies** — Pure SVG badges, no external image services
 - ⚡ **Edge Cached** — 6-hour cache with cache-busting support
 
@@ -34,7 +36,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - uses: ErBharatMalhotra/readmecraft-action@v1
+      - uses: ErBharatMalhotra/readmecraft/readmecraft-action@main
         with:
           username: ${{ github.repository_owner }}
           token: ${{ secrets.GITHUB_TOKEN }}

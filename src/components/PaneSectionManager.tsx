@@ -47,7 +47,7 @@ interface PaneSectionManagerProps {
 }
 
 const CATEGORY_TABS: { id: string; label: string; icon: string }[] = [
-  { id: 'all', label: 'All 50', icon: '🎨' },
+  { id: 'all', label: `All ${THEMES.length}`, icon: '🎨' },
   { id: 'gaming', label: 'Gaming', icon: '🎮' },
   { id: 'anime', label: 'Anime', icon: '⚔️' },
   { id: 'aesthetic', label: 'Aesthetic', icon: '✨' },

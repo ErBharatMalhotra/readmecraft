@@ -155,7 +155,15 @@ async function main() {
   }
 
   console.log(`📝 README ${changed ? 'updated' : 'unchanged'}`);
-  console.log(`::set-output name=changed::${changed}`);
+
+  // GitHub removed the deprecated ::set-output command, so write to the
+  // step output file instead.
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (outputPath) {
+    fs.appendFileSync(outputPath, `changed=${changed}\n`);
+  } else {
+    console.log(`changed=${changed}`);
+  }
 }
 
 main().catch((err) => {

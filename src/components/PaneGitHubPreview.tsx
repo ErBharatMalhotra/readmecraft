@@ -31,6 +31,7 @@ import type { ScoreBreakdown } from '@/lib/score';
 import { scoreProfileReadme, scoreProjectReadme } from '@/lib/score';
 import { roastReadme, quickPolishMarkdown } from '@/lib/ai-assistant';
 import { generateGitHubWorkflowYaml } from '@/lib/action-generator';
+import { THEMES } from '@/lib/themes';
 
 interface PaneGitHubPreviewProps {
   markdown: string;
@@ -116,7 +117,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
   const handleShareTwitter = () => {
     const text = encodeURIComponent(
-      `Redesigned my GitHub README with @ReadmeCraft in ${theme.toUpperCase()} theme! 🚀\n\nTaste Score: ${scoreData?.score || 96}/100 (${scoreData?.grade || 'A+'})\n\nBuild yours with 50+ viral themes & animated SVGs: https://readme.bharatdn.com`
+      `Redesigned my GitHub README with @ReadmeCraft in ${theme.toUpperCase()} theme! 🚀\n\nTaste Score: ${scoreData?.score || 96}/100 (${scoreData?.grade || 'A+'})\n\nBuild yours with ${THEMES.length} viral themes & animated SVGs: https://readme.bharatdn.com`
     );
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
   };

@@ -1,6 +1,7 @@
 // ============================================================================
 // ReadmeCraft — GitHub Action & Workflow Generator
-// Generates .github/workflows/readme-craft-updater.yml & dynamic telemetry
+// Generates .github/workflows/readme-craft-updater.yml that calls the
+// composite action shipped in this repository (readmecraft-action/action.yml).
 // ============================================================================
 
 export interface ActionConfig {
@@ -13,6 +14,11 @@ export interface ActionConfig {
   rssFeedUrl?: string;
 }
 
+// The action lives at `readmecraft-action/` in this public repository, so the
+// composite action reference below resolves without a published npm package or
+// a separate marketplace listing.
+const ACTION_REF = 'ErBharatMalhotra/readmecraft/readmecraft-action@main';
+
 export function generateGitHubWorkflowYaml(config: ActionConfig): string {
   const cronExpression =
     config.updateFrequency === 'hourly'
@@ -22,7 +28,9 @@ export function generateGitHubWorkflowYaml(config: ActionConfig): string {
         : '0 0 * * *'; // daily default
 
   return `name: 🚀 ReadmeCraft Auto-Updater
-# Automatically updates GitHub Profile README with live stats, Wakatime, and telemetry
+# Regenerates your README badges from live GitHub data on a schedule.
+# Uses the composite action that ships with ReadmeCraft — no npm install, no
+# extra secrets beyond the default GITHUB_TOKEN.
 
 on:
   schedule:
@@ -32,46 +40,26 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   update-readme:
     name: Update Profile README
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Regenerate README badges
+        uses: ${ACTION_REF}
         with:
-          node-version: '20'
-
-      - name: Run ReadmeCraft Telemetry Sync
-        env:
-          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-          ${config.includeWakatime ? `WAKATIME_API_KEY: \${{ secrets.WAKATIME_API_KEY }}` : '# WAKATIME_API_KEY not enabled'}
-          ${config.includeBlogRss ? `RSS_FEED_URL: '${config.rssFeedUrl || 'https://blog.bharatdn.com/rss.xml'}'` : '# RSS not enabled'}
-        run: |
-          echo "Syncing ReadmeCraft live widgets..."
-          npx readmecraft-sync --token "$GITHUB_TOKEN"
-
-      - name: Commit & Push Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "🤖 Auto-update README.md via ReadmeCraft Action"
-          file_pattern: README.md
-          commit_user_name: "ReadmeCraft Bot"
-          commit_user_email: "bot@readme.bharatdn.com"
-`;
-}
-
-export function generateCliReadmeSetupSnippet(): string {
-  return `# Install ReadmeCraft CLI globally
-npm install -g @readmecraft/cli
-
-# Initialize automated GitHub Actions sync in your profile repo
-readmecraft init --auto-sync
+          username: \${{ github.repository_owner }}
+          repository: \${{ github.event.repository.name }}
+          token: \${{ secrets.GITHUB_TOKEN }}
+          theme: 'tokyonight'
+          badges: 'composite,snake,heatmap,trophy,activity'
+          commit-message: '🤖 Auto-update README via ReadmeCraft'
+          branch: 'main'
 `;
 }

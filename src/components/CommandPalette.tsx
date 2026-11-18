@@ -230,7 +230,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             <Keyboard className="h-3.5 w-3.5 text-emerald-400" />
             <span>Navigation: ESC to close • Enter to select</span>
           </div>
-          <span>50 Themes Ready</span>
+          <span>{THEMES.length} Themes Ready</span>
         </div>
       </div>
     </div>

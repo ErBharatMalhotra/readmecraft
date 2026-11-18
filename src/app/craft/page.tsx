@@ -524,7 +524,7 @@ export default function CraftPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-[#94a3b8]">
-                  Badge Theme (50 Themes)
+                  Badge Theme ({themes.length} Themes)
                 </label>
                 <span className="font-mono text-xs text-emerald-400 capitalize">{theme}</span>
               </div>

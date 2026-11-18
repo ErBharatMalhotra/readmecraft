@@ -20,7 +20,7 @@
 
 ![Native SVG badges rendered from real GitHub data](docs/screenshots/badges.png)
 
-<p align="center"><em>39 self-contained badge types, generated server-side from real GitHub data — no shields.io.</em></p>
+<p align="center"><em>41 badge types rendered by our own SVG engine from real GitHub data — stats, streak, heatmap, snake and composite cards fully native.</em></p>
 
 ### Key Capabilities
 
@@ -28,8 +28,8 @@
 |---------|-------------|
 | **Dual-Mode Studio** | Profile READMEs + Repository READMEs in one tool |
 | **Zero-Typing Ingestion** | Username → real language bytes, pinned repos, live stats; Repo URL → package.json/Cargo.toml inspection |
-| **6 Design Presets** | Bento Grid, Minimalist, Titan (Profile) · Standard, API, CLI (Project) |
-| **Native SVG Badges** | 39 badge types via `/api/badges` — no external deps, zero rate-limit issues |
+| **Presets & Templates** | 3 profile layouts + 16 persona templates (Profile) · Standard, API, CLI (Project) |
+| **Native SVG Badges** | 41 badge types via `/api/badges` — stats, streak, heatmap, snake and composite cards rendered in-house, with a 6-hour edge cache |
 | **GitHub OAuth** | "Sign in with GitHub" → your personal 5,000 req/hr token used automatically |
 | **Star Button** | Native "Star Repo" in header — direct API call, no redirect |
 | **🚀 Deploy Button** | One-click GitHub App install → auto-pushes README to your profile repo |
@@ -89,7 +89,7 @@
 
 ## 📦 Native Badge API (`/api/badges`)
 
-Self-contained SVG badges — no shields.io, no external dependencies, no client-side JS. **39 badge types** across 8 theme categories (**63 themes**).
+Badges are rendered server-side by ReadmeCraft's own SVG engine — **41 badge types** across 8 theme categories (**63 themes**), with no client-side JS. Stats, streak, contribution heatmap, snake, trophies, language charts and the composite card are fully native and depend on no third-party image service. A handful of one-line convenience chips (tech-stack chips and the followers/website/social header badges) are still generated through shields.io, and are labelled as such in the docs.
 
 ```
 https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme-id>
@@ -359,7 +359,7 @@ Badges detect viewer via edge headers (Vercel/Cloudflare):
 
 ### Text Safety System
 
-All 39 badge generators use comprehensive text handling:
+All 41 badge generators use comprehensive text handling:
 
 ```typescript
 // Font metrics → truncation → wrapping → overflow prevention
@@ -417,7 +417,7 @@ src/
 │   │   │   └── github-app/
 │   │   │       ├── install/route.ts        # GitHub App install URL
 │   │   │       └── callback/route.ts       # Installation token → push README
-│   │   ├── badges/route.ts                 # Native SVG badge generator (39 types)
+│   │   ├── badges/route.ts                 # Native SVG badge generator (41 types)
 │   │   ├── ingest/route.ts                 # GitHub profile/repo ingestion
 │   │   └── star/route.ts                   # Star repo via OAuth token
 │   ├── deploy/page.tsx                     # Deploy UI (theme + badge picker)

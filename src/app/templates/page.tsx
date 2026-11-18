@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Sparkles, ArrowRight, Check, Copy, ExternalLink } from 'lucide-react';
 import { getProfileSections, compileSectionsToMarkdown } from '@/lib/generators';
 import { COMMUNITY_TEMPLATES, type CommunityTemplate } from '@/lib/templates';
+import { THEMES } from '@/lib/themes';
 
 const TEMPLATES = COMMUNITY_TEMPLATES;
 
@@ -162,7 +163,7 @@ export default function TemplatesPage() {
           </h1>
           <p className="mt-4 text-base text-slate-400 sm:text-lg">
             Hand-crafted, viral aesthetic README templates for engineers, researchers, and students.
-            1-click load into ReadmeCraft studio with 50+ viral themes and animated SVGs.
+            1-click load into ReadmeCraft studio with {THEMES.length} viral themes and animated SVGs.
           </p>
         </div>
       </div>
