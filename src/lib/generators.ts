@@ -54,24 +54,16 @@ function shieldsEscape(text: string): string {
     .replace(/\//g, '%2F');
 }
 
-// Simple-icons slugs differ from display names for a few common entries.
-const LOGO_SLUGS: Record<string, string> = {
-  html: 'html5',
-  'github actions': 'githubactions',
-  'ci/cd': 'githubactions',
-  'c++': 'cplusplus',
-  'c#': 'csharp',
-  'rest apis': '',
-};
+const BADGE_API = 'https://readme.bharatdn.com/api/badges';
 
-function logoSlug(name: string): string {
-  const key = (name || '').toLowerCase();
-  if (key in LOGO_SLUGS) return LOGO_SLUGS[key];
-  return key.replace(/[^a-z0-9]/g, '');
+// Chip rendered by our own /api/badges engine (curated simple-icons subset + the
+// selected theme), so a README no longer breaks when shields.io is slow.
+function skillChip(name: string, themeParam: string): string {
+  return `<img src="${BADGE_API}?type=skill&name=${encodeURIComponent(name)}${themeParam}" alt="${name}" />`;
 }
 
-function getLanguageBadge(lang: LanguageStat, bgHex: string, accentHex: string): string {
-  return `<img src="https://img.shields.io/badge/-${shieldsEscape(lang.name)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(logoSlug(lang.name))}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${lang.name} ${lang.percentage}%" />`;
+function getLanguageBadge(lang: LanguageStat, themeParam: string): string {
+  return skillChip(lang.name, themeParam);
 }
 
 export function getProfileSections(
@@ -141,7 +133,7 @@ export function getProfileSections(
       title: 'Language Breakdown (Bytes)',
       enabled: (data.languages?.length ?? 0) > 0,
       order: 5,
-      content: generateLanguagesDetailedSection(data, bgHex, accentHex),
+      content: generateLanguagesDetailedSection(data, themeParam),
     },
 
     // Skills from repo topics
@@ -150,7 +142,7 @@ export function getProfileSections(
       title: 'Technology Skills (from Repos)',
       enabled: (data.skills?.length ?? 0) > 0,
       order: 6,
-      content: generateSkillsEnhancedSection(data, bgHex, accentHex),
+      content: generateSkillsEnhancedSection(data, themeParam),
     },
 
     // Pinned repositories with full details
@@ -413,11 +405,7 @@ ${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges
 </details>`;
 }
 
-function generateLanguagesDetailedSection(
-  data: ProfileData,
-  bgHex: string,
-  accentHex: string
-): string {
+function generateLanguagesDetailedSection(data: ProfileData, themeParam: string): string {
   if ((data.languages?.length ?? 0) === 0) return '';
 
   const totalBytes = (data.languages ?? []).reduce((sum, l) => sum + (l.bytes || 0), 0);
@@ -426,7 +414,7 @@ function generateLanguagesDetailedSection(
 
 <div align="center">
 
-${(data.languages ?? []).map((l) => getLanguageBadge(l, bgHex, accentHex)).join(' ')}
+${(data.languages ?? []).map((l) => getLanguageBadge(l, themeParam)).join(' ')}
 
 </div>
 
@@ -441,11 +429,7 @@ ${(data.languages ?? []).map((l) => `| **${l.name}** | ${l.percentage}% | ${l.by
 </details>`;
 }
 
-function generateSkillsEnhancedSection(
-  data: ProfileData,
-  bgHex: string,
-  accentHex: string
-): string {
+function generateSkillsEnhancedSection(data: ProfileData, themeParam: string): string {
   if ((data.skills?.length ?? 0) === 0) return '';
 
   // Group skills by category. Repo topics are noisy, so drop generic ones and
@@ -568,46 +552,23 @@ function generateSkillsEnhancedSection(
 
   if (langSkills.length > 0) {
     content += `<details open><summary><b>🗣️ Languages (${langSkills.length})</b></summary>\n\n`;
-    content +=
-      langSkills
-        .map(
-          (s) =>
-            `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`
-        )
-        .join(' ') + '\n\n</details>\n\n';
+    content += langSkills.map((s) => skillChip(s, themeParam)).join(' ') + '\n\n</details>\n\n';
   }
 
   if (frameworkSkills.length > 0) {
     content += `<details open><summary><b>⚡ Frameworks & Libraries (${frameworkSkills.length})</b></summary>\n\n`;
     content +=
-      frameworkSkills
-        .map(
-          (s) =>
-            `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`
-        )
-        .join(' ') + '\n\n</details>\n\n';
+      frameworkSkills.map((s) => skillChip(s, themeParam)).join(' ') + '\n\n</details>\n\n';
   }
 
   if (infraSkills.length > 0) {
     content += `<details open><summary><b>☁️ Infrastructure & DevOps (${infraSkills.length})</b></summary>\n\n`;
-    content +=
-      infraSkills
-        .map(
-          (s) =>
-            `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`
-        )
-        .join(' ') + '\n\n</details>\n\n';
+    content += infraSkills.map((s) => skillChip(s, themeParam)).join(' ') + '\n\n</details>\n\n';
   }
 
   if (otherSkills.length > 0) {
     content += `<details open><summary><b>🛠️ Other Skills (${otherSkills.length})</b></summary>\n\n`;
-    content +=
-      otherSkills
-        .map(
-          (s) =>
-            `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`
-        )
-        .join(' ') + '\n\n</details>\n\n';
+    content += otherSkills.map((s) => skillChip(s, themeParam)).join(' ') + '\n\n</details>\n\n';
   }
 
   content += `</div>`;
@@ -1048,7 +1009,7 @@ function getCLIProjectSections(
       title: 'Tech Stack',
       enabled: true,
       order: 6,
-      content: generateTechStackSection(data, bgHex, accentHex),
+      content: generateTechStackSection(data, themeParam),
     },
     {
       id: 'ecosystem',
@@ -1177,14 +1138,14 @@ function getStandardProjectSections(
       title: 'Tech Stack & Dependencies',
       enabled: true,
       order: 4,
-      content: generateTechStackSection(data, bgHex, accentHex),
+      content: generateTechStackSection(data, themeParam),
     },
     {
       id: 'languages_detailed',
       title: 'Language Statistics',
       enabled: (data.languages?.length ?? 0) > 0,
       order: 5,
-      content: generateProjectLanguagesSection(data, bgHex, accentHex),
+      content: generateProjectLanguagesSection(data, themeParam),
     },
     {
       id: 'topics',
@@ -1468,21 +1429,17 @@ function generateFeaturesSection(data: ProjectData): string {
 ${data.features.map((f) => `- **${f}**`).join('\n')}`;
 }
 
-function generateTechStackSection(data: ProjectData, bgHex: string, accentHex: string): string {
+function generateTechStackSection(data: ProjectData, themeParam: string): string {
   return `## 🛠️ Tech Stack
 
 <div align="left">
 
-${data.techStack.map((t) => `<img src="https://img.shields.io/badge/-${shieldsEscape(t)}-${bgHex}?style=flat-square&logoColor=${accentHex}&labelColor=${bgHex}" alt="${t}" />`).join(' ')}
+${data.techStack.map((t) => skillChip(t, themeParam)).join(' ')}
 
 </div>`;
 }
 
-function generateProjectLanguagesSection(
-  data: ProjectData,
-  bgHex: string,
-  accentHex: string
-): string {
+function generateProjectLanguagesSection(data: ProjectData, themeParam: string): string {
   const totalSize = data.totalLanguageSize ?? 0;
   const languages = (data.languages ?? []).map((l) => ({
     name: l.name,
@@ -1495,7 +1452,7 @@ function generateProjectLanguagesSection(
 
 <div align="center">
 
-${languages.map((l) => getLanguageBadge(l, bgHex, accentHex)).join(' ')}
+${languages.map((l) => getLanguageBadge(l, themeParam)).join(' ')}
 
 </div>
 

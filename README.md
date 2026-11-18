@@ -89,7 +89,7 @@
 
 ## 📦 Native Badge API (`/api/badges`)
 
-Badges are rendered server-side by ReadmeCraft's own SVG engine — **41 badge types** across 8 theme categories (**63 themes**), with no client-side JS. Stats, streak, contribution heatmap, snake, trophies, language charts and the composite card are fully native and depend on no third-party image service. A handful of one-line convenience chips (tech-stack chips and the followers/website/social header badges) are still generated through shields.io, and are labelled as such in the docs.
+Badges are rendered server-side by ReadmeCraft's own SVG engine — **41 badge types** across 8 theme categories (**63 themes**), with no client-side JS. Stats, streak, contribution heatmap, snake, trophies, language charts, the composite card and every **tech-stack chip** are fully native and depend on no third-party image service. Only the profile header row (followers / website / social links) and a few repository-header badges are still generated through shields.io, and they are labelled as such in the docs.
 
 ```
 https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme-id>
@@ -106,6 +106,8 @@ https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme
 | `contributions` | Total contributions in the last year |
 | `stars` | Stars the user has given |
 | `blog` | Blog presence badge |
+| `skill` | Native tech chip — `&name=React` (curated simple-icons subset) |
+| `skill-row` | Row of up to 12 native tech chips — `&skills=React,Docker,Redis` |
 
 ### Visual cards
 

@@ -14,6 +14,7 @@ import {
 // Theme definitions - using 50 curated viral themes from single source of truth
 import type { ThemePalette } from '@/lib/themes';
 import { getThemeById } from '@/lib/themes';
+import { findTechIcon } from '@/lib/tech-icons';
 
 type Theme = ThemePalette;
 
@@ -497,6 +498,97 @@ function generateBadge(
 <text x="${labelWidth + 10 + messageWidth / 2 + 5}" y="18" fill="#fff">${message}</text>
 </g>
 </svg>`;
+}
+
+// ============================================================================
+// NATIVE SKILL CHIPS
+// Rendered from the curated simple-icons subset in `@/lib/tech-icons`, so a
+// profile never depends on shields.io for its tech stack.
+// ============================================================================
+
+function escXml(value: string): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function mixHex(hex: string, toward: string, amount: number): string {
+  const parse = (value: string) => {
+    const clean = value.replace('#', '').padEnd(6, '0').slice(0, 6);
+    return [0, 2, 4].map((i) => parseInt(clean.slice(i, i + 2), 16) || 0);
+  };
+  const a = parse(hex);
+  const b = parse(toward);
+  const out = a.map((channel, i) => Math.round(channel + (b[i] - channel) * amount));
+  return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
+/** Brand colours such as Java's #007396 vanish on dark README backgrounds. */
+function readableBrandColor(brandHex: string, backgroundColor: string): string {
+  if (!/^#?[0-9a-f]{6}$/i.test(brandHex.trim())) return '#94a3b8';
+  const brand = brandHex.startsWith('#') ? brandHex : `#${brandHex}`;
+  const brandLum = relativeLuminance(brand);
+  const bgLum = relativeLuminance(backgroundColor);
+  const contrast = (Math.max(brandLum, bgLum) + 0.05) / (Math.min(brandLum, bgLum) + 0.05);
+  if (contrast >= 3) return brand;
+  return mixHex(brand, bgLum < 0.5 ? '#ffffff' : '#000000', 0.45);
+}
+
+interface SkillChipGeometry {
+  width: number;
+  iconSize: number;
+  textX: number;
+  textWidth: number;
+  hasIcon: boolean;
+}
+
+const SKILL_CHIP = { height: 24, radius: 6, padX: 10, iconSize: 13, iconGap: 6, fontSize: 11 };
+
+function measureSkillChip(name: string): SkillChipGeometry {
+  const icon = findTechIcon(name);
+  const textWidth = Math.ceil(estimateTextWidth(name, SKILL_CHIP.fontSize, 'mono'));
+  const iconSpace = icon ? SKILL_CHIP.iconSize + SKILL_CHIP.iconGap : 5 + SKILL_CHIP.iconGap;
+  return {
+    width: Math.max(46, SKILL_CHIP.padX * 2 + iconSpace + textWidth),
+    iconSize: SKILL_CHIP.iconSize,
+    textX: SKILL_CHIP.padX + iconSpace,
+    textWidth,
+    hasIcon: Boolean(icon),
+  };
+}
+
+function skillChipBody(name: string, x: number, theme: Theme): string {
+  const c = C(theme);
+  const geo = measureSkillChip(name);
+  const text = escXml(name);
+  const iconY = (SKILL_CHIP.height - SKILL_CHIP.iconSize) / 2;
+  const glyph = findTechIcon(name);
+
+  const mark = glyph
+    ? `<g transform="translate(${x + SKILL_CHIP.padX}, ${iconY}) scale(${SKILL_CHIP.iconSize / 24})"><path d="${glyph.icon.path}" fill="${readableBrandColor(glyph.icon.hex, c.bgElevated)}" /></g>`
+    : `<circle cx="${x + SKILL_CHIP.padX + 2}" cy="${SKILL_CHIP.height / 2}" r="2.5" fill="${c.emerald}" />`;
+
+  return `${rect(x, 0, geo.width, SKILL_CHIP.height, c.bgElevated, SKILL_CHIP.radius, c.border, 1)}${mark}<text x="${x + geo.textX}" y="${SKILL_CHIP.height / 2 + 4}" font-family="${FONTS.mono}" font-size="${SKILL_CHIP.fontSize}" fill="${c.textPrimary}" text-rendering="geometricPrecision">${text}</text>`;
+}
+
+function generateSkillChipSvg(name: string, theme: Theme): string {
+  const geo = measureSkillChip(name);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${geo.width}" height="${SKILL_CHIP.height}" role="img" aria-label="${escXml(name)}">${skillChipBody(name, 0, theme)}</svg>`;
+}
+
+function generateSkillRowSvg(names: string[], theme: Theme): string {
+  const gap = 6;
+  let cursor = 0;
+  const chips = names.map((name) => {
+    const body = skillChipBody(name, cursor, theme);
+    cursor += measureSkillChip(name).width + gap;
+    return body;
+  });
+  const width = Math.max(0, cursor - gap);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${SKILL_CHIP.height}" role="img" aria-label="${escXml(names.join(', '))}">${chips.join('')}</svg>`;
 }
 
 // ============================================================================
@@ -3610,6 +3702,42 @@ export async function GET(req: NextRequest) {
     const token = searchParams.get('token') || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
     const userToken = searchParams.get('user_token') || undefined; // User's OAuth token from NextAuth
     const themeName = searchParams.get('theme') || 'default';
+
+    // ===== NATIVE SKILL CHIPS (no username needed) =====
+    // `/api/badges?type=skill&name=React&theme=gta6`
+    // `/api/badges?type=skill-row&skills=React,Docker,Redis&theme=gta6`
+    if (type === 'skill' || type === 'skill-row') {
+      const skillTheme = getTheme(themeName);
+      const raw =
+        type === 'skill'
+          ? searchParams.get('name') || searchParams.get('skill') || ''
+          : searchParams.get('skills') || searchParams.get('names') || '';
+      const limit = type === 'skill' ? 1 : 12;
+      const names = raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, limit);
+
+      const headers = {
+        'Content-Type': 'image/svg+xml',
+        // Deterministic output: brand icon + theme tokens are baked in the URL.
+        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      };
+
+      if (names.length === 0) {
+        return new NextResponse(generateBadge('Skill', 'name required', skillTheme, 'red'), {
+          status: 400,
+          headers,
+        });
+      }
+
+      const svg =
+        type === 'skill'
+          ? generateSkillChipSvg(names[0], skillTheme)
+          : generateSkillRowSvg(names, skillTheme);
+      return new NextResponse(svg, { headers });
+    }
 
     if (!username) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });
