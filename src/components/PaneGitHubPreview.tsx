@@ -27,7 +27,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { AppMode, ProfileData, ProjectData, Section } from '@/types/readmecraft';
-import { scoreProfileReadme, scoreProjectReadme, ScoreBreakdown } from '@/lib/score';
+import type { ScoreBreakdown } from '@/lib/score';
+import { scoreProfileReadme, scoreProjectReadme } from '@/lib/score';
 import { roastReadme, quickPolishMarkdown } from '@/lib/ai-assistant';
 import { generateGitHubWorkflowYaml } from '@/lib/action-generator';
 
@@ -126,7 +127,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
   };
 
   return (
-    <div className="flex h-full flex-col bg-[#090d16] relative">
+    <div className="relative flex h-full flex-col bg-[#090d16]">
       {/* Pane Title Bar & Controls */}
       <div className="flex items-center justify-between border-b border-[#1e293b] bg-[#0b101c] px-4 py-2.5">
         <div className="flex items-center gap-2">
@@ -156,7 +157,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
           {/* AI Polish / Roast Button */}
           <button
             onClick={() => setShowRoastModal(true)}
-            className="flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 font-mono text-xs font-medium text-purple-300 hover:border-purple-500/60 hover:text-white transition-colors"
+            className="flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 font-mono text-xs font-medium text-purple-300 transition-colors hover:border-purple-500/60 hover:text-white"
             title="AI Roast & Polish (Google XYZ Formula)"
           >
             <Brain className="h-3.5 w-3.5 text-purple-400" />
@@ -166,7 +167,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
           {/* Actions Workflow Button */}
           <button
             onClick={() => setShowActionModal(true)}
-            className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] px-2.5 py-1 font-mono text-xs font-medium text-slate-300 hover:border-slate-700 hover:text-white transition-colors"
+            className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] px-2.5 py-1 font-mono text-xs font-medium text-slate-300 transition-colors hover:border-slate-700 hover:text-white"
             title="Generate GitHub Actions Auto-Updater"
           >
             <Terminal className="h-3.5 w-3.5 text-emerald-400" />
@@ -176,7 +177,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
           {/* Telemetry / Views Badge Button */}
           <button
             onClick={() => setShowTelemetryModal(true)}
-            className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] px-2.5 py-1 font-mono text-xs font-medium text-slate-300 hover:border-slate-700 hover:text-white transition-colors"
+            className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] px-2.5 py-1 font-mono text-xs font-medium text-slate-300 transition-colors hover:border-slate-700 hover:text-white"
             title="Live Visitor & Click Analytics Badge"
           >
             <Zap className="h-3.5 w-3.5 text-amber-400" />
@@ -186,7 +187,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
           {/* Viral Share Button */}
           <button
             onClick={() => setShowShareModal(true)}
-            className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] px-2.5 py-1 font-mono text-xs font-medium text-slate-300 hover:border-slate-700 hover:text-white transition-colors"
+            className="flex items-center gap-1 rounded-lg border border-[#1e293b] bg-[#0e1526] px-2.5 py-1 font-mono text-xs font-medium text-slate-300 transition-colors hover:border-slate-700 hover:text-white"
             title="Share your README"
           >
             <Share2 className="h-3.5 w-3.5 text-emerald-400" />
@@ -294,9 +295,9 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
       {/* Quality Taste Score Modal */}
       {showScoreModal && scoreData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-2xl border border-[#1e293b] bg-[#0c1220] p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-4">
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-emerald-400" />
                 <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white">
@@ -313,12 +314,12 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
             <div className="mt-4 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
               <div>
-                <div className="font-mono text-xs text-emerald-400 uppercase font-semibold">
+                <div className="font-mono text-xs font-semibold text-emerald-400 uppercase">
                   Overall Score
                 </div>
                 <div className="font-['Space_Grotesk'] text-3xl font-extrabold text-white">
                   {scoreData.score}
-                  <span className="text-lg text-slate-400 font-normal"> / 100</span>
+                  <span className="text-lg font-normal text-slate-400"> / 100</span>
                 </div>
               </div>
               <div className="text-right">
@@ -330,57 +331,57 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
             {/* Metrics Breakdown */}
             <div className="mt-4 space-y-2">
-              <div className="text-xs font-semibold text-slate-400 font-mono uppercase">
+              <div className="font-mono text-xs font-semibold text-slate-400 uppercase">
                 Dimension Breakdown
               </div>
               <div className="space-y-1.5 text-xs">
                 <div>
-                  <div className="flex justify-between text-slate-300 mb-1">
+                  <div className="mb-1 flex justify-between text-slate-300">
                     <span>Completeness</span>
                     <span>{scoreData.metrics.completeness} / 25</span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
                     <div
-                      className="h-full bg-emerald-400 rounded-full"
+                      className="h-full rounded-full bg-emerald-400"
                       style={{ width: `${(scoreData.metrics.completeness / 25) * 100}%` }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-slate-300 mb-1">
+                  <div className="mb-1 flex justify-between text-slate-300">
                     <span>Visual Richness</span>
                     <span>{scoreData.metrics.visualRichness} / 25</span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
                     <div
-                      className="h-full bg-emerald-400 rounded-full"
+                      className="h-full rounded-full bg-emerald-400"
                       style={{ width: `${(scoreData.metrics.visualRichness / 25) * 100}%` }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-slate-300 mb-1">
+                  <div className="mb-1 flex justify-between text-slate-300">
                     <span>Technical Depth</span>
                     <span>{scoreData.metrics.technicalDepth} / 25</span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
                     <div
-                      className="h-full bg-emerald-400 rounded-full"
+                      className="h-full rounded-full bg-emerald-400"
                       style={{ width: `${(scoreData.metrics.technicalDepth / 25) * 100}%` }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-slate-300 mb-1">
+                  <div className="mb-1 flex justify-between text-slate-300">
                     <span>Social Proof</span>
                     <span>{scoreData.metrics.socialProof} / 15</span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
                     <div
-                      className="h-full bg-emerald-400 rounded-full"
+                      className="h-full rounded-full bg-emerald-400"
                       style={{ width: `${(scoreData.metrics.socialProof / 15) * 100}%` }}
                     />
                   </div>
@@ -391,20 +392,20 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
             {/* Suggestions */}
             {scoreData.suggestions.length > 0 && (
               <div className="mt-4">
-                <div className="text-xs font-semibold text-slate-400 font-mono uppercase mb-2">
+                <div className="mb-2 font-mono text-xs font-semibold text-slate-400 uppercase">
                   Actionable Recommendations
                 </div>
-                <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                <div className="max-h-36 space-y-2 overflow-y-auto pr-1">
                   {scoreData.suggestions.map((sug, i) => (
                     <div
                       key={i}
                       className="rounded-lg border border-[#1e293b] bg-[#080d18] p-2.5 text-xs"
                     >
-                      <div className="font-semibold text-slate-200 flex items-center gap-1.5">
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                      <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" />
                         {sug.title}
                       </div>
-                      <div className="text-slate-400 mt-0.5 text-[11px]">{sug.description}</div>
+                      <div className="mt-0.5 text-[11px] text-slate-400">{sug.description}</div>
                     </div>
                   ))}
                 </div>
@@ -413,10 +414,10 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
             {/* Embeddable Taste Score Badge Snippet */}
             <div className="mt-4">
-              <div className="text-xs font-semibold text-slate-400 font-mono uppercase mb-1.5">
+              <div className="mb-1.5 font-mono text-xs font-semibold text-slate-400 uppercase">
                 Embed Taste Score Badge in README
               </div>
-              <div className="rounded-xl border border-[#1e293b] bg-[#080d18] p-2.5 font-mono text-[10px] text-emerald-300 break-all select-all">
+              <div className="rounded-xl border border-[#1e293b] bg-[#080d18] p-2.5 font-mono text-[10px] break-all text-emerald-300 select-all">
                 {`[![ReadmeCraft Score](https://readme.bharatdn.com/api/score?username=${(profileData as any)?.username || 'developer'}&score=${scoreData.score}&grade=${scoreData.grade}&theme=${theme})](https://readme.bharatdn.com)`}
               </div>
             </div>
@@ -427,7 +428,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
                   setShowScoreModal(false);
                   setShowShareModal(true);
                 }}
-                className="flex-1 rounded-xl bg-emerald-500 py-2.5 font-bold text-xs text-slate-950 hover:bg-emerald-400 transition-colors shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-colors hover:bg-emerald-400"
               >
                 Share My Score on 𝕏 / Twitter
               </button>
@@ -444,9 +445,9 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
       {/* Viral Social Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-[#1e293b] bg-[#0c1220] p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-4">
               <div className="flex items-center gap-2">
                 <Share2 className="h-5 w-5 text-emerald-400" />
                 <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white">
@@ -474,13 +475,13 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
             <div className="mt-5 space-y-2">
               <button
                 onClick={handleShareTwitter}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-white text-black py-2.5 font-bold text-xs hover:bg-slate-200 transition-colors"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-xs font-bold text-black transition-colors hover:bg-slate-200"
               >
                 <span>Share on 𝕏 (Twitter)</span>
               </button>
               <button
                 onClick={handleShareLinkedIn}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#0a66c2] text-white py-2.5 font-bold text-xs hover:bg-[#084e96] transition-colors"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0a66c2] py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#084e96]"
               >
                 <span>Share on LinkedIn</span>
               </button>
@@ -500,16 +501,19 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
       {/* AI Roast & Polish Modal */}
       {showRoastModal && roastData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-purple-500/30 bg-[#0c1220] p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-purple-500/30 bg-[#0c1220] p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-4">
               <div className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-purple-400" />
                 <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white">
                   AI Roast & Polish (Google XYZ Formula)
                 </h3>
               </div>
-              <button onClick={() => setShowRoastModal(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setShowRoastModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -517,7 +521,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
             {/* Roast Header */}
             <div className="mt-4 flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/10 p-4">
               <div>
-                <div className="font-mono text-xs text-purple-400 uppercase font-semibold">
+                <div className="font-mono text-xs font-semibold text-purple-400 uppercase">
                   Roast Intensity
                 </div>
                 <div className="font-['Space_Grotesk'] text-2xl font-black text-white capitalize">
@@ -526,18 +530,21 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
               </div>
               <div className="text-right">
                 <span className="font-mono text-xs text-slate-400">Score: </span>
-                <span className="font-bold text-lg text-purple-300">{roastData.score}/100</span>
+                <span className="text-lg font-bold text-purple-300">{roastData.score}/100</span>
               </div>
             </div>
 
             {/* The Burns */}
             <div className="mt-4">
-              <div className="text-xs font-semibold text-slate-400 font-mono uppercase mb-2">
+              <div className="mb-2 font-mono text-xs font-semibold text-slate-400 uppercase">
                 Brutal Honest Feedback
               </div>
               <div className="space-y-2">
                 {roastData.burns.map((burn, i) => (
-                  <div key={i} className="rounded-lg border border-rose-500/20 bg-rose-950/20 p-2.5 text-xs text-rose-300">
+                  <div
+                    key={i}
+                    className="rounded-lg border border-rose-500/20 bg-rose-950/20 p-2.5 text-xs text-rose-300"
+                  >
                     "{burn}"
                   </div>
                 ))}
@@ -546,12 +553,13 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
             {/* Google XYZ Formula Bullets */}
             <div className="mt-4 rounded-xl border border-[#1e293b] bg-[#080d18] p-3 text-xs">
-              <div className="font-semibold text-emerald-400 flex items-center gap-1.5 mb-1.5">
+              <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-emerald-400">
                 <Sparkles className="h-3.5 w-3.5" />
                 Google XYZ Resume Formula:
               </div>
-              <p className="text-slate-400 text-[11px] mb-2 leading-relaxed">
-                "Accomplished [X] as measured by [Y], by doing [Z]" transforms weak responsibilities into high-impact accomplishments.
+              <p className="mb-2 text-[11px] leading-relaxed text-slate-400">
+                "Accomplished [X] as measured by [Y], by doing [Z]" transforms weak responsibilities
+                into high-impact accomplishments.
               </p>
             </div>
 
@@ -560,9 +568,13 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
               <button
                 disabled={isPolishing}
                 onClick={handleQuickPolish}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-purple-500 py-2.5 font-bold text-xs text-slate-950 hover:bg-purple-400 transition-colors shadow-[0_0_12px_rgba(168,85,247,0.3)] disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-500 py-2.5 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(168,85,247,0.3)] transition-colors hover:bg-purple-400 disabled:opacity-50"
               >
-                {isPolishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {isPolishing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
                 <span>1-Click Apply AI Polish</span>
               </button>
               <button
@@ -578,29 +590,33 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
       {/* GitHub Actions Workflow Modal */}
       {showActionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xl rounded-2xl border border-[#1e293b] bg-[#0c1220] p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#1e293b] bg-[#0c1220] p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-4">
               <div className="flex items-center gap-2">
                 <Terminal className="h-5 w-5 text-emerald-400" />
                 <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white">
                   GitHub Actions Auto-Updater
                 </h3>
               </div>
-              <button onClick={() => setShowActionModal(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setShowActionModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <p className="mt-3 text-xs text-slate-300">
-              Run this automated workflow in your repository to keep your contributions, telemetry, and live stats synchronized:
+              Run this automated workflow in your repository to keep your contributions, telemetry,
+              and live stats synchronized:
             </p>
 
             <div className="mt-3 rounded-xl border border-[#1e293b] bg-[#080d18] p-3">
-              <div className="font-mono text-[10px] text-slate-500 mb-1">
+              <div className="mb-1 font-mono text-[10px] text-slate-500">
                 .github/workflows/readme-craft-updater.yml
               </div>
-              <pre className="font-mono text-[11px] text-emerald-300 leading-relaxed max-h-48 overflow-y-auto">
+              <pre className="max-h-48 overflow-y-auto font-mono text-[11px] leading-relaxed text-emerald-300">
                 {generateGitHubWorkflowYaml({
                   updateFrequency: 'daily',
                   includeWakatime: true,
@@ -624,7 +640,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
                   navigator.clipboard.writeText(yaml);
                   alert('Workflow YAML copied to clipboard!');
                 }}
-                className="flex-1 rounded-xl bg-emerald-500 py-2.5 font-bold text-xs text-slate-950 hover:bg-emerald-400 transition-colors shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-colors hover:bg-emerald-400"
               >
                 Copy Workflow YAML
               </button>
@@ -656,16 +672,19 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
 
       {/* Telemetry / Views Analytics Modal */}
       {showTelemetryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-amber-500/30 bg-[#0c1220] p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-4">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-400" />
                 <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white">
                   README Visitor & Click Telemetry
                 </h3>
               </div>
-              <button onClick={() => setShowTelemetryModal(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setShowTelemetryModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -682,7 +701,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
               />
             </div>
 
-            <div className="mt-4 rounded-xl border border-[#1e293b] bg-[#080d18] p-3 font-mono text-[11px] text-slate-400 break-all select-all">
+            <div className="mt-4 rounded-xl border border-[#1e293b] bg-[#080d18] p-3 font-mono text-[11px] break-all text-slate-400 select-all">
               {`[![README Views](https://readme.bharatdn.com/api/telemetry?username=${(profileData as any)?.username || 'ErBharatMalhotra'}&theme=${theme})](https://readme.bharatdn.com)`}
             </div>
 
@@ -693,7 +712,7 @@ export const PaneGitHubPreview: React.FC<PaneGitHubPreviewProps> = ({
                   navigator.clipboard.writeText(snippet);
                   alert('Telemetry Badge markdown copied to clipboard!');
                 }}
-                className="flex-1 rounded-xl bg-amber-400 py-2.5 font-bold text-xs text-slate-950 hover:bg-amber-300 transition-colors shadow-[0_0_12px_rgba(251,191,36,0.25)]"
+                className="flex-1 rounded-xl bg-amber-400 py-2.5 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(251,191,36,0.25)] transition-colors hover:bg-amber-300"
               >
                 Copy Badge Snippet
               </button>

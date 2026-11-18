@@ -45,14 +45,40 @@ const XYZ_TEMPLATES = [
   'Scaled {system} to handle {scale} requests/day with {uptime}% uptime',
 ];
 
-const WEAK_VERBS = ['helped', 'assisted', 'worked on', 'participated in', 'involved in', 'responsible for', 'managed', 'handled'];
-const STRONG_VERBS = ['spearheaded', 'architected', 'engineered', 'optimized', 'delivered', 'launched', 'scaled', 'automated', 'reduced', 'increased', 'built', 'designed', 'implemented'];
+const WEAK_VERBS = [
+  'helped',
+  'assisted',
+  'worked on',
+  'participated in',
+  'involved in',
+  'responsible for',
+  'managed',
+  'handled',
+];
+const STRONG_VERBS = [
+  'spearheaded',
+  'architected',
+  'engineered',
+  'optimized',
+  'delivered',
+  'launched',
+  'scaled',
+  'automated',
+  'reduced',
+  'increased',
+  'built',
+  'designed',
+  'implemented',
+];
 
 // -----------------------------------------------------------
 // Profile Bio Polishing
 // -----------------------------------------------------------
 
-export function polishBio(bio: string, profileData: ProfileData): { polished: string; xyzExamples: string[] } {
+export function polishBio(
+  bio: string,
+  profileData: ProfileData
+): { polished: string; xyzExamples: string[] } {
   if (!bio || bio.length < 30) {
     const fallback = `Building scalable systems at ${profileData.company || 'a tech company'}. ${profileData.skills.slice(0, 3).join(', ')} enthusiast.`;
     return {
@@ -71,7 +97,10 @@ export function polishBio(bio: string, profileData: ProfileData): { polished: st
 
   // Ensure it ends with a tech hook
   if (!polished.match(/[.!?]$/)) polished += '.';
-  if (!polished.toLowerCase().includes('building') && !polished.toLowerCase().includes('engineering')) {
+  if (
+    !polished.toLowerCase().includes('building') &&
+    !polished.toLowerCase().includes('engineering')
+  ) {
     polished += ` Currently building with ${profileData.skills.slice(0, 2).join(' & ')}.`;
   }
 
@@ -83,8 +112,20 @@ export function polishBio(bio: string, profileData: ProfileData): { polished: st
 
 function generateXYZFromSkills(skills: string[]): string[] {
   const examples: string[] = [];
-  const metrics = ['latency', 'throughput', 'cost', 'deployment time', 'bundle size', 'API response time'];
-  const outcomes = ['50% faster deploys', '30% cost reduction', '99.99% uptime', 'sub-100ms p99 latency'];
+  const metrics = [
+    'latency',
+    'throughput',
+    'cost',
+    'deployment time',
+    'bundle size',
+    'API response time',
+  ];
+  const outcomes = [
+    '50% faster deploys',
+    '30% cost reduction',
+    '99.99% uptime',
+    'sub-100ms p99 latency',
+  ];
 
   skills.slice(0, 3).forEach((skill, i) => {
     const template = XYZ_TEMPLATES[i % XYZ_TEMPLATES.length];
@@ -117,7 +158,10 @@ function generateXYZFromSkills(skills: string[]): string[] {
 // Project Description Polishing
 // -----------------------------------------------------------
 
-export function polishProjectDesc(description: string, projectData: ProjectData): { polished: string; xyzExamples: string[] } {
+export function polishProjectDesc(
+  description: string,
+  projectData: ProjectData
+): { polished: string; xyzExamples: string[] } {
   if (!description || description.length < 50) {
     const fallback = `${projectData.title} is a ${projectData.techStack[0] || 'modern'} application featuring ${projectData.features.slice(0, 3).join(', ')}. Built for performance and developer experience.`;
     return { polished: fallback, xyzExamples: generateProjectXYZ(projectData) };
@@ -130,7 +174,9 @@ export function polishProjectDesc(description: string, projectData: ProjectData)
   });
 
   // Add tech stack context if missing
-  const hasTech = projectData.techStack.some(t => polished.toLowerCase().includes(t.toLowerCase()));
+  const hasTech = projectData.techStack.some((t) =>
+    polished.toLowerCase().includes(t.toLowerCase())
+  );
   if (!hasTech && projectData.techStack.length > 0) {
     polished += ` Built with ${projectData.techStack.slice(0, 4).join(', ')}.`;
   }
@@ -167,55 +213,72 @@ export function roastReadme(
 
   // Badge check
   const badgeCount = (markdown.match(/!\[.*?\]\(.*?\)/g) || []).length;
-  if (badgeCount < 3) burns.push(`${badgeCount} badges? Even your grandma's recipe blog has more flair.`);
+  if (badgeCount < 3)
+    burns.push(`${badgeCount} badges? Even your grandma's recipe blog has more flair.`);
   else highlights.push(`${badgeCount} badges - looking sharp.`);
 
   // Bio / Description check
   if (mode === 'profile') {
     const pData = data as ProfileData;
-    if (!pData.bio || pData.bio.length < 50) burns.push('Bio missing or shorter than a Tinder bio. Recruiters swipe left.');
-    if (pData.skills.length < 5) burns.push(`${pData.skills.length} skills? Are you a specialist or just undecided?`);
-    if (!pData.website && !pData.twitter) burns.push('Zero social links. Do you exist outside GitHub?');
-    if (pData.pinnedRepos.length < 3) burns.push('Less than 3 pinned repos? Show your work or stay invisible.');
+    if (!pData.bio || pData.bio.length < 50)
+      burns.push('Bio missing or shorter than a Tinder bio. Recruiters swipe left.');
+    if (pData.skills.length < 5)
+      burns.push(`${pData.skills.length} skills? Are you a specialist or just undecided?`);
+    if (!pData.website && !pData.twitter)
+      burns.push('Zero social links. Do you exist outside GitHub?');
+    if (pData.pinnedRepos.length < 3)
+      burns.push('Less than 3 pinned repos? Show your work or stay invisible.');
   } else {
     const prData = data as ProjectData;
-    if (!prData.license || prData.license === 'UNLICENSED') burns.push('No license? Good luck with enterprise adoption.');
-    if (prData.features.length < 3) burns.push('Feature list is emptier than a junior dev\'s first PR.');
-    if (!prData.demoUrl && !prData.repo) burns.push('No demo, no repo link. How do people even use this?');
+    if (!prData.license || prData.license === 'UNLICENSED')
+      burns.push('No license? Good luck with enterprise adoption.');
+    if (prData.features.length < 3)
+      burns.push("Feature list is emptier than a junior dev's first PR.");
+    if (!prData.demoUrl && !prData.repo)
+      burns.push('No demo, no repo link. How do people even use this?');
   }
 
   // Section structure
-  const enabledSections = sections.filter(s => s.enabled).length;
-  if (enabledSections < 5) burns.push(`${enabledSections} sections? A README needs structure, not a sticky note.`);
+  const enabledSections = sections.filter((s) => s.enabled).length;
+  if (enabledSections < 5)
+    burns.push(`${enabledSections} sections? A README needs structure, not a sticky note.`);
 
   // Images/diagrams
-  if (!markdown.includes('![')) burns.push('Zero images or diagrams. Walls of text don\'t get read, they get scrolled.');
+  if (!markdown.includes('!['))
+    burns.push("Zero images or diagrams. Walls of text don't get read, they get scrolled.");
 
   // Code blocks
   const codeBlocks = (markdown.match(/```/g) || []).length / 2;
-  if (codeBlocks === 0 && mode === 'project') burns.push('Project README with ZERO code examples? How do I install this, telepathy?');
+  if (codeBlocks === 0 && mode === 'project')
+    burns.push('Project README with ZERO code examples? How do I install this, telepathy?');
 
   // Score calculation
   let score = 50;
   score += Math.min(badgeCount * 5, 20);
   score += Math.min(wordCount / 10, 20);
   score += enabledSections * 3;
-  score += (markdown.includes('![') ? 10 : 0);
-  score += (codeBlocks > 0 ? 10 : 0);
+  score += markdown.includes('![') ? 10 : 0;
+  score += codeBlocks > 0 ? 10 : 0;
   score -= burns.length * 8;
   score = Math.max(0, Math.min(100, score));
 
   const roastLevel = score >= 70 ? 'gentle' : score >= 40 ? 'spicy' : 'brutal';
 
   // Action items
-  if (burns.some(b => b.includes('bio'))) actionItems.push('Write a 100+ char bio with your superpower');
-  if (burns.some(b => b.includes('badges'))) actionItems.push('Add 5+ dynamic badges (stars, license, language, CI)');
-  if (burns.some(b => b.includes('skills'))) actionItems.push('List 8+ core skills with proficiency');
-  if (burns.some(b => b.includes('pinned'))) actionItems.push('Pin your 3 best repos with descriptions');
-  if (burns.some(b => b.includes('license'))) actionItems.push('Add MIT/Apache-2.0 license badge');
-  if (burns.some(b => b.includes('demo'))) actionItems.push('Deploy a live demo and link it');
-  if (burns.some(b => b.includes('images'))) actionItems.push('Add architecture diagram or screenshot');
-  if (burns.some(b => b.includes('code'))) actionItems.push('Add install/run/test code blocks');
+  if (burns.some((b) => b.includes('bio')))
+    actionItems.push('Write a 100+ char bio with your superpower');
+  if (burns.some((b) => b.includes('badges')))
+    actionItems.push('Add 5+ dynamic badges (stars, license, language, CI)');
+  if (burns.some((b) => b.includes('skills')))
+    actionItems.push('List 8+ core skills with proficiency');
+  if (burns.some((b) => b.includes('pinned')))
+    actionItems.push('Pin your 3 best repos with descriptions');
+  if (burns.some((b) => b.includes('license')))
+    actionItems.push('Add MIT/Apache-2.0 license badge');
+  if (burns.some((b) => b.includes('demo'))) actionItems.push('Deploy a live demo and link it');
+  if (burns.some((b) => b.includes('images')))
+    actionItems.push('Add architecture diagram or screenshot');
+  if (burns.some((b) => b.includes('code'))) actionItems.push('Add install/run/test code blocks');
 
   return {
     score,
@@ -236,9 +299,10 @@ export function generatePolishPrompt(
   markdown: string,
   roast: RoastResult
 ): string {
-  const context = mode === 'profile'
-    ? `GitHub Profile README for @${(data as ProfileData).username}`
-    : `Project README for ${(data as ProjectData).title}`;
+  const context =
+    mode === 'profile'
+      ? `GitHub Profile README for @${(data as ProfileData).username}`
+      : `Project README for ${(data as ProjectData).title}`;
 
   return `You are a senior technical writer and GitHub profile optimizer. Polish this README using the Google XYZ formula: "Accomplished [X] as measured by [Y], by doing [Z]".
 

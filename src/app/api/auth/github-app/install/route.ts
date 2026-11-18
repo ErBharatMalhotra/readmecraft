@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { SignJWT, importPKCS8 } from 'jose';
 
@@ -54,10 +55,20 @@ async function findExistingInstallation(accountLogin: string): Promise<string | 
 }
 
 const AVAILABLE_BADGES = [
-  'composite', 'stats', 'snake', 'heatmap', 'trophy', 'activity',
-  'skill-radar', 'language-race', 'repo-constellation',
-  'code-pulse', 'contribution-mountain', 'tech-galaxy',
-  'contribution-flow', 'code-time-heatmap'
+  'composite',
+  'stats',
+  'snake',
+  'heatmap',
+  'trophy',
+  'activity',
+  'skill-radar',
+  'language-race',
+  'repo-constellation',
+  'code-pulse',
+  'contribution-mountain',
+  'tech-galaxy',
+  'contribution-flow',
+  'code-time-heatmap',
 ];
 
 export async function GET(request: NextRequest) {
@@ -70,8 +81,10 @@ export async function GET(request: NextRequest) {
     const theme = searchParams.get('theme') || 'gta6';
     const badgesParam = searchParams.get('badges');
     const autoSync = searchParams.get('autosync') === 'true';
-    const badges = badgesParam ? badgesParam.split(',').filter(b => AVAILABLE_BADGES.includes(b)) : AVAILABLE_BADGES;
-    
+    const badges = badgesParam
+      ? badgesParam.split(',').filter((b) => AVAILABLE_BADGES.includes(b))
+      : AVAILABLE_BADGES;
+
     // Get config from request (passed via query params or body in real usage)
     // For now, we'll use a standard config that matches the UI
     const config = {

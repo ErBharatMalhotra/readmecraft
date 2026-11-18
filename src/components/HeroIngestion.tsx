@@ -122,12 +122,14 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
             <div className="animate-in fade-in mt-2 rounded-xl border border-[#1e293b] bg-[#0e1526] p-3 text-left text-xs duration-200">
               <div className="mb-1 flex items-center justify-between font-medium text-slate-300">
                 <span className="flex items-center gap-1.5">
-                  <Key className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" /> GitHub Personal Access Token
-                  (Optional)
+                  <Key className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" /> GitHub
+                  Personal Access Token (Optional)
                 </span>
                 <span className="text-[11px] text-slate-500">Increases API rate limits</span>
               </div>
-              <label htmlFor="github-token" className="visually-hidden">GitHub Personal Access Token</label>
+              <label htmlFor="github-token" className="visually-hidden">
+                GitHub Personal Access Token
+              </label>
               <input
                 id="github-token"
                 type="password"
@@ -149,10 +151,12 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
               setTarget(demo);
               onIngest(demo, token.trim() || undefined);
             }}
-            className="flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 font-mono text-[11px] font-bold text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)] hover:bg-emerald-500/25 transition-all"
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 font-mono text-[11px] font-bold text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-500/25"
           >
             <Sparkles className="h-3 w-3 text-emerald-400" />
-            <span>⚡ 1-Click Fast Demo: {mode === 'profile' ? '@ErBharatMalhotra' : 'readmecraft'}</span>
+            <span>
+              ⚡ 1-Click Fast Demo: {mode === 'profile' ? '@ErBharatMalhotra' : 'readmecraft'}
+            </span>
           </button>
           {(mode === 'profile' ? sampleProfiles.slice(1) : sampleRepos.slice(1)).map((item) => (
             <button

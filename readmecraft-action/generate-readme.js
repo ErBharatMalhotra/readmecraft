@@ -1,19 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-  USERNAME,
-  REPOSITORY,
-  THEME,
-  BADGES,
-  GITHUB_TOKEN,
-  COMMIT_MESSAGE,
-  BRANCH,
-} = process.env;
+const { USERNAME, REPOSITORY, THEME, BADGES, GITHUB_TOKEN, COMMIT_MESSAGE, BRANCH } = process.env;
 
 const BASE_URL = 'https://readme.bharatdn.com/api/badges';
 const THEME_PARAM = `&theme=${THEME}`;
-const BADGE_LIST = BADGES.split(',').map(b => b.trim()).filter(Boolean);
+const BADGE_LIST = BADGES.split(',')
+  .map((b) => b.trim())
+  .filter(Boolean);
 
 async function fetchReadmeTemplate() {
   // Try to fetch existing README first
@@ -56,7 +50,7 @@ function generateReadmeMarkdown(existingReadme) {
 
   // Core badges
   if (BADGE_LIST.includes('composite')) {
-    const include = BADGE_LIST.filter(b => b !== 'composite').join(',');
+    const include = BADGE_LIST.filter((b) => b !== 'composite').join(',');
     markdown += `## 🎯 GitHub Pulse (Composite)\n\n`;
     markdown += `<img src="${baseUrl}?username=${USERNAME}&type=composite&include=${include}${themeParam}" alt="GitHub Pulse Composite" />\n\n`;
   } else {
@@ -118,7 +112,7 @@ function updateExistingReadme(existingReadme) {
   // If no ReadmeCraft badges found, append them
   if (!updated.includes('readme.bharatdn.com/api/badges')) {
     const badgeSection = '\n\n## 🎯 GitHub Pulse\n\n';
-    const include = BADGE_LIST.filter(b => b !== 'composite').join(',');
+    const include = BADGE_LIST.filter((b) => b !== 'composite').join(',');
     const badgeUrl = `${BASE_URL}?username=${USERNAME}&type=composite&include=${include}${THEME_PARAM}`;
     updated += badgeSection + `<img src="${badgeUrl}" alt="GitHub Pulse" />\n`;
   }
@@ -164,7 +158,7 @@ async function main() {
   console.log(`::set-output name=changed::${changed}`);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('❌ Error:', err);
   process.exit(1);
 });

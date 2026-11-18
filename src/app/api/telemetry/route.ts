@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { generateAnalyticsBadgeSvg, recordView } from '@/lib/analytics';
 
-export async function GET(req: NextRequest) {
+export function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const username = searchParams.get('username')?.trim();
   if (!username) {

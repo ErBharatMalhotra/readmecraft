@@ -92,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Center: Mode Switcher + Star Button + Deploy */}
-        <div className="flex flex-col items-center gap-3 md:flex-row md:items-center w-full md:w-auto">
+        <div className="flex w-full flex-col items-center gap-3 md:w-auto md:flex-row md:items-center">
           {/* Dual Mode Switcher */}
           <div className="flex items-center rounded-xl border border-[#1e293b] bg-[#0e1526] p-1 shadow-inner">
             <button
@@ -126,8 +126,8 @@ export const Header: React.FC<HeaderProps> = ({
               disabled={starring || starred}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
                 starred
-                  ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 cursor-default'
-                  : 'bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 hover:border-amber-500 hover:shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                  ? 'cursor-default border border-emerald-500/30 bg-emerald-500/20 text-emerald-400'
+                  : 'border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:border-amber-500 hover:bg-amber-500/20 hover:shadow-[0_0_12px_rgba(245,158,11,0.3)]'
               }`}
               title={starred ? 'Already starred! ⭐' : 'Star ReadmeCraft on GitHub'}
             >
@@ -154,12 +154,12 @@ export const Header: React.FC<HeaderProps> = ({
           {onOpenCommandPalette && (
             <button
               onClick={onOpenCommandPalette}
-              className="hidden lg:flex items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0c1220] px-3 py-1.5 font-mono text-xs text-slate-300 hover:border-emerald-500/50 hover:text-white transition-all shadow-sm"
+              className="hidden items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0c1220] px-3 py-1.5 font-mono text-xs text-slate-300 shadow-sm transition-all hover:border-emerald-500/50 hover:text-white lg:flex"
               title="Open Command Palette (⌘K or Ctrl+K)"
             >
               <Search className="h-3.5 w-3.5 text-emerald-400" />
               <span>Commands</span>
-              <kbd className="rounded bg-[#1e293b] px-1.5 py-0.5 text-[10px] text-slate-400 font-semibold">
+              <kbd className="rounded bg-[#1e293b] px-1.5 py-0.5 text-[10px] font-semibold text-slate-400">
                 ⌘K
               </kbd>
             </button>
@@ -174,19 +174,21 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden rounded-lg border border-[#1e293b] bg-[#0e1526] p-2 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white"
+            className="rounded-lg border border-[#1e293b] bg-[#0e1526] p-2 text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white md:hidden"
             aria-label="More options"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
           {/* Desktop: Overflow Menu */}
-          <div className={`flex items-center gap-1 ${mobileMenuOpen ? 'md:hidden' : 'hidden md:flex'}`}>
+          <div
+            className={`flex items-center gap-1 ${mobileMenuOpen ? 'md:hidden' : 'hidden md:flex'}`}
+          >
             {/* Deploy Link in Overflow Menu (for mobile/small screens) */}
             {status === 'authenticated' && session && (
               <Link
                 href="/deploy"
-                className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20 hover:border-emerald-500 hover:shadow-[0_0_8px_rgba(16,185,129,0.2)]"
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:border-emerald-500 hover:bg-emerald-500/20 hover:shadow-[0_0_8px_rgba(16,185,129,0.2)]"
               >
                 <Rocket className="h-3.5 w-3.5" />
                 <span>Deploy</span>
@@ -202,17 +204,27 @@ export const Header: React.FC<HeaderProps> = ({
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span>Templates</span>
             </Link>
-            <div className="relative group">
+            <div className="group relative">
               <button className="flex items-center gap-1.5 rounded-lg border border-[#1e293b] bg-[#0e1526] px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white">
                 <Globe className="h-3.5 w-3.5" />
                 <span>Ecosystem</span>
               </button>
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-[#1e293b] bg-[#0b101c] py-2 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                <a href="https://githolo.bharatdn.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-400">
+              <div className="invisible absolute top-full right-0 z-50 mt-2 w-56 rounded-lg border border-[#1e293b] bg-[#0b101c] py-2 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100">
+                <a
+                  href="https://githolo.bharatdn.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-400"
+                >
                   <Sparkles className="h-4 w-4" />
                   GitHolo (3D Cards)
                 </a>
-                <a href="https://gitchronicle.bharatdn.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-amber-500/10 hover:text-amber-400">
+                <a
+                  href="https://gitchronicle.bharatdn.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-amber-500/10 hover:text-amber-400"
+                >
                   <Terminal className="h-4 w-4" />
                   GitChronicle (Cadence)
                 </a>
@@ -220,12 +232,12 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Import/Export/Reset */}
-            <div className="relative group">
+            <div className="group relative">
               <button className="flex items-center gap-1.5 rounded-lg border border-[#1e293b] bg-[#0e1526] px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white">
                 <Download className="h-3.5 w-3.5" />
                 <span>Tools</span>
               </button>
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-[#1e293b] bg-[#0b101c] py-2 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="invisible absolute top-full right-0 z-50 mt-2 w-48 rounded-lg border border-[#1e293b] bg-[#0b101c] py-2 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -235,14 +247,14 @@ export const Header: React.FC<HeaderProps> = ({
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-400"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-400"
                 >
                   <Upload className="h-4 w-4" />
                   Import JSON
                 </button>
                 <button
                   onClick={onExportJson}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-400"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-400"
                 >
                   <Download className="h-4 w-4" />
                   Export JSON
@@ -250,7 +262,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <hr className="my-2 border-[#1e293b]" />
                 <button
                   onClick={onReset}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Reset Studio
@@ -262,31 +274,41 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden w-full border-t border-[#1e293b] pt-4 mt-4">
+          <div className="mt-4 w-full border-t border-[#1e293b] pt-4 md:hidden">
             <div className="space-y-2">
               {status === 'authenticated' && session && (
                 <Link
                   href="/deploy"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 w-full rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-sm font-bold text-slate-950"
+                  className="flex w-full items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-sm font-bold text-slate-950"
                 >
                   <Rocket className="h-4 w-4" />
                   <span>Deploy to GitHub Profile</span>
                 </Link>
               )}
               <div className="rounded-lg border border-[#1e293b] bg-[#0e1526] p-2">
-                <p className="font-mono text-xs text-slate-500 uppercase mb-2">Ecosystem</p>
-                <a href="https://githolo.bharatdn.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400">
+                <p className="mb-2 font-mono text-xs text-slate-500 uppercase">Ecosystem</p>
+                <a
+                  href="https://githolo.bharatdn.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400"
+                >
                   <Sparkles className="h-4 w-4" />
                   GitHolo (3D Cards)
                 </a>
-                <a href="https://gitchronicle.bharatdn.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-amber-400">
+                <a
+                  href="https://gitchronicle.bharatdn.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-amber-400"
+                >
                   <Terminal className="h-4 w-4" />
                   GitChronicle (Cadence)
                 </a>
               </div>
               <div className="rounded-lg border border-[#1e293b] bg-[#0e1526] p-2">
-                <p className="font-mono text-xs text-slate-500 uppercase mb-2">Tools</p>
+                <p className="mb-2 font-mono text-xs text-slate-500 uppercase">Tools</p>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -295,22 +317,31 @@ export const Header: React.FC<HeaderProps> = ({
                   className="hidden"
                 />
                 <button
-                  onClick={() => { fileInputRef.current?.click(); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400"
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400"
                 >
                   <Upload className="h-4 w-4" />
                   Import JSON
                 </button>
                 <button
-                  onClick={() => { onExportJson(); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400"
+                  onClick={() => {
+                    onExportJson();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400"
                 >
                   <Download className="h-4 w-4" />
                   Export JSON
                 </button>
                 <button
-                  onClick={() => { onReset(); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-rose-400 hover:text-rose-300"
+                  onClick={() => {
+                    onReset();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-rose-400 hover:text-rose-300"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Reset Studio

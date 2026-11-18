@@ -3,13 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  Sparkles,
-  ArrowRight,
-  Check,
-  Copy,
-  ExternalLink,
-} from 'lucide-react';
+import { Sparkles, ArrowRight, Check, Copy, ExternalLink } from 'lucide-react';
 import { getProfileSections, compileSectionsToMarkdown } from '@/lib/generators';
 import { COMMUNITY_TEMPLATES, type CommunityTemplate } from '@/lib/templates';
 
@@ -125,8 +119,8 @@ export default function TemplatesPage() {
       {/* Header Bar */}
       <header className="sticky top-0 z-50 border-b border-[#1e293b] bg-[#090d16]/90 px-6 py-4 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-transform group-hover:scale-105">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
@@ -142,13 +136,13 @@ export default function TemplatesPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0e1526] px-4 py-2 text-xs font-semibold text-slate-300 hover:border-slate-700 hover:text-white transition-all"
+              className="flex items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0e1526] px-4 py-2 text-xs font-semibold text-slate-300 transition-all hover:border-slate-700 hover:text-white"
             >
               Open Studio
             </Link>
             <Link
               href="/deploy"
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-xs font-bold text-slate-950 hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all hover:from-emerald-400 hover:to-emerald-500"
             >
               1-Click Deploy
             </Link>
@@ -157,13 +151,13 @@ export default function TemplatesPage() {
       </header>
 
       {/* Hero Banner */}
-      <div className="relative overflow-hidden border-b border-[#1e293b] bg-gradient-to-b from-[#0b101c] to-[#070b14] py-16 px-6 text-center">
+      <div className="relative overflow-hidden border-b border-[#1e293b] bg-gradient-to-b from-[#0b101c] to-[#070b14] px-6 py-16 text-center">
         <div className="mx-auto max-w-3xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 font-mono text-xs font-semibold text-emerald-400">
             <Sparkles className="h-3.5 w-3.5" />
             Community Persona Showcase
           </div>
-          <h1 className="font-['Space_Grotesk'] text-4xl font-extrabold tracking-tight sm:text-5xl text-white">
+          <h1 className="font-['Space_Grotesk'] text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
             Curated GitHub Profile Templates
           </h1>
           <p className="mt-4 text-base text-slate-400 sm:text-lg">
@@ -187,7 +181,7 @@ export default function TemplatesPage() {
               >
                 <div>
                   {/* Top Badges */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                     <div
                       className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10"
                       style={{ backgroundColor: `${tmpl.accentColor}15`, color: tmpl.accentColor }}
@@ -200,19 +194,17 @@ export default function TemplatesPage() {
                   </div>
 
                   {/* Title & Role */}
-                  <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white group-hover:text-emerald-300 transition-colors">
+                  <h3 className="font-['Space_Grotesk'] text-lg font-bold text-white transition-colors group-hover:text-emerald-300">
                     {tmpl.title}
                   </h3>
                   <div className="mt-1 flex items-center gap-2 font-mono text-xs text-slate-400">
                     <span>{tmpl.role}</span>
                     <span>•</span>
-                    <span className="capitalize text-emerald-400">{tmpl.theme} theme</span>
+                    <span className="text-emerald-400 capitalize">{tmpl.theme} theme</span>
                   </div>
 
                   {/* Bio Preview */}
-                  <p className="mt-3.5 text-xs text-slate-300 leading-relaxed">
-                    "{tmpl.bio}"
-                  </p>
+                  <p className="mt-3.5 text-xs leading-relaxed text-slate-300">"{tmpl.bio}"</p>
 
                   {/* Skills Pills */}
                   <div className="mt-4 flex flex-wrap gap-1.5">
@@ -233,10 +225,10 @@ export default function TemplatesPage() {
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="mt-6 flex items-center gap-2 pt-4 border-t border-[#1e293b]/60">
+                <div className="mt-6 flex items-center gap-2 border-t border-[#1e293b]/60 pt-4">
                   <button
                     onClick={() => handleApplyTemplate(tmpl)}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 px-3 text-xs font-bold text-slate-950 hover:bg-emerald-400 transition-all shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 py-2.5 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.25)] transition-all hover:bg-emerald-400"
                   >
                     <span>Use Template</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -245,9 +237,13 @@ export default function TemplatesPage() {
                   <button
                     onClick={() => handleCopyMarkdown(tmpl)}
                     title="Copy Raw Markdown"
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#1e293b] bg-[#090d16] text-slate-400 hover:border-slate-700 hover:text-white transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#1e293b] bg-[#090d16] text-slate-400 transition-colors hover:border-slate-700 hover:text-white"
                   >
-                    {isCopied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                    {isCopied ? (
+                      <Check className="h-4 w-4 text-emerald-400" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>

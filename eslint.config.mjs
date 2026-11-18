@@ -12,8 +12,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default tseslint.config(
-  { ignores: ['.next/', 'node_modules/', '*.config.*', 'postcss.config.mjs', 'next-env.d.ts'] },
-  ...tseslint.configs.recommendedTypeChecked,
+  {
+    ignores: [
+      '.next/',
+      'node_modules/',
+      '*.config.*',
+      'postcss.config.mjs',
+      'next-env.d.ts',
+      'coverage/',
+    ],
+  },
+  // Type-aware rules only where TypeScript actually generates type information.
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [...tseslint.configs.recommendedTypeChecked],
+  },
+  {
+    files: ['**/*.{js,mjs,cjs}'],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -48,6 +65,9 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      // GitHub REST/GraphQL responses are untyped JSON; keep this in the same
+      // warning-level family as the unsafe rules above rather than failing lint.
+      '@typescript-eslint/no-unsafe-return': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-misused-promises': 'off',
       'react-hooks/exhaustive-deps': 'warn',

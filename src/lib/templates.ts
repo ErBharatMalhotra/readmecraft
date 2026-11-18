@@ -12,7 +12,13 @@ export interface CommunityTemplate {
   bio: string;
   skills: string[];
   languages: Array<{ name: string; percentage: number; color: string }>;
-  pinnedRepos: Array<{ name: string; description: string; language: string; stargazersCount: number; url: string }>;
+  pinnedRepos: Array<{
+    name: string;
+    description: string;
+    language: string;
+    stargazersCount: number;
+    url: string;
+  }>;
   accentColor: string;
 }
 
@@ -26,11 +32,39 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'gta6',
     preset: 'bento',
     bio: 'Architecting resilient distributed web platforms & real-time telemetry systems. Obsessed with zero-overhead UX.',
-    skills: ['TypeScript', 'React', 'Next.js', 'Node.js', 'PostgreSQL', 'Docker', 'Redis', 'AWS', 'TailwindCSS'],
+    skills: [
+      'TypeScript',
+      'React',
+      'Next.js',
+      'Node.js',
+      'PostgreSQL',
+      'Docker',
+      'Redis',
+      'AWS',
+      'TailwindCSS',
+    ],
     pinnedRepos: [
-      { name: 'hyper-stream', description: 'Ultra-low latency streaming microservice in Node.js', language: 'TypeScript', stargazersCount: 420, url: 'https://github.com/ErBharatMalhotra/hyper-stream' },
-      { name: 'bento-design-system', description: 'Accessible Tailwind component primitives for enterprise', language: 'TypeScript', stargazersCount: 280, url: 'https://github.com/ErBharatMalhotra/bento-design-system' },
-      { name: 'edge-cache-proxy', description: 'Distributed caching proxy with zero cold-starts', language: 'Go', stargazersCount: 195, url: 'https://github.com/ErBharatMalhotra/edge-cache-proxy' },
+      {
+        name: 'hyper-stream',
+        description: 'Ultra-low latency streaming microservice in Node.js',
+        language: 'TypeScript',
+        stargazersCount: 420,
+        url: 'https://github.com/ErBharatMalhotra/hyper-stream',
+      },
+      {
+        name: 'bento-design-system',
+        description: 'Accessible Tailwind component primitives for enterprise',
+        language: 'TypeScript',
+        stargazersCount: 280,
+        url: 'https://github.com/ErBharatMalhotra/bento-design-system',
+      },
+      {
+        name: 'edge-cache-proxy',
+        description: 'Distributed caching proxy with zero cold-starts',
+        language: 'Go',
+        stargazersCount: 195,
+        url: 'https://github.com/ErBharatMalhotra/edge-cache-proxy',
+      },
     ],
     accentColor: '#ff6b35',
     languages: [
@@ -55,9 +89,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'TypeScript', percentage: 10, color: '#3178c6' },
     ],
     pinnedRepos: [
-      { name: 'agent-swarm-core', description: 'Orchestration framework for hierarchical LLM agents', language: 'Python', stargazersCount: 1250, url: 'https://github.com/ErBharatMalhotra/agent-swarm-core' },
-      { name: 'quant-kernel', description: 'Custom 4-bit CUDA quantization kernels for local inference', language: 'C++', stargazersCount: 890, url: 'https://github.com/ErBharatMalhotra/quant-kernel' },
-      { name: 'eval-bench', description: 'Automated hallucination benchmark for RAG applications', language: 'Python', stargazersCount: 540, url: 'https://github.com/ErBharatMalhotra/eval-bench' },
+      {
+        name: 'agent-swarm-core',
+        description: 'Orchestration framework for hierarchical LLM agents',
+        language: 'Python',
+        stargazersCount: 1250,
+        url: 'https://github.com/ErBharatMalhotra/agent-swarm-core',
+      },
+      {
+        name: 'quant-kernel',
+        description: 'Custom 4-bit CUDA quantization kernels for local inference',
+        language: 'C++',
+        stargazersCount: 890,
+        url: 'https://github.com/ErBharatMalhotra/quant-kernel',
+      },
+      {
+        name: 'eval-bench',
+        description: 'Automated hallucination benchmark for RAG applications',
+        language: 'Python',
+        stargazersCount: 540,
+        url: 'https://github.com/ErBharatMalhotra/eval-bench',
+      },
     ],
     accentColor: '#ffcc00',
   },
@@ -77,9 +129,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'C++', percentage: 15, color: '#f34b7d' },
     ],
     pinnedRepos: [
-      { name: 'zero-copy-db', description: 'Lock-free database engine with zero-copy reads', language: 'Rust', stargazersCount: 3200, url: 'https://github.com/ErBharatMalhotra/zero-copy-db' },
-      { name: 'async-runtime', description: 'Custom async runtime for embedded systems', language: 'Rust', stargazersCount: 1800, url: 'https://github.com/ErBharatMalhotra/async-runtime' },
-      { name: 'network-stack', description: 'User-space TCP/IP stack in safe Rust', language: 'Rust', stargazersCount: 950, url: 'https://github.com/ErBharatMalhotra/network-stack' },
+      {
+        name: 'zero-copy-db',
+        description: 'Lock-free database engine with zero-copy reads',
+        language: 'Rust',
+        stargazersCount: 3200,
+        url: 'https://github.com/ErBharatMalhotra/zero-copy-db',
+      },
+      {
+        name: 'async-runtime',
+        description: 'Custom async runtime for embedded systems',
+        language: 'Rust',
+        stargazersCount: 1800,
+        url: 'https://github.com/ErBharatMalhotra/async-runtime',
+      },
+      {
+        name: 'network-stack',
+        description: 'User-space TCP/IP stack in safe Rust',
+        language: 'Rust',
+        stargazersCount: 950,
+        url: 'https://github.com/ErBharatMalhotra/network-stack',
+      },
     ],
     accentColor: '#c9a84c',
   },
@@ -99,9 +169,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'Jsonnet', percentage: 20, color: '#008080' },
     ],
     pinnedRepos: [
-      { name: 'gitops-platform', description: 'Multi-cluster GitOps platform with ArgoCD', language: 'Go', stargazersCount: 2100, url: 'https://github.com/ErBharatMalhotra/gitops-platform' },
-      { name: 'observability-stack', description: 'Batteries-included Prometheus/Grafana/Loki stack', language: 'Jsonnet', stargazersCount: 1400, url: 'https://github.com/ErBharatMalhotra/observability-stack' },
-      { name: 'cluster-autoscaler', description: 'Custom CA for spot-instance workloads', language: 'Go', stargazersCount: 890, url: 'https://github.com/ErBharatMalhotra/cluster-autoscaler' },
+      {
+        name: 'gitops-platform',
+        description: 'Multi-cluster GitOps platform with ArgoCD',
+        language: 'Go',
+        stargazersCount: 2100,
+        url: 'https://github.com/ErBharatMalhotra/gitops-platform',
+      },
+      {
+        name: 'observability-stack',
+        description: 'Batteries-included Prometheus/Grafana/Loki stack',
+        language: 'Jsonnet',
+        stargazersCount: 1400,
+        url: 'https://github.com/ErBharatMalhotra/observability-stack',
+      },
+      {
+        name: 'cluster-autoscaler',
+        description: 'Custom CA for spot-instance workloads',
+        language: 'Go',
+        stargazersCount: 890,
+        url: 'https://github.com/ErBharatMalhotra/cluster-autoscaler',
+      },
     ],
     accentColor: '#00ff41',
   },
@@ -121,9 +209,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'Rust', percentage: 20, color: '#dea584' },
     ],
     pinnedRepos: [
-      { name: 'account-abstraction-wallet', description: 'ERC-4337 smart wallet with session keys', language: 'Solidity', stargazersCount: 3400, url: 'https://github.com/ErBharatMalhotra/account-abstraction-wallet' },
-      { name: 'mev-protection', description: 'MEV-resistant transaction relayer', language: 'Rust', stargazersCount: 1200, url: 'https://github.com/ErBharatMalhotra/mev-protection' },
-      { name: 'defi-sdk', description: 'Type-safe DeFi protocol SDK', language: 'TypeScript', stargazersCount: 980, url: 'https://github.com/ErBharatMalhotra/defi-sdk' },
+      {
+        name: 'account-abstraction-wallet',
+        description: 'ERC-4337 smart wallet with session keys',
+        language: 'Solidity',
+        stargazersCount: 3400,
+        url: 'https://github.com/ErBharatMalhotra/account-abstraction-wallet',
+      },
+      {
+        name: 'mev-protection',
+        description: 'MEV-resistant transaction relayer',
+        language: 'Rust',
+        stargazersCount: 1200,
+        url: 'https://github.com/ErBharatMalhotra/mev-protection',
+      },
+      {
+        name: 'defi-sdk',
+        description: 'Type-safe DeFi protocol SDK',
+        language: 'TypeScript',
+        stargazersCount: 980,
+        url: 'https://github.com/ErBharatMalhotra/defi-sdk',
+      },
     ],
     accentColor: '#ff00ff',
   },
@@ -143,9 +249,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'JavaScript', percentage: 25, color: '#f1e05a' },
     ],
     pinnedRepos: [
-      { name: 'leetcode-solutions', description: 'Clean LeetCode solutions with explanations', language: 'C++', stargazersCount: 120, url: 'https://github.com/ErBharatMalhotra/leetcode-solutions' },
-      { name: 'mini-compiler', description: 'Toy compiler for a C-like language', language: 'C++', stargazersCount: 85, url: 'https://github.com/ErBharatMalhotra/mini-compiler' },
-      { name: 'distributed-chat', description: 'P2P chat app with WebRTC', language: 'TypeScript', stargazersCount: 60, url: 'https://github.com/ErBharatMalhotra/distributed-chat' },
+      {
+        name: 'leetcode-solutions',
+        description: 'Clean LeetCode solutions with explanations',
+        language: 'C++',
+        stargazersCount: 120,
+        url: 'https://github.com/ErBharatMalhotra/leetcode-solutions',
+      },
+      {
+        name: 'mini-compiler',
+        description: 'Toy compiler for a C-like language',
+        language: 'C++',
+        stargazersCount: 85,
+        url: 'https://github.com/ErBharatMalhotra/mini-compiler',
+      },
+      {
+        name: 'distributed-chat',
+        description: 'P2P chat app with WebRTC',
+        language: 'TypeScript',
+        stargazersCount: 60,
+        url: 'https://github.com/ErBharatMalhotra/distributed-chat',
+      },
     ],
     accentColor: '#7aa2f7',
   },
@@ -158,16 +282,43 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'atom',
     preset: 'titan',
     bio: 'Crafting performant, accessible React applications with modern patterns. TypeScript, Tailwind, and testing enthusiast.',
-    skills: ['React', 'TypeScript', 'Next.js', 'TailwindCSS', 'Vitest', 'Storybook', 'Zustand', 'Framer Motion'],
+    skills: [
+      'React',
+      'TypeScript',
+      'Next.js',
+      'TailwindCSS',
+      'Vitest',
+      'Storybook',
+      'Zustand',
+      'Framer Motion',
+    ],
     languages: [
       { name: 'TypeScript', percentage: 70, color: '#3178c6' },
       { name: 'JavaScript', percentage: 20, color: '#f1e05a' },
       { name: 'CSS', percentage: 10, color: '#563d7c' },
     ],
     pinnedRepos: [
-      { name: 'design-system', description: 'Accessible component library with 50+ primitives', language: 'TypeScript', stargazersCount: 2200, url: 'https://github.com/ErBharatMalhotra/design-system' },
-      { name: 'animations-toolkit', description: 'Framer Motion utilities for delightful UX', language: 'TypeScript', stargazersCount: 1100, url: 'https://github.com/ErBharatMalhotra/animations-toolkit' },
-      { name: 'form-validator', description: 'Zero-dependency form validation hook', language: 'TypeScript', stargazersCount: 750, url: 'https://github.com/ErBharatMalhotra/form-validator' },
+      {
+        name: 'design-system',
+        description: 'Accessible component library with 50+ primitives',
+        language: 'TypeScript',
+        stargazersCount: 2200,
+        url: 'https://github.com/ErBharatMalhotra/design-system',
+      },
+      {
+        name: 'animations-toolkit',
+        description: 'Framer Motion utilities for delightful UX',
+        language: 'TypeScript',
+        stargazersCount: 1100,
+        url: 'https://github.com/ErBharatMalhotra/animations-toolkit',
+      },
+      {
+        name: 'form-validator',
+        description: 'Zero-dependency form validation hook',
+        language: 'TypeScript',
+        stargazersCount: 750,
+        url: 'https://github.com/ErBharatMalhotra/form-validator',
+      },
     ],
     accentColor: '#61dafb',
   },
@@ -180,16 +331,43 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'matrix',
     preset: 'bento',
     bio: 'Building high-performance async APIs, data pipelines, and ML serving infrastructure with Python.',
-    skills: ['Python', 'FastAPI', 'PostgreSQL', 'Redis', 'Docker', 'Kubernetes', 'PyTorch', 'Pydantic'],
+    skills: [
+      'Python',
+      'FastAPI',
+      'PostgreSQL',
+      'Redis',
+      'Docker',
+      'Kubernetes',
+      'PyTorch',
+      'Pydantic',
+    ],
     languages: [
       { name: 'Python', percentage: 80, color: '#3776ab' },
       { name: 'TypeScript', percentage: 15, color: '#3178c6' },
       { name: 'SQL', percentage: 5, color: '#e38c00' },
     ],
     pinnedRepos: [
-      { name: 'async-api-framework', description: 'Batteries-included FastAPI starter kit', language: 'Python', stargazersCount: 1800, url: 'https://github.com/ErBharatMalhotra/async-api-framework' },
-      { name: 'ml-serving', description: 'Low-latency model serving with batching', language: 'Python', stargazersCount: 950, url: 'https://github.com/ErBharatMalhotra/ml-serving' },
-      { name: 'open-source-ai-radar', description: 'Scores 10,200+ open-source AI repos on Impact / Velocity / Health', language: 'Python', stargazersCount: 1200, url: 'https://github.com/ErBharatMalhotra/open-source-ai-radar' },
+      {
+        name: 'async-api-framework',
+        description: 'Batteries-included FastAPI starter kit',
+        language: 'Python',
+        stargazersCount: 1800,
+        url: 'https://github.com/ErBharatMalhotra/async-api-framework',
+      },
+      {
+        name: 'ml-serving',
+        description: 'Low-latency model serving with batching',
+        language: 'Python',
+        stargazersCount: 950,
+        url: 'https://github.com/ErBharatMalhotra/ml-serving',
+      },
+      {
+        name: 'open-source-ai-radar',
+        description: 'Scores 10,200+ open-source AI repos on Impact / Velocity / Health',
+        language: 'Python',
+        stargazersCount: 1200,
+        url: 'https://github.com/ErBharatMalhotra/open-source-ai-radar',
+      },
     ],
     accentColor: '#3776ab',
   },
@@ -202,7 +380,16 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'tokyonight',
     preset: 'bento',
     bio: 'Building delightful mobile experiences across iOS, Android, and cross-platform. Native performance, beautiful UI, offline-first architecture.',
-    skills: ['Swift', 'Kotlin', 'React Native', 'Flutter', 'SwiftUI', 'Jetpack Compose', 'Firebase', 'App Store Connect'],
+    skills: [
+      'Swift',
+      'Kotlin',
+      'React Native',
+      'Flutter',
+      'SwiftUI',
+      'Jetpack Compose',
+      'Firebase',
+      'App Store Connect',
+    ],
     languages: [
       { name: 'Swift', percentage: 35, color: '#fa7343' },
       { name: 'Kotlin', percentage: 30, color: '#7f52ff' },
@@ -210,9 +397,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'Dart', percentage: 15, color: '#0175c2' },
     ],
     pinnedRepos: [
-      { name: 'ios-production-app', description: 'App Store featured iOS app with SwiftUI & Combine', language: 'Swift', stargazersCount: 1800, url: 'https://github.com/ErBharatMalhotra/ios-production-app' },
-      { name: 'android-architecture', description: 'Clean architecture Kotlin app with Jetpack Compose', language: 'Kotlin', stargazersCount: 1200, url: 'https://github.com/ErBharatMalhotra/android-architecture' },
-      { name: 'cross-platform-kit', description: 'Shared React Native + Flutter component library', language: 'TypeScript', stargazersCount: 950, url: 'https://github.com/ErBharatMalhotra/cross-platform-kit' },
+      {
+        name: 'ios-production-app',
+        description: 'App Store featured iOS app with SwiftUI & Combine',
+        language: 'Swift',
+        stargazersCount: 1800,
+        url: 'https://github.com/ErBharatMalhotra/ios-production-app',
+      },
+      {
+        name: 'android-architecture',
+        description: 'Clean architecture Kotlin app with Jetpack Compose',
+        language: 'Kotlin',
+        stargazersCount: 1200,
+        url: 'https://github.com/ErBharatMalhotra/android-architecture',
+      },
+      {
+        name: 'cross-platform-kit',
+        description: 'Shared React Native + Flutter component library',
+        language: 'TypeScript',
+        stargazersCount: 950,
+        url: 'https://github.com/ErBharatMalhotra/cross-platform-kit',
+      },
     ],
     accentColor: '#fa7343',
   },
@@ -225,7 +430,18 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'matrix',
     preset: 'titan',
     bio: 'Transforming raw data into actionable insights. Building scalable ML pipelines, real-time analytics, and data products that drive business decisions.',
-    skills: ['Python', 'SQL', 'PySpark', 'Airflow', 'dbt', 'Pandas', 'Polars', 'Delta Lake', 'Kafka', 'MLflow'],
+    skills: [
+      'Python',
+      'SQL',
+      'PySpark',
+      'Airflow',
+      'dbt',
+      'Pandas',
+      'Polars',
+      'Delta Lake',
+      'Kafka',
+      'MLflow',
+    ],
     languages: [
       { name: 'Python', percentage: 55, color: '#3776ab' },
       { name: 'SQL', percentage: 25, color: '#e38c00' },
@@ -233,9 +449,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'Scala', percentage: 8, color: '#c22d40' },
     ],
     pinnedRepos: [
-      { name: 'analytics-platform', description: 'Real-time analytics stack with ClickHouse & Grafana', language: 'Python', stargazersCount: 2400, url: 'https://github.com/ErBharatMalhotra/analytics-platform' },
-      { name: 'ml-pipeline-orchestrator', description: 'End-to-end ML pipeline with Airflow & MLflow', language: 'Python', stargazersCount: 1800, url: 'https://github.com/ErBharatMalhotra/ml-pipeline-orchestrator' },
-      { name: 'data-quality-framework', description: 'Automated data testing & observability with dbt', language: 'SQL', stargazersCount: 1100, url: 'https://github.com/ErBharatMalhotra/data-quality-framework' },
+      {
+        name: 'analytics-platform',
+        description: 'Real-time analytics stack with ClickHouse & Grafana',
+        language: 'Python',
+        stargazersCount: 2400,
+        url: 'https://github.com/ErBharatMalhotra/analytics-platform',
+      },
+      {
+        name: 'ml-pipeline-orchestrator',
+        description: 'End-to-end ML pipeline with Airflow & MLflow',
+        language: 'Python',
+        stargazersCount: 1800,
+        url: 'https://github.com/ErBharatMalhotra/ml-pipeline-orchestrator',
+      },
+      {
+        name: 'data-quality-framework',
+        description: 'Automated data testing & observability with dbt',
+        language: 'SQL',
+        stargazersCount: 1100,
+        url: 'https://github.com/ErBharatMalhotra/data-quality-framework',
+      },
     ],
     accentColor: '#00ff41',
   },
@@ -248,7 +482,18 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'cyberpunk2077',
     preset: 'bento',
     bio: 'Securing the software supply chain. Threat modeling, vulnerability research, DevSecOps automation, and zero-trust architecture.',
-    skills: ['Burp Suite', 'SAST/DAST', 'Threat Modeling', 'OAuth/OIDC', 'Kubernetes Security', 'Go', 'Python', 'Rust', 'eBPF', 'Terraform'],
+    skills: [
+      'Burp Suite',
+      'SAST/DAST',
+      'Threat Modeling',
+      'OAuth/OIDC',
+      'Kubernetes Security',
+      'Go',
+      'Python',
+      'Rust',
+      'eBPF',
+      'Terraform',
+    ],
     languages: [
       { name: 'Go', percentage: 40, color: '#00ADD8' },
       { name: 'Python', percentage: 30, color: '#3776ab' },
@@ -256,9 +501,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'Rust', percentage: 10, color: '#dea584' },
     ],
     pinnedRepos: [
-      { name: 'vuln-scanner', description: 'Fast container & code vulnerability scanner', language: 'Go', stargazersCount: 3200, url: 'https://github.com/ErBharatMalhotra/vuln-scanner' },
-      { name: 'secure-config', description: 'Security-as-Code for K8s & cloud infrastructure', language: 'TypeScript', stargazersCount: 1500, url: 'https://github.com/ErBharatMalhotra/secure-config' },
-      { name: 'auth-lib', description: 'Zero-trust authentication library with FIDO2 support', language: 'Rust', stargazersCount: 890, url: 'https://github.com/ErBharatMalhotra/auth-lib' },
+      {
+        name: 'vuln-scanner',
+        description: 'Fast container & code vulnerability scanner',
+        language: 'Go',
+        stargazersCount: 3200,
+        url: 'https://github.com/ErBharatMalhotra/vuln-scanner',
+      },
+      {
+        name: 'secure-config',
+        description: 'Security-as-Code for K8s & cloud infrastructure',
+        language: 'TypeScript',
+        stargazersCount: 1500,
+        url: 'https://github.com/ErBharatMalhotra/secure-config',
+      },
+      {
+        name: 'auth-lib',
+        description: 'Zero-trust authentication library with FIDO2 support',
+        language: 'Rust',
+        stargazersCount: 890,
+        url: 'https://github.com/ErBharatMalhotra/auth-lib',
+      },
     ],
     accentColor: '#ff0040',
   },
@@ -271,7 +534,18 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'synthwave',
     preset: 'titan',
     bio: 'Crafting immersive interactive experiences. From indie gems to AAA systems — graphics programming, gameplay architecture, and multiplayer networking.',
-    skills: ['Unity', 'C#', 'Unreal Engine', 'C++', 'Godot', 'GDScript', 'HLSL/GLSL', 'ECS/DOTS', 'Netcode', 'Shader Graph'],
+    skills: [
+      'Unity',
+      'C#',
+      'Unreal Engine',
+      'C++',
+      'Godot',
+      'GDScript',
+      'HLSL/GLSL',
+      'ECS/DOTS',
+      'Netcode',
+      'Shader Graph',
+    ],
     languages: [
       { name: 'C#', percentage: 50, color: '#239120' },
       { name: 'C++', percentage: 30, color: '#f34b7d' },
@@ -279,9 +553,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'HLSL', percentage: 5, color: '#8b00ff' },
     ],
     pinnedRepos: [
-      { name: 'indie-rpg-engine', description: 'Modular 2D RPG engine with ECS architecture', language: 'C#', stargazersCount: 2100, url: 'https://github.com/ErBharatMalhotra/indie-rpg-engine' },
-      { name: 'multiplayer-framework', description: 'Authoritative server framework for Unity/Godot', language: 'C#', stargazersCount: 1400, url: 'https://github.com/ErBharatMalhotra/multiplayer-framework' },
-      { name: 'shader-library', description: 'Production-ready shader collection for URP/HDRP', language: 'HLSL', stargazersCount: 980, url: 'https://github.com/ErBharatMalhotra/shader-library' },
+      {
+        name: 'indie-rpg-engine',
+        description: 'Modular 2D RPG engine with ECS architecture',
+        language: 'C#',
+        stargazersCount: 2100,
+        url: 'https://github.com/ErBharatMalhotra/indie-rpg-engine',
+      },
+      {
+        name: 'multiplayer-framework',
+        description: 'Authoritative server framework for Unity/Godot',
+        language: 'C#',
+        stargazersCount: 1400,
+        url: 'https://github.com/ErBharatMalhotra/multiplayer-framework',
+      },
+      {
+        name: 'shader-library',
+        description: 'Production-ready shader collection for URP/HDRP',
+        language: 'HLSL',
+        stargazersCount: 980,
+        url: 'https://github.com/ErBharatMalhotra/shader-library',
+      },
     ],
     accentColor: '#ff00ff',
   },
@@ -294,7 +586,18 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'matrix',
     preset: 'bento',
     bio: 'Building systems that heal themselves. SLO-driven development, chaos engineering, distributed tracing, and incident response automation.',
-    skills: ['Kubernetes', 'Prometheus', 'Grafana', 'Jaeger', 'Go', 'Python', 'Terraform', 'Helm', 'eBPF', 'SLI/SLO'],
+    skills: [
+      'Kubernetes',
+      'Prometheus',
+      'Grafana',
+      'Jaeger',
+      'Go',
+      'Python',
+      'Terraform',
+      'Helm',
+      'eBPF',
+      'SLI/SLO',
+    ],
     languages: [
       { name: 'Go', percentage: 55, color: '#00ADD8' },
       { name: 'Python', percentage: 25, color: '#3776ab' },
@@ -302,9 +605,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'Bash', percentage: 8, color: '#4eaa25' },
     ],
     pinnedRepos: [
-      { name: 'chaos-platform', description: 'Automated chaos engineering for K8s', language: 'Go', stargazersCount: 2800, url: 'https://github.com/ErBharatMalhotra/chaos-platform' },
-      { name: 'slo-dashboard', description: 'SLO/SLI monitoring with error budgets', language: 'TypeScript', stargazersCount: 1600, url: 'https://github.com/ErBharatMalhotra/slo-dashboard' },
-      { name: 'incident-runbook', description: 'Automated incident response & runbook engine', language: 'Python', stargazersCount: 950, url: 'https://github.com/ErBharatMalhotra/incident-runbook' },
+      {
+        name: 'chaos-platform',
+        description: 'Automated chaos engineering for K8s',
+        language: 'Go',
+        stargazersCount: 2800,
+        url: 'https://github.com/ErBharatMalhotra/chaos-platform',
+      },
+      {
+        name: 'slo-dashboard',
+        description: 'SLO/SLI monitoring with error budgets',
+        language: 'TypeScript',
+        stargazersCount: 1600,
+        url: 'https://github.com/ErBharatMalhotra/slo-dashboard',
+      },
+      {
+        name: 'incident-runbook',
+        description: 'Automated incident response & runbook engine',
+        language: 'Python',
+        stargazersCount: 950,
+        url: 'https://github.com/ErBharatMalhotra/incident-runbook',
+      },
     ],
     accentColor: '#00d4aa',
   },
@@ -317,7 +638,17 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'gta6',
     preset: 'titan',
     bio: 'Scaling teams and systems. Technical strategy, developer experience, hiring excellence, and delivery without burnout. Code reviews, RFCs, and 1:1s.',
-    skills: ['System Design', 'Team Building', 'Technical Strategy', 'RFC Process', 'TypeScript', 'Go', 'PostgreSQL', 'AWS', 'Kubernetes'],
+    skills: [
+      'System Design',
+      'Team Building',
+      'Technical Strategy',
+      'RFC Process',
+      'TypeScript',
+      'Go',
+      'PostgreSQL',
+      'AWS',
+      'Kubernetes',
+    ],
     languages: [
       { name: 'TypeScript', percentage: 40, color: '#3178c6' },
       { name: 'Go', percentage: 30, color: '#00ADD8' },
@@ -325,9 +656,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'SQL', percentage: 10, color: '#e38c00' },
     ],
     pinnedRepos: [
-      { name: 'eng-playbook', description: 'Engineering culture & process handbook', language: 'Markdown', stargazersCount: 4200, url: 'https://github.com/ErBharatMalhotra/eng-playbook' },
-      { name: 'tech-rfc-template', description: 'RFC framework for architectural decisions', language: 'Markdown', stargazersCount: 1800, url: 'https://github.com/ErBharatMalhotra/tech-rfc-template' },
-      { name: 'dev-ex-platform', description: 'Internal developer platform for productivity', language: 'Go', stargazersCount: 1200, url: 'https://github.com/ErBharatMalhotra/dev-ex-platform' },
+      {
+        name: 'eng-playbook',
+        description: 'Engineering culture & process handbook',
+        language: 'Markdown',
+        stargazersCount: 4200,
+        url: 'https://github.com/ErBharatMalhotra/eng-playbook',
+      },
+      {
+        name: 'tech-rfc-template',
+        description: 'RFC framework for architectural decisions',
+        language: 'Markdown',
+        stargazersCount: 1800,
+        url: 'https://github.com/ErBharatMalhotra/tech-rfc-template',
+      },
+      {
+        name: 'dev-ex-platform',
+        description: 'Internal developer platform for productivity',
+        language: 'Go',
+        stargazersCount: 1200,
+        url: 'https://github.com/ErBharatMalhotra/dev-ex-platform',
+      },
     ],
     accentColor: '#ff6b35',
   },
@@ -340,7 +689,18 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     theme: 'elden-ring',
     preset: 'minimalist',
     bio: 'Bridging hardware and software. Bare-metal C, Rust on microcontrollers, RTOS, sensor fusion, and edge ML. Deterministic, memory-safe, power-efficient.',
-    skills: ['C', 'Rust', 'C++', 'Zephyr RTOS', 'FreeRTOS', 'Embedded Linux', 'MQTT', 'Protocol Buffers', 'eBPF', 'ARM Cortex-M'],
+    skills: [
+      'C',
+      'Rust',
+      'C++',
+      'Zephyr RTOS',
+      'FreeRTOS',
+      'Embedded Linux',
+      'MQTT',
+      'Protocol Buffers',
+      'eBPF',
+      'ARM Cortex-M',
+    ],
     languages: [
       { name: 'C', percentage: 45, color: '#555555' },
       { name: 'Rust', percentage: 30, color: '#dea584' },
@@ -348,9 +708,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'Assembly', percentage: 5, color: '#8b00ff' },
     ],
     pinnedRepos: [
-      { name: 'firmware-sdk', description: 'Rust-based firmware SDK for STM32/ESP32', language: 'Rust', stargazersCount: 2400, url: 'https://github.com/ErBharatMalhotra/firmware-sdk' },
-      { name: 'edge-ml-runtime', description: 'TinyML inference on Cortex-M with zero alloc', language: 'C', stargazersCount: 1100, url: 'https://github.com/ErBharatMalhotra/edge-ml-runtime' },
-      { name: 'iot-protocol-stack', description: 'Memory-safe MQTT/CoAP implementation', language: 'Rust', stargazersCount: 850, url: 'https://github.com/ErBharatMalhotra/iot-protocol-stack' },
+      {
+        name: 'firmware-sdk',
+        description: 'Rust-based firmware SDK for STM32/ESP32',
+        language: 'Rust',
+        stargazersCount: 2400,
+        url: 'https://github.com/ErBharatMalhotra/firmware-sdk',
+      },
+      {
+        name: 'edge-ml-runtime',
+        description: 'TinyML inference on Cortex-M with zero alloc',
+        language: 'C',
+        stargazersCount: 1100,
+        url: 'https://github.com/ErBharatMalhotra/edge-ml-runtime',
+      },
+      {
+        name: 'iot-protocol-stack',
+        description: 'Memory-safe MQTT/CoAP implementation',
+        language: 'Rust',
+        stargazersCount: 850,
+        url: 'https://github.com/ErBharatMalhotra/iot-protocol-stack',
+      },
     ],
     accentColor: '#c9a84c',
   },
@@ -362,8 +740,19 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     icon: null,
     theme: 'atom',
     preset: 'bento',
-    bio: 'Quality is everyone\'s job — I build the tools to make it easy. Test architecture, contract testing, visual regression, performance budgets, and CI/CD quality gates.',
-    skills: ['Playwright', 'Cypress', 'Vitest', 'k6', 'Pact', 'Postman', 'TypeScript', 'Python', 'GitHub Actions', 'Testcontainers'],
+    bio: "Quality is everyone's job — I build the tools to make it easy. Test architecture, contract testing, visual regression, performance budgets, and CI/CD quality gates.",
+    skills: [
+      'Playwright',
+      'Cypress',
+      'Vitest',
+      'k6',
+      'Pact',
+      'Postman',
+      'TypeScript',
+      'Python',
+      'GitHub Actions',
+      'Testcontainers',
+    ],
     languages: [
       { name: 'TypeScript', percentage: 50, color: '#3178c6' },
       { name: 'Python', percentage: 30, color: '#3776ab' },
@@ -371,9 +760,27 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
       { name: 'Java', percentage: 5, color: '#b07219' },
     ],
     pinnedRepos: [
-      { name: 'test-framework', description: 'Opinionated E2E + API + Contract test framework', language: 'TypeScript', stargazersCount: 1900, url: 'https://github.com/ErBharatMalhotra/test-framework' },
-      { name: 'visual-regression', description: 'Cross-browser visual diff with pixel-perfect thresholds', language: 'TypeScript', stargazersCount: 1100, url: 'https://github.com/ErBharatMalhotra/visual-regression' },
-      { name: 'perf-budget-ci', description: 'Automated performance budgets in CI/CD', language: 'Go', stargazersCount: 750, url: 'https://github.com/ErBharatMalhotra/perf-budget-ci' },
+      {
+        name: 'test-framework',
+        description: 'Opinionated E2E + API + Contract test framework',
+        language: 'TypeScript',
+        stargazersCount: 1900,
+        url: 'https://github.com/ErBharatMalhotra/test-framework',
+      },
+      {
+        name: 'visual-regression',
+        description: 'Cross-browser visual diff with pixel-perfect thresholds',
+        language: 'TypeScript',
+        stargazersCount: 1100,
+        url: 'https://github.com/ErBharatMalhotra/visual-regression',
+      },
+      {
+        name: 'perf-budget-ci',
+        description: 'Automated performance budgets in CI/CD',
+        language: 'Go',
+        stargazersCount: 750,
+        url: 'https://github.com/ErBharatMalhotra/perf-budget-ci',
+      },
     ],
     accentColor: '#61dafb',
   },
@@ -388,7 +795,7 @@ export function applyTemplate(templateId: string): {
   sections: any[];
   theme: string;
 } | null {
-  const template = COMMUNITY_TEMPLATES.find(t => t.id === templateId);
+  const template = COMMUNITY_TEMPLATES.find((t) => t.id === templateId);
   if (!template) return null;
 
   // Calculate languages with bytes from template data
@@ -400,7 +807,7 @@ export function applyTemplate(templateId: string): {
 
   // Add bytes to languages (estimate based on percentage)
   const totalBytes = 1000000;
-  const languagesWithBytes = templateLanguages.map(l => ({
+  const languagesWithBytes = templateLanguages.map((l) => ({
     ...l,
     bytes: Math.round((l.percentage / 100) * totalBytes),
   }));
@@ -436,7 +843,7 @@ export function applyTemplate(templateId: string): {
     gistsCount: 3,
     languages: languagesWithBytes,
     skills: template.skills,
-    pinnedRepos: template.pinnedRepos.map(r => ({
+    pinnedRepos: template.pinnedRepos.map((r) => ({
       ...r,
       forksCount: Math.round(r.stargazersCount * 0.1),
       topics: ['github', 'opensource', 'developer-tools'],
@@ -445,10 +852,16 @@ export function applyTemplate(templateId: string): {
       isArchived: false,
       homepageUrl: undefined,
       releases: [
-        { name: 'v1.0.0', tagName: 'v1.0.0', publishedAt: '2024-01-15T00:00:00Z', url: r.url + '/releases/tag/v1.0.0', isPrerelease: false },
+        {
+          name: 'v1.0.0',
+          tagName: 'v1.0.0',
+          publishedAt: '2024-01-15T00:00:00Z',
+          url: r.url + '/releases/tag/v1.0.0',
+          isPrerelease: false,
+        },
       ],
     })),
-    topRepositories: template.pinnedRepos.slice(0, 3).map(r => ({
+    topRepositories: template.pinnedRepos.slice(0, 3).map((r) => ({
       name: r.name,
       stargazerCount: r.stargazersCount,
       url: r.url,
@@ -459,7 +872,9 @@ export function applyTemplate(templateId: string): {
       weeks: Array.from({ length: 53 }, (_, w) => ({
         contributionDays: Array.from({ length: 7 }, (_, d) => ({
           contributionCount: Math.floor(Math.random() * 5),
-          date: new Date(Date.now() - (53 - w) * 7 * 86400000 + d * 86400000).toISOString().split('T')[0],
+          date: new Date(Date.now() - (53 - w) * 7 * 86400000 + d * 86400000)
+            .toISOString()
+            .split('T')[0],
           weekday: d,
         })),
       })),
@@ -469,25 +884,52 @@ export function applyTemplate(templateId: string): {
     totalPullRequestContributions: 280,
     totalPullRequestReviewContributions: 77,
     totalRepositoriesWithContributedCommits: 28,
-    commitContributionsByRepository: template.pinnedRepos.slice(0, 3).map(r => ({
-      repository: { name: r.name, owner: { login: 'ErBharatMalhotra' }, url: r.url, primaryLanguage: { name: r.language, color: '#3178c6' } },
+    commitContributionsByRepository: template.pinnedRepos.slice(0, 3).map((r) => ({
+      repository: {
+        name: r.name,
+        owner: { login: 'ErBharatMalhotra' },
+        url: r.url,
+        primaryLanguage: { name: r.language, color: '#3178c6' },
+      },
       contributions: { totalCount: Math.floor(r.stargazersCount / 10) },
     })),
-    pullRequestContributionsByRepository: template.pinnedRepos.slice(0, 2).map(r => ({
+    pullRequestContributionsByRepository: template.pinnedRepos.slice(0, 2).map((r) => ({
       repository: { name: r.name, owner: { login: 'ErBharatMalhotra' }, url: r.url },
       contributions: { totalCount: Math.floor(r.stargazersCount / 50) },
     })),
     organizations: [
-      { login: 'TechInnovators', name: 'Tech Innovators', avatarUrl: 'https://avatars.githubusercontent.com/u/123456?v=4', url: 'https://github.com/TechInnovators' },
+      {
+        login: 'TechInnovators',
+        name: 'Tech Innovators',
+        avatarUrl: 'https://avatars.githubusercontent.com/u/123456?v=4',
+        url: 'https://github.com/TechInnovators',
+      },
     ],
     packages: [
-      { name: `@techinnovators/${template.id}`, packageType: 'NPM', url: 'https://github.com/ErBharatMalhotra/' + template.id + '/packages', version: '1.0.0' },
+      {
+        name: `@techinnovators/${template.id}`,
+        packageType: 'NPM',
+        url: 'https://github.com/ErBharatMalhotra/' + template.id + '/packages',
+        version: '1.0.0',
+      },
     ],
     sponsors: [
-      { login: 'supporter1', avatarUrl: 'https://avatars.githubusercontent.com/u/111?v=4', url: 'https://github.com/supporter1' },
+      {
+        login: 'supporter1',
+        avatarUrl: 'https://avatars.githubusercontent.com/u/111?v=4',
+        url: 'https://github.com/supporter1',
+      },
     ],
     sponsorshipsAsMaintainer: [
-      { sponsorEntity: { login: 'supporter1', avatarUrl: 'https://avatars.githubusercontent.com/u/111?v=4', name: 'Supporter One', url: 'https://github.com/supporter1' }, tier: { monthlyPriceInCents: 500, name: 'Supporter' } },
+      {
+        sponsorEntity: {
+          login: 'supporter1',
+          avatarUrl: 'https://avatars.githubusercontent.com/u/111?v=4',
+          name: 'Supporter One',
+          url: 'https://github.com/supporter1',
+        },
+        tier: { monthlyPriceInCents: 500, name: 'Supporter' },
+      },
     ],
     socialAccounts: [
       { provider: 'TWITTER', url: 'https://twitter.com/ReadmeCraft' },
@@ -496,14 +938,37 @@ export function applyTemplate(templateId: string): {
     ],
     status: { emoji: '🚀', message: `Building ${template.title} tools`, expiresAt: null },
     recentPullRequests: [
-      { title: 'feat: Add new features', url: 'https://github.com/ErBharatMalhotra/readmecraft/pull/42', state: 'MERGED', mergedAt: '2024-11-10T00:00:00Z', repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } } },
+      {
+        title: 'feat: Add new features',
+        url: 'https://github.com/ErBharatMalhotra/readmecraft/pull/42',
+        state: 'MERGED',
+        mergedAt: '2024-11-10T00:00:00Z',
+        repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } },
+      },
     ],
     recentIssues: [
-      { title: 'Feature request: More templates', url: 'https://github.com/ErBharatMalhotra/readmecraft/issues/38', state: 'OPEN', repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } } },
+      {
+        title: 'Feature request: More templates',
+        url: 'https://github.com/ErBharatMalhotra/readmecraft/issues/38',
+        state: 'OPEN',
+        repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } },
+      },
     ],
     repositoriesContributedTo: [
-      { name: 'next.js', owner: { login: 'vercel' }, url: 'https://github.com/vercel/next.js', stargazerCount: 120000, primaryLanguage: { name: 'TypeScript', color: '#3178c6' } },
-      { name: 'rust', owner: { login: 'rust-lang' }, url: 'https://github.com/rust-lang/rust', stargazerCount: 95000, primaryLanguage: { name: 'Rust', color: '#dea584' } },
+      {
+        name: 'next.js',
+        owner: { login: 'vercel' },
+        url: 'https://github.com/vercel/next.js',
+        stargazerCount: 120000,
+        primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
+      },
+      {
+        name: 'rust',
+        owner: { login: 'rust-lang' },
+        url: 'https://github.com/rust-lang/rust',
+        stargazerCount: 95000,
+        primaryLanguage: { name: 'Rust', color: '#dea584' },
+      },
     ],
     gitHoloEnabled: true,
     gitChronicleEnabled: true,
@@ -541,25 +1006,48 @@ export function applyTemplate(templateId: string): {
       licenseUrl: 'https://opensource.org/licenses/MIT',
       defaultBranch: 'main',
       primaryLanguage: { name: template.skills[0] || 'TypeScript', color: '#3178c6' },
-      languages: languagesWithBytes.map(l => ({ name: l.name, color: l.color, size: l.bytes || 0 })),
+      languages: languagesWithBytes.map((l) => ({
+        name: l.name,
+        color: l.color,
+        size: l.bytes || 0,
+      })),
       totalLanguageSize: totalBytes,
-      repositoryTopics: template.skills.slice(0, 5).map(s => ({ name: s, stargazerCount: 1000 })),
+      repositoryTopics: template.skills.slice(0, 5).map((s) => ({ name: s, stargazerCount: 1000 })),
       releases: [
-        { name: 'v1.0.0', tagName: 'v1.0.0', description: 'Initial release', publishedAt: '2024-01-15T00:00:00Z', url: 'https://github.com/ErBharatMalhotra/flagship-project/releases/tag/v1.0.0', isPrerelease: false, isDraft: false },
+        {
+          name: 'v1.0.0',
+          tagName: 'v1.0.0',
+          description: 'Initial release',
+          publishedAt: '2024-01-15T00:00:00Z',
+          url: 'https://github.com/ErBharatMalhotra/flagship-project/releases/tag/v1.0.0',
+          isPrerelease: false,
+          isDraft: false,
+        },
       ],
       deployments: [
-        { createdAt: '2024-11-01T12:00:00Z', environment: 'production', state: 'active', payload: 'Deployed to Vercel' },
+        {
+          createdAt: '2024-11-01T12:00:00Z',
+          environment: 'production',
+          state: 'active',
+          payload: 'Deployed to Vercel',
+        },
       ],
-      environments: [
-        { name: 'production', url: 'https://readme.bharatdn.com' },
-      ],
+      environments: [{ name: 'production', url: 'https://readme.bharatdn.com' }],
       packages: [],
-      workflows: [
-        { name: 'CI', state: 'active', filePath: '.github/workflows/ci.yml' },
-      ],
+      workflows: [{ name: 'CI', state: 'active', filePath: '.github/workflows/ci.yml' }],
       vulnerabilityAlerts: [],
       dependencyGraphManifests: [
-        { filename: 'package.json', dependencies: [ { packageName: 'next', repository: { name: 'next.js', url: 'https://github.com/vercel/next.js' }, requirements: '^16.0.0', hasDependencies: true } ] },
+        {
+          filename: 'package.json',
+          dependencies: [
+            {
+              packageName: 'next',
+              repository: { name: 'next.js', url: 'https://github.com/vercel/next.js' },
+              requirements: '^16.0.0',
+              hasDependencies: true,
+            },
+          ],
+        },
       ],
       mergeCommitAllowed: true,
       rebaseMergeAllowed: true,
@@ -579,13 +1067,18 @@ export function applyTemplate(templateId: string): {
       templateRepository: null,
       parent: null,
       mentionableUsers: [
-        { login: 'ErBharatMalhotra', name: 'Bharat Malhotra', avatarUrl: 'https://avatars.githubusercontent.com/u/9919?v=4' },
+        {
+          login: 'ErBharatMalhotra',
+          name: 'Bharat Malhotra',
+          avatarUrl: 'https://avatars.githubusercontent.com/u/9919?v=4',
+        },
       ],
       securityPolicyUrl: 'https://github.com/ErBharatMalhotra/flagship-project/security/policy',
-      codeOfConduct: { name: 'Contributor Covenant', url: 'https://github.com/ErBharatMalhotra/flagship-project/blob/main/CODE_OF_CONDUCT.md' },
-      fundingLinks: [
-        { platform: 'GITHUB', url: 'https://github.com/sponsors/ErBharatMalhotra' },
-      ],
+      codeOfConduct: {
+        name: 'Contributor Covenant',
+        url: 'https://github.com/ErBharatMalhotra/flagship-project/blob/main/CODE_OF_CONDUCT.md',
+      },
+      fundingLinks: [{ platform: 'GITHUB', url: 'https://github.com/sponsors/ErBharatMalhotra' }],
       usesCustomOpenGraphImage: true,
       openGraphImageUrl: 'https://githolo.bharatdn.com/api/og/ErBharatMalhotra',
       hasIssuesEnabled: true,

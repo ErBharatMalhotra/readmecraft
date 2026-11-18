@@ -27,10 +27,7 @@ export async function GET() {
     }
 
     const markdown = (await res.text()).trim();
-    return NextResponse.json(
-      { markdown: markdown || null },
-      { headers: CACHE_HEADERS }
-    );
+    return NextResponse.json({ markdown: markdown || null }, { headers: CACHE_HEADERS });
   } catch {
     // Never break the homepage: the client keeps its local sample on failure.
     return NextResponse.json(

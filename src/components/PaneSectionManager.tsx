@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import type { AppMode, ProfilePreset, ProjectPreset, Section } from '@/types/readmecraft';
 import {
   Layers,
@@ -58,9 +59,29 @@ const CATEGORY_TABS: { id: string; label: string; icon: string }[] = [
 ];
 
 const POPULAR_SKILLS = [
-  'TypeScript', 'JavaScript', 'React', 'Next.js', 'Node.js', 'Python', 'Rust', 'Go',
-  'Docker', 'Kubernetes', 'PostgreSQL', 'Redis', 'TailwindCSS', 'GraphQL', 'AWS',
-  'Linux', 'Git', 'MongoDB', 'Prisma', 'Solidity', 'FastAPI', 'Express', 'Vue.js'
+  'TypeScript',
+  'JavaScript',
+  'React',
+  'Next.js',
+  'Node.js',
+  'Python',
+  'Rust',
+  'Go',
+  'Docker',
+  'Kubernetes',
+  'PostgreSQL',
+  'Redis',
+  'TailwindCSS',
+  'GraphQL',
+  'AWS',
+  'Linux',
+  'Git',
+  'MongoDB',
+  'Prisma',
+  'Solidity',
+  'FastAPI',
+  'Express',
+  'Vue.js',
 ];
 
 export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
@@ -123,14 +144,15 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
   const filteredThemes = useMemo(() => {
     let themes = THEMES;
     if (themeCategory !== 'all') {
-      themes = themes.filter(t => t.category === themeCategory);
+      themes = themes.filter((t) => t.category === themeCategory);
     }
     if (themeSearch.trim()) {
       const query = themeSearch.toLowerCase().trim();
-      themes = themes.filter(t => 
-        t.name.toLowerCase().includes(query) || 
-        t.id.toLowerCase().includes(query) ||
-        t.description.toLowerCase().includes(query)
+      themes = themes.filter(
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          t.id.toLowerCase().includes(query) ||
+          t.description.toLowerCase().includes(query)
       );
     }
     return themes;
@@ -243,12 +265,12 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
                 <UserCheck className="h-3.5 w-3.5 text-emerald-400" />
                 Quick Personas
               </span>
-              <a
+              <Link
                 href="/templates"
                 className="font-mono text-[10px] text-emerald-400 hover:text-emerald-300 hover:underline"
               >
                 Browse All →
-              </a>
+              </Link>
             </div>
             <p className="mb-3 text-[11px] leading-relaxed text-slate-400">
               Instantly load community persona presets & themes:
@@ -289,25 +311,31 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
             </span>
           </div>
           <p className="mb-2.5 text-[11px] text-slate-400">
-            Select from {THEMES.length} viral aesthetic themes (applies instantly to all badges & icons):
+            Select from {THEMES.length} viral aesthetic themes (applies instantly to all badges &
+            icons):
           </p>
 
           {/* Search Bar */}
           <div className="relative mb-2.5">
-            <label htmlFor="theme-search" className="visually-hidden">Search themes</label>
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+            <label htmlFor="theme-search" className="visually-hidden">
+              Search themes
+            </label>
+            <Search
+              className="absolute top-2.5 left-2.5 h-3.5 w-3.5 text-slate-500"
+              aria-hidden="true"
+            />
             <input
               id="theme-search"
               type="text"
               value={themeSearch}
               onChange={(e) => setThemeSearch(e.target.value)}
               placeholder={`Search ${THEMES.length} themes (e.g. gta6, matrix, tokyo)...`}
-              className="w-full rounded-lg border border-[#1e293b] bg-[#090d16] py-1.5 pl-8 pr-3 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-lg border border-[#1e293b] bg-[#090d16] py-1.5 pr-3 pl-8 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
             />
           </div>
 
           {/* Category Tabs */}
-          <div className="mb-2.5 flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+          <div className="no-scrollbar mb-2.5 flex gap-1 overflow-x-auto pb-1">
             {CATEGORY_TABS.map((tab) => {
               const active = themeCategory === tab.id;
               return (
@@ -316,8 +344,8 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
                   onClick={() => setThemeCategory(tab.id)}
                   className={`shrink-0 rounded-lg px-2 py-1 font-mono text-[10px] transition-all ${
                     active
-                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-[0_0_8px_rgba(16,185,129,0.3)]'
-                      : 'bg-[#090d16] border border-[#1e293b] text-slate-400 hover:text-white hover:border-slate-700'
+                      ? 'bg-emerald-500 font-bold text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.3)]'
+                      : 'border border-[#1e293b] bg-[#090d16] text-slate-400 hover:border-slate-700 hover:text-white'
                   }`}
                 >
                   {tab.icon} {tab.label}
@@ -327,7 +355,10 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
           </div>
 
           {/* Themes Grid */}
-          <div className="grid grid-cols-1 gap-1.5 max-h-60 overflow-y-auto p-0.5" suppressHydrationWarning={!isHydrated}>
+          <div
+            className="grid max-h-60 grid-cols-1 gap-1.5 overflow-y-auto p-0.5"
+            suppressHydrationWarning={!isHydrated}
+          >
             {filteredThemes.length === 0 ? (
               <div className="py-6 text-center font-mono text-xs text-slate-500">
                 No themes found matching "{themeSearch}"
@@ -345,7 +376,7 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
                         : 'border-[#1e293b] bg-[#090d16] text-slate-300 hover:border-slate-700 hover:bg-[#121824]'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex min-w-0 items-center gap-2.5">
                       <span
                         className="h-4 w-4 shrink-0 rounded-full border border-white/20 shadow-sm"
                         style={{ backgroundColor: t.emerald }}
@@ -353,13 +384,11 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="truncate font-mono text-xs font-semibold">{t.name}</span>
-                          <span className="rounded bg-slate-800/80 px-1 py-0.2 font-mono text-[9px] text-slate-400 uppercase">
+                          <span className="py-0.2 rounded bg-slate-800/80 px-1 font-mono text-[9px] text-slate-400 uppercase">
                             {t.category}
                           </span>
                         </div>
-                        <div className="truncate text-[10px] text-slate-400">
-                          {t.description}
-                        </div>
+                        <div className="truncate text-[10px] text-slate-400">{t.description}</div>
                       </div>
                     </div>
                     {isSelected && (
@@ -382,12 +411,14 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
                 <Code2 className="h-3.5 w-3.5 text-emerald-400" />
                 Tech Stack Quick Picker
               </label>
-              <span className="font-mono text-[10px] text-emerald-400">{skills.length} Selected</span>
+              <span className="font-mono text-[10px] text-emerald-400">
+                {skills.length} Selected
+              </span>
             </div>
             <p className="mb-2.5 text-[11px] text-slate-400">
               Click to toggle tech stack badges on your profile:
             </p>
-            <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
+            <div className="flex max-h-36 flex-wrap gap-1.5 overflow-y-auto p-1">
               {POPULAR_SKILLS.map((skill) => {
                 const isSelected = isHydrated && skills.includes(skill);
                 return (
@@ -407,7 +438,9 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
               })}
             </div>
             <form onSubmit={handleAddCustomSkill} className="mt-2.5 flex gap-1.5">
-              <label htmlFor="custom-skill-input" className="visually-hidden">Add custom tech skill</label>
+              <label htmlFor="custom-skill-input" className="visually-hidden">
+                Add custom tech skill
+              </label>
               <input
                 id="custom-skill-input"
                 type="text"
@@ -542,15 +575,15 @@ export const PaneSectionManager: React.FC<PaneSectionManagerProps> = ({
                 }}
                 className={`flex items-center justify-between rounded-xl border p-2.5 transition-all ${
                   dragOverIndex === index
-                    ? 'border-emerald-400 bg-emerald-500/15 scale-[1.02]'
+                    ? 'scale-[1.02] border-emerald-400 bg-emerald-500/15'
                     : section.enabled
-                    ? 'border-[#1e293b] bg-[#0e1526] text-slate-200'
-                    : 'border-slate-900 bg-[#080b12] text-slate-600 opacity-60'
+                      ? 'border-[#1e293b] bg-[#0e1526] text-slate-200'
+                      : 'border-slate-900 bg-[#080b12] text-slate-600 opacity-60'
                 } ${draggedIndex === index ? 'opacity-40' : ''}`}
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <div
-                    className="cursor-grab text-slate-500 hover:text-slate-300 active:cursor-grabbing p-0.5"
+                    className="cursor-grab p-0.5 text-slate-500 hover:text-slate-300 active:cursor-grabbing"
                     title="Drag to reorder"
                   >
                     <GripVertical className="h-3.5 w-3.5" />

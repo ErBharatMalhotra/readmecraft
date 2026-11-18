@@ -101,5 +101,8 @@ export function shortcodeToEmoji(value?: string | null): string {
 
 /** Remove any leftover `:shortcode:` tokens from free text. */
 export function stripShortcodes(value: string): string {
-  return value.replace(/:[a-z0-9_+-]+:/gi, ' ').replace(/\s+/g, ' ').trim();
+  return value
+    .replace(/:[a-z0-9_+-]+:/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

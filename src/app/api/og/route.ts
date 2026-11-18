@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getThemeById } from '@/lib/themes';
 
-export async function GET(req: NextRequest) {
+export function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const title = searchParams.get('title') || 'World-Class GitHub Profile README';
-  const subtitle = searchParams.get('subtitle') || 'Built with ReadmeCraft — 50 Curated Viral Themes';
+  const subtitle =
+    searchParams.get('subtitle') || 'Built with ReadmeCraft — 63 Curated Viral Themes';
   const score = searchParams.get('score') || '98';
   const grade = searchParams.get('grade') || 'A+';
   const themeId = searchParams.get('theme') || 'gta6';
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
     <rect width="300" height="150" rx="20" fill="#0b1120" stroke="#1e293b" stroke-width="1.5"/>
     <text x="36" y="50" fill="#64748b" font-family="monospace" font-size="14" font-weight="700" letter-spacing="1">ACTIVE THEME</text>
     <text x="36" y="98" fill="${accent}" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="800" font-size="28" text-transform="uppercase">${themeId}</text>
-    <text x="36" y="125" fill="#94a3b8" font-family="monospace" font-size="12">50 Universal Themes</text>
+    <text x="36" y="125" fill="#94a3b8" font-family="monospace" font-size="12">63 Universal Themes</text>
   </g>
 
   <!-- Footer Hook -->

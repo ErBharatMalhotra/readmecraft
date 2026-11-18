@@ -29,8 +29,12 @@ import { Layers, FileCode, Eye } from 'lucide-react';
 import { COMMUNITY_TEMPLATES, applyTemplate } from '@/lib/templates';
 
 // Code-split heavy components
-const PaneGitHubPreview = lazy(() => import('@/components/PaneGitHubPreview').then(m => ({ default: m.PaneGitHubPreview })));
-const CommandPalette = lazy(() => import('@/components/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const PaneGitHubPreview = lazy(() =>
+  import('@/components/PaneGitHubPreview').then((m) => ({ default: m.PaneGitHubPreview }))
+);
+const CommandPalette = lazy(() =>
+  import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette }))
+);
 
 const STORAGE_KEY = 'readmecraft_saved_state_v2';
 
@@ -68,9 +72,10 @@ function getInitialState(urlTemplate: string | null, urlTheme: string | null) {
           projectPreset: parsed.projectPreset || 'standard',
           profileData: parsed.profileData || SAMPLE_PROFILE,
           projectData: parsed.projectData || SAMPLE_PROJECT,
-          sections: parsed.sections && parsed.sections.length > 0
-            ? parsed.sections
-            : getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6'),
+          sections:
+            parsed.sections && parsed.sections.length > 0
+              ? parsed.sections
+              : getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6'),
           theme: savedTheme,
           hasLoaded: true,
         };
@@ -140,9 +145,7 @@ function HomeInner() {
         const cfg = JSON.parse(raw);
         setDeployConfig({
           badges:
-            Array.isArray(cfg.badges) && cfg.badges.length > 0
-              ? cfg.badges
-              : DEPLOY_DEFAULT_BADGES,
+            Array.isArray(cfg.badges) && cfg.badges.length > 0 ? cfg.badges : DEPLOY_DEFAULT_BADGES,
           autoSync: !!cfg.autoSync,
         });
       }
@@ -188,7 +191,16 @@ function HomeInner() {
       badges: deployConfig.badges,
       autoSync: deployConfig.autoSync,
     });
-  }, [mode, markdown, profileData.username, activeUsername, theme, deployConfig, showFeatured, featuredMarkdown]);
+  }, [
+    mode,
+    markdown,
+    profileData.username,
+    activeUsername,
+    theme,
+    deployConfig,
+    showFeatured,
+    featuredMarkdown,
+  ]);
 
   // Sync theme from localStorage after hydration (client-only)
   useEffect(() => {
@@ -605,7 +617,10 @@ function HomeInner() {
       </div>
 
       {/* The 3-Pane Studio Layout */}
-      <main id="main-content" className="grid min-h-[750px] w-full flex-1 grid-cols-1 lg:grid-cols-12">
+      <main
+        id="main-content"
+        className="grid min-h-[750px] w-full flex-1 grid-cols-1 lg:grid-cols-12"
+      >
         {/* Pane 1: Section Manager */}
         <div
           className={`h-full overflow-hidden lg:col-span-3 xl:col-span-3 ${
@@ -663,7 +678,13 @@ function HomeInner() {
             activeMobileTab === 'preview' ? 'block' : 'hidden lg:block'
           }`}
         >
-          <Suspense fallback={<div className="flex h-full items-center justify-center bg-[#090d16]"><div className="text-center text-slate-500 font-mono text-sm">Loading preview…</div></div>}>
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center bg-[#090d16]">
+                <div className="text-center font-mono text-sm text-slate-500">Loading preview…</div>
+              </div>
+            }
+          >
             <PaneGitHubPreview
               markdown={previewMarkdown}
               repoOrUserTitle={activeTitle}
@@ -737,28 +758,39 @@ export function StudioClient() {
             activeUsername="ErBharatMalhotra"
             activeRepo="ErBharatMalhotra/readmecraft"
           />
-          <main id="main-content" className="grid min-h-[750px] w-full flex-1 grid-cols-1 lg:grid-cols-12">
-            <div className="h-full overflow-hidden lg:col-span-3 xl:col-span-3 border-r border-[#1e293b] bg-[#090d16]">
+          <main
+            id="main-content"
+            className="grid min-h-[750px] w-full flex-1 grid-cols-1 lg:grid-cols-12"
+          >
+            <div className="h-full overflow-hidden border-r border-[#1e293b] bg-[#090d16] lg:col-span-3 xl:col-span-3">
               <div className="flex h-full flex-col">
                 <div className="flex items-center justify-between border-b border-[#1e293b] bg-[#0b101c] px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold tracking-wider text-slate-200 uppercase">1. Layout & Sections</span>
+                    <span className="font-mono text-xs font-bold tracking-wider text-slate-200 uppercase">
+                      1. Layout & Sections
+                    </span>
                   </div>
                 </div>
                 <div className="flex-1 space-y-5 overflow-y-auto p-4">
-                  <div className="text-center py-12 text-slate-500 font-mono text-sm">Loading sections…</div>
+                  <div className="py-12 text-center font-mono text-sm text-slate-500">
+                    Loading sections…
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="h-full overflow-hidden lg:col-span-4 xl:col-span-4 border-r border-[#1e293b] bg-[#080d1a]">
+            <div className="h-full overflow-hidden border-r border-[#1e293b] bg-[#080d1a] lg:col-span-4 xl:col-span-4">
               <div className="flex h-full flex-col">
                 <div className="flex items-center justify-between border-b border-[#1e293b] bg-[#0b101c] px-4 py-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold tracking-wider text-slate-200 uppercase">2. Markdown Studio</span>
+                    <span className="font-mono text-xs font-bold tracking-wider text-slate-200 uppercase">
+                      2. Markdown Studio
+                    </span>
                   </div>
                 </div>
                 <div className="relative flex flex-1">
-                  <label htmlFor="readme-editor" className="visually-hidden">Markdown editor</label>
+                  <label htmlFor="readme-editor" className="visually-hidden">
+                    Markdown editor
+                  </label>
                   <textarea
                     id="readme-editor"
                     className="h-full w-full resize-none bg-transparent p-4 font-mono text-xs leading-relaxed text-slate-100 selection:bg-emerald-500/30 focus:outline-none md:text-sm"
@@ -771,16 +803,14 @@ export function StudioClient() {
             <div className="h-full overflow-hidden lg:col-span-5 xl:col-span-5">
               <div className="flex h-full flex-col">
                 <div className="flex h-full items-center justify-center bg-[#090d16]">
-                  <div className="text-center text-slate-500 font-mono text-sm">Loading preview…</div>
+                  <div className="text-center font-mono text-sm text-slate-500">
+                    Loading preview…
+                  </div>
                 </div>
               </div>
             </div>
           </main>
-          <ExportToolbar
-            markdown=""
-            filename="README.md"
-            activeUsername="ErBharatMalhotra"
-          />
+          <ExportToolbar markdown="" filename="README.md" activeUsername="ErBharatMalhotra" />
           <Footer />
         </div>
       }

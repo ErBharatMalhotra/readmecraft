@@ -8,21 +8,30 @@ export interface ThemePalette {
   id: string;
   name: string;
   description: string;
-  category: 'gaming' | 'anime' | 'aesthetic' | 'dev-classic' | 'nature' | 'cyberpunk' | 'retro' | 'minimal' | 'pop-culture';
+  category:
+    | 'gaming'
+    | 'anime'
+    | 'aesthetic'
+    | 'dev-classic'
+    | 'nature'
+    | 'cyberpunk'
+    | 'retro'
+    | 'minimal'
+    | 'pop-culture';
   // Core palette (required by badge generators)
   bg: string;
   bgElevated: string;
   border: string;
   borderLight: string;
-  emerald: string;       // Primary accent (used for stats, numbers, highlights)
+  emerald: string; // Primary accent (used for stats, numbers, highlights)
   emeraldDim: string;
   emeraldLight: string;
-  gold: string;          // Secondary accent (used for stars, trophies, warnings)
+  gold: string; // Secondary accent (used for stars, trophies, warnings)
   goldDim: string;
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
-  red: string;           // Danger/error/streak fire
+  red: string; // Danger/error/streak fire
   // Extended palette (for viral variety in icons, gradients, skill badges)
   cyan?: string;
   cyanDim?: string;
@@ -36,8 +45,8 @@ export interface ThemePalette {
   limeDim?: string;
   blue?: string;
   blueDim?: string;
-  gradient?: string;     // CSS gradient string for hero backgrounds
-  tagline?: string;      // Marketing hook
+  gradient?: string; // CSS gradient string for hero backgrounds
+  tagline?: string; // Marketing hook
 }
 
 export const THEMES: ThemePalette[] = [
@@ -138,7 +147,7 @@ export const THEMES: ThemePalette[] = [
     lime: '#7a9e2e',
     limeDim: '#688827',
     gradient: 'linear-gradient(135deg, #14120e 0%, #1a1810 50%, #14120e 100%)',
-    tagline: 'Wind\'s howling...',
+    tagline: "Wind's howling...",
   },
   {
     id: 'hollow-knight',
@@ -166,7 +175,7 @@ export const THEMES: ThemePalette[] = [
   {
     id: 'bloodborne',
     name: 'Bloodborne',
-    description: 'Yharnam blood — crimson & hunter\'s lantern on cobblestone grey',
+    description: "Yharnam blood — crimson & hunter's lantern on cobblestone grey",
     category: 'gaming',
     bg: '#0d0808',
     bgElevated: '#1a1010',
@@ -258,7 +267,7 @@ export const THEMES: ThemePalette[] = [
   {
     id: 'league-of-legends',
     name: 'League of Legends',
-    description: 'Runeterra magic — hextech blue & demonic red on summoner\'s rift',
+    description: "Runeterra magic — hextech blue & demonic red on summoner's rift",
     category: 'gaming',
     bg: '#0a0a12',
     bgElevated: '#121220',
@@ -518,7 +527,7 @@ export const THEMES: ThemePalette[] = [
     orange: '#f0a038',
     orangeDim: '#d88830',
     gradient: 'linear-gradient(180deg, #081828 0%, #183048 50%, #081828 100%)',
-    tagline: 'I\'m gonna be King!',
+    tagline: "I'm gonna be King!",
   },
   {
     id: 'naruto',
@@ -691,7 +700,7 @@ export const THEMES: ThemePalette[] = [
     pink: '#ff00cc',
     pinkDim: '#cc00aa',
     gradient: 'linear-gradient(135deg, #00ccff 0%, #ff00cc 50%, #ffff00 100%)',
-    tagline: 'It\'s the 2000s again',
+    tagline: "It's the 2000s again",
   },
   {
     id: 'sunset',
@@ -998,7 +1007,7 @@ export const THEMES: ThemePalette[] = [
   {
     id: 'solarized-dark',
     name: 'Solarized Dark',
-    description: 'Precision colors — Ethan Schoonover\'s science-based palette',
+    description: "Precision colors — Ethan Schoonover's science-based palette",
     category: 'dev-classic',
     bg: '#002b36',
     bgElevated: '#073642',
@@ -1462,7 +1471,7 @@ export const THEMES: ThemePalette[] = [
     cyan: '#00ffcc',
     cyanDim: '#00ccaa',
     gradient: 'linear-gradient(135deg, #1a1a2e 0%, #2a2a4e 100%)',
-    tagline: 'It really whips the llama\'s ass',
+    tagline: "It really whips the llama's ass",
   },
   {
     id: 'ms-dos',
@@ -1583,8 +1592,8 @@ export const THEMES: ThemePalette[] = [
 
 export function getThemeById(id: string): ThemePalette {
   const normalized = id.toLowerCase();
-  const theme = THEMES.find(t => t.id === normalized);
-  return theme || THEMES.find(t => t.id === 'gta6')!;
+  const theme = THEMES.find((t) => t.id === normalized);
+  return theme || THEMES.find((t) => t.id === 'gta6')!;
 }
 
 // ============================================================================
@@ -1592,7 +1601,7 @@ export function getThemeById(id: string): ThemePalette {
 // ============================================================================
 
 export function getThemesByCategory(category: ThemePalette['category']): ThemePalette[] {
-  return THEMES.filter(t => t.category === category);
+  return THEMES.filter((t) => t.category === category);
 }
 
 // ============================================================================
@@ -1600,14 +1609,14 @@ export function getThemesByCategory(category: ThemePalette['category']): ThemePa
 // ============================================================================
 
 export function getCategories(): ThemePalette['category'][] {
-  return [...new Set(THEMES.map(t => t.category))];
+  return [...new Set(THEMES.map((t) => t.category))];
 }
 
 // ============================================================================
 // Export the raw array for UI selectors
 // ============================================================================
 
-export const THEME_LIST = THEMES.map(t => ({
+export const THEME_LIST = THEMES.map((t) => ({
   id: t.id,
   name: t.name,
   description: t.description,
@@ -1619,4 +1628,4 @@ export const THEME_LIST = THEMES.map(t => ({
   tagline: t.tagline,
 }));
 
-export type ThemeId = typeof THEMES[number]['id'];
+export type ThemeId = (typeof THEMES)[number]['id'];

@@ -58,62 +58,133 @@ export default function CraftPage() {
 
   const detectProjectType = (data: RepoAnalysis): ProjectType => {
     const { packageJson, cargoToml, pyprojectToml, topics, language } = data;
-    
+
     // Check package.json for CLI indicators
     if (packageJson) {
       const bin = packageJson.bin || {};
       const scripts = packageJson.scripts || {};
       const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-      
+
       // CLI: has bin entry or commander/yargs/oclif
       if (Object.keys(bin).length > 0) return 'cli';
       if (deps.commander || deps.yargs || deps.oclif || deps['@clack/prompts']) return 'cli';
-      if (scripts.cli || scripts.start?.includes('ts-node') || scripts.dev?.includes('tsx')) return 'cli';
-      
+      if (scripts.cli || scripts.start?.includes('ts-node') || scripts.dev?.includes('tsx'))
+        return 'cli';
+
       // Web App: next.js, react, vue, svelte, remix, astro
-      if (deps.next || deps.react || deps.vue || deps.svelte || deps['@remix-run/react'] || deps.astro) return 'webapp';
-      
+      if (
+        deps.next ||
+        deps.react ||
+        deps.vue ||
+        deps.svelte ||
+        deps['@remix-run/react'] ||
+        deps.astro
+      )
+        return 'webapp';
+
       // API: express, fastify, hono, elysia, nestjs, trpc
-      if (deps.express || deps.fastify || deps.hono || deps.elysia || deps['@nestjs/core'] || deps['@trpc/server']) return 'api';
-      
+      if (
+        deps.express ||
+        deps.fastify ||
+        deps.hono ||
+        deps.elysia ||
+        deps['@nestjs/core'] ||
+        deps['@trpc/server']
+      )
+        return 'api';
+
       // Library: has main/module/exports, no bin, not a framework
       if (packageJson.main || packageJson.module || packageJson.exports) return 'library';
     }
-    
+
     // Check Cargo.toml
     if (cargoToml) {
       if (cargoToml.includes('[[bin]]')) return 'cli';
       if (cargoToml.includes('cdylib') || cargoToml.includes('rlib')) return 'library';
-      if (cargoToml.includes('actix-web') || cargoToml.includes('axum') || cargoToml.includes('rocket') || cargoToml.includes('warp')) return 'api';
-      if (cargoToml.includes('tauri') || cargoToml.includes('dioxus') || cargoToml.includes('leptos') || cargoToml.includes('yew')) return 'webapp';
+      if (
+        cargoToml.includes('actix-web') ||
+        cargoToml.includes('axum') ||
+        cargoToml.includes('rocket') ||
+        cargoToml.includes('warp')
+      )
+        return 'api';
+      if (
+        cargoToml.includes('tauri') ||
+        cargoToml.includes('dioxus') ||
+        cargoToml.includes('leptos') ||
+        cargoToml.includes('yew')
+      )
+        return 'webapp';
     }
-    
+
     // Check pyproject.toml
     if (pyprojectToml) {
-      if (pyprojectToml.includes('console_scripts') || pyprojectToml.includes('click') || pyprojectToml.includes('typer') || pyprojectToml.includes('argparse')) return 'cli';
-      if (pyprojectToml.includes('fastapi') || pyprojectToml.includes('flask') || pyprojectToml.includes('django') || pyprojectToml.includes('starlette')) return 'api';
-      if (pyprojectToml.includes('django') || pyprojectToml.includes('streamlit') || pyprojectToml.includes('gradio') || pyprojectToml.includes('nicegui')) return 'webapp';
+      if (
+        pyprojectToml.includes('console_scripts') ||
+        pyprojectToml.includes('click') ||
+        pyprojectToml.includes('typer') ||
+        pyprojectToml.includes('argparse')
+      )
+        return 'cli';
+      if (
+        pyprojectToml.includes('fastapi') ||
+        pyprojectToml.includes('flask') ||
+        pyprojectToml.includes('django') ||
+        pyprojectToml.includes('starlette')
+      )
+        return 'api';
+      if (
+        pyprojectToml.includes('django') ||
+        pyprojectToml.includes('streamlit') ||
+        pyprojectToml.includes('gradio') ||
+        pyprojectToml.includes('nicegui')
+      )
+        return 'webapp';
       return 'library';
     }
-    
+
     // Check topics
     const topicStr = topics.join(' ').toLowerCase();
     if (topicStr.includes('cli') || topicStr.includes('command-line')) return 'cli';
-    if (topicStr.includes('library') || topicStr.includes('sdk') || topicStr.includes('package')) return 'library';
-    if (topicStr.includes('api') || topicStr.includes('backend') || topicStr.includes('microservice')) return 'api';
-    if (topicStr.includes('web') || topicStr.includes('frontend') || topicStr.includes('react') || topicStr.includes('vue')) return 'webapp';
-    if (topicStr.includes('mobile') || topicStr.includes('android') || topicStr.includes('ios') || topicStr.includes('flutter') || topicStr.includes('react-native')) return 'mobile';
-    
+    if (topicStr.includes('library') || topicStr.includes('sdk') || topicStr.includes('package'))
+      return 'library';
+    if (
+      topicStr.includes('api') ||
+      topicStr.includes('backend') ||
+      topicStr.includes('microservice')
+    )
+      return 'api';
+    if (
+      topicStr.includes('web') ||
+      topicStr.includes('frontend') ||
+      topicStr.includes('react') ||
+      topicStr.includes('vue')
+    )
+      return 'webapp';
+    if (
+      topicStr.includes('mobile') ||
+      topicStr.includes('android') ||
+      topicStr.includes('ios') ||
+      topicStr.includes('flutter') ||
+      topicStr.includes('react-native')
+    )
+      return 'mobile';
+
     return 'unknown';
   };
 
-  const generateBadgeUrls = (owner: string, repo: string, projectType: ProjectType, theme: string) => {
+  const generateBadgeUrls = (
+    owner: string,
+    repo: string,
+    projectType: ProjectType,
+    theme: string
+  ) => {
     const base = 'https://readme.bharatdn.com/api/badges';
     const themeParam = `&theme=${theme}`;
     const badges = [
       `${base}?username=${owner}&type=composite&include=stats,trophies,snake,heatmap${themeParam}`,
     ];
-    
+
     // Add project-specific badges
     switch (projectType) {
       case 'cli':
@@ -141,23 +212,38 @@ export default function CraftPage() {
         );
         break;
     }
-    
+
     return badges;
   };
 
-  const generateMarkdown = (data: RepoAnalysis, projectType: ProjectType, badges: string[], theme: string): string => {
-    const { name, description, language, stars, forks, topics, packageJson, cargoToml, pyprojectToml } = data;
+  const generateMarkdown = (
+    data: RepoAnalysis,
+    projectType: ProjectType,
+    badges: string[],
+    theme: string
+  ): string => {
+    const {
+      name,
+      description,
+      language,
+      stars,
+      forks,
+      topics,
+      packageJson,
+      cargoToml,
+      pyprojectToml,
+    } = data;
     const typeInfo = PROJECT_TYPES[projectType];
     const baseUrl = `https://github.com/${data.name}`;
-    
+
     let md = `# ${name}\n\n`;
-    
+
     // Badge row
-    md += badges.map(url => `<img src="${url}" alt="Badge" />`).join(' ') + '\n\n';
-    
+    md += badges.map((url) => `<img src="${url}" alt="Badge" />`).join(' ') + '\n\n';
+
     md += `> ${description || 'No description provided.'}\n\n`;
     md += `---\n\n`;
-    
+
     // Quick links
     md += `## 🔗 Quick Links\n\n`;
     md += `- [📖 Documentation](${baseUrl}#readme)\n`;
@@ -165,7 +251,7 @@ export default function CraftPage() {
     md += `- [💡 Request Feature](${baseUrl}/issues/new)\n`;
     if (packageJson?.homepage) md += `- [🌐 Homepage](${packageJson.homepage})\n`;
     md += `\n`;
-    
+
     // Install section (varies by type)
     md += `## 📥 Installation\n\n`;
     if (projectType === 'cli') {
@@ -183,7 +269,7 @@ export default function CraftPage() {
     } else {
       md += `\`\`\`bash\ngit clone ${baseUrl}.git\ncd ${name}\n# Follow setup instructions\n\`\`\`\n\n`;
     }
-    
+
     // Usage section
     md += `## 🚀 Quick Start\n\n`;
     if (projectType === 'cli') {
@@ -196,7 +282,12 @@ export default function CraftPage() {
       }
       md += `\n`;
     } else if (projectType === 'library') {
-      md += `\`\`\`typescript\nimport ${name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')} from '${name}';\n\n// Basic usage\nconst result = await ${name.split('-')[0]}();\n\`\`\`\n\n`;
+      md += `\`\`\`typescript\nimport ${name
+        .split('-')
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(
+          ''
+        )} from '${name}';\n\n// Basic usage\nconst result = await ${name.split('-')[0]}();\n\`\`\`\n\n`;
       md += `See [API Documentation](${baseUrl}/blob/main/docs/API.md) for full reference.\n\n`;
     } else if (projectType === 'api') {
       md += `### Base URL\n\n\`\`\`\nhttps://api.${name.replace(/[^a-z0-9]/gi, '')}.com/v1\n\`\`\`\n\n`;
@@ -206,7 +297,7 @@ export default function CraftPage() {
       md += `Visit the deployed app: [${name}](${packageJson?.homepage || baseUrl})\n\n`;
       md += `### Environment Variables\n\n\`\`\`bash\n# Copy example\ncp .env.example .env\n\n# Edit with your values\n# DATABASE_URL=...\n# NEXT_PUBLIC_API_URL=...\n\`\`\`\n\n`;
     }
-    
+
     // Configuration (for library/api/cli)
     if (['cli', 'library', 'api'].includes(projectType)) {
       md += `## ⚙️ Configuration\n\n`;
@@ -217,11 +308,11 @@ export default function CraftPage() {
         md += `| Variable | Required | Default | Description |\n|----------|----------|---------|-------------|\n| PORT | No | 3000 | Server port |\n| DATABASE_URL | Yes | - | Database connection |\n| JWT_SECRET | Yes | - | JWT signing secret |\n\n`;
       }
     }
-    
+
     // Development
     md += `## 🛠️ Development\n\n`;
     md += `\`\`\`bash\n# Install dependencies\nnpm install\n\n# Run tests\nnpm test\n\n# Lint\nnpm run lint\n\n# Type check\nnpm run typecheck\n\`\`\`\n\n`;
-    
+
     // Tech Stack
     md += `## 🧰 Tech Stack\n\n`;
     const tech: string[] = [];
@@ -239,9 +330,13 @@ export default function CraftPage() {
     if (cargoToml) tech.push('Rust');
     if (pyprojectToml) tech.push('Python');
     if (topics.length) tech.push(...topics.slice(0, 5));
-    
-    md += tech.slice(0, 10).map(t => `\`${t}\``).join(' ') + '\n\n';
-    
+
+    md +=
+      tech
+        .slice(0, 10)
+        .map((t) => `\`${t}\``)
+        .join(' ') + '\n\n';
+
     // Project Structure
     md += `## 📁 Project Structure\n\n`;
     md += `\`\`\`\n${name}/\n`;
@@ -257,7 +352,7 @@ export default function CraftPage() {
       md += `├── src/\n├── tests/\n├── docs/\n└── package.json / Cargo.toml / pyproject.toml\n`;
     }
     md += `\`\`\`\n\n`;
-    
+
     // Contributing
     md += `## 🤝 Contributing\n\n`;
     md += `1. Fork the repository\n`;
@@ -265,18 +360,18 @@ export default function CraftPage() {
     md += `3. Commit your changes (\`git commit -m 'feat: add amazing feature'\`)\n`;
     md += `4. Push to the branch (\`git push origin feature/amazing-feature\`)\n`;
     md += `5. Open a Pull Request\n\n`;
-    
+
     // License
     md += `## 📄 License\n\n`;
     md += `Distributed under the **MIT License**. See \`LICENSE\` for more information.\n\n`;
-    
+
     // Footer
     md += `---\n\n`;
     md += `<div align="center">\n`;
     md += `  <sub>Built with ❤️ by <a href="https://github.com/${data.name.split('/')[0]}">${data.name.split('/')[0]}</a> • `;
     md += `Generated with <a href="https://readme.bharatdn.com">ReadmeCraft</a></sub>\n`;
     md += `</div>\n`;
-    
+
     return md;
   };
 
@@ -298,14 +393,25 @@ export default function CraftPage() {
         fetch(`https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/README.md`),
         fetch(`https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/package.json`),
         fetch(`https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/Cargo.toml`),
-        fetch(`https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/pyproject.toml`),
+        fetch(
+          `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/pyproject.toml`
+        ),
       ]);
 
-      const repoData = repoRes.status === 'fulfilled' && repoRes.value.ok ? await repoRes.value.json() : null;
-      const readme = readmeRes.status === 'fulfilled' && readmeRes.value.ok ? await readmeRes.value.text() : '';
-      const packageJson = packageRes.status === 'fulfilled' && packageRes.value.ok ? await packageRes.value.json() : null;
-      const cargoToml = cargoRes.status === 'fulfilled' && cargoRes.value.ok ? await cargoRes.value.text() : '';
-      const pyprojectToml = pyprojectRes.status === 'fulfilled' && pyprojectRes.value.ok ? await pyprojectRes.value.text() : '';
+      const repoData =
+        repoRes.status === 'fulfilled' && repoRes.value.ok ? await repoRes.value.json() : null;
+      const readme =
+        readmeRes.status === 'fulfilled' && readmeRes.value.ok ? await readmeRes.value.text() : '';
+      const packageJson =
+        packageRes.status === 'fulfilled' && packageRes.value.ok
+          ? await packageRes.value.json()
+          : null;
+      const cargoToml =
+        cargoRes.status === 'fulfilled' && cargoRes.value.ok ? await cargoRes.value.text() : '';
+      const pyprojectToml =
+        pyprojectRes.status === 'fulfilled' && pyprojectRes.value.ok
+          ? await pyprojectRes.value.text()
+          : '';
 
       if (!repoData) throw new Error('Repository not found or private');
 
@@ -326,13 +432,13 @@ export default function CraftPage() {
 
       // Detect project type
       const projectType = detectProjectType(analysisData);
-      
+
       // Generate badge URLs
       const badges = generateBadgeUrls(parsed.owner, parsed.repo, projectType, theme);
-      
+
       // Generate markdown
       const markdown = generateMarkdown(analysisData, projectType, badges, theme);
-      
+
       setCrafted({ markdown, badges, projectType });
       setStep('result');
     } catch (err: any) {
@@ -360,14 +466,14 @@ export default function CraftPage() {
 
   if (step === 'error') {
     return (
-      <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-4">
-        <div className="bg-[#0b101c] border border-[#ef4444]/30 rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="text-4xl mb-4">❌</div>
-          <h1 className="text-2xl font-bold text-[#ef4444] mb-2">Analysis Failed</h1>
-          <p className="text-[#94a3b8] mb-6">{error}</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#090d16] p-4">
+        <div className="w-full max-w-md rounded-2xl border border-[#ef4444]/30 bg-[#0b101c] p-8 text-center">
+          <div className="mb-4 text-4xl">❌</div>
+          <h1 className="mb-2 text-2xl font-bold text-[#ef4444]">Analysis Failed</h1>
+          <p className="mb-6 text-[#94a3b8]">{error}</p>
           <button
             onClick={() => setStep('input')}
-            className="inline-block px-6 py-3 bg-[#ef4444] text-white rounded-lg font-medium hover:bg-[#dc2626] transition-colors"
+            className="inline-block rounded-lg bg-[#ef4444] px-6 py-3 font-medium text-white transition-colors hover:bg-[#dc2626]"
           >
             Try Again
           </button>
@@ -377,11 +483,11 @@ export default function CraftPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-4">
-      <div className="bg-[#0b101c] border border-[#1e293b] rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="flex min-h-screen items-center justify-center bg-[#090d16] p-4">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-[#1e293b] bg-[#0b101c] p-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#f1f5f9] mb-2 flex items-center justify-center gap-2">
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 flex items-center justify-center gap-2 text-3xl font-bold text-[#f1f5f9]">
             <span>📝</span> Project README Wizard
           </h1>
           <p className="text-[#94a3b8]">
@@ -393,36 +499,41 @@ export default function CraftPage() {
           <div className="space-y-6">
             {/* Input */}
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-[#94a3b8]">GitHub Repository URL</label>
+              <label className="block text-sm font-medium text-[#94a3b8]">
+                GitHub Repository URL
+              </label>
               <div className="relative">
                 <input
                   type="text"
                   value={repoUrl}
                   onChange={(e) => setRepoUrl(e.target.value)}
                   placeholder="https://github.com/owner/repo"
-                  className="w-full px-4 py-3 bg-[#090d16] border border-[#2a3a4f] rounded-xl text-[#f1f5f9] placeholder-[#64748b] focus:border-[#10b981] focus:outline-none focus:ring-1 focus:ring-[#10b981]"
+                  className="w-full rounded-xl border border-[#2a3a4f] bg-[#090d16] px-4 py-3 text-[#f1f5f9] placeholder-[#64748b] focus:border-[#10b981] focus:ring-1 focus:ring-[#10b981] focus:outline-none"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] text-sm">
+                <div className="absolute top-1/2 right-3 -translate-y-1/2 text-sm text-[#64748b]">
                   owner/repo
                 </div>
               </div>
               <p className="text-xs text-[#64748b]">
-                Supports: GitHub.com URLs • Public repos only • Auto-detects CLI, Library, Web App, API, Mobile
+                Supports: GitHub.com URLs • Public repos only • Auto-detects CLI, Library, Web App,
+                API, Mobile
               </p>
             </div>
 
             {/* Theme Selector */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-[#94a3b8]">Badge Theme (50 Themes)</label>
+                <label className="block text-sm font-medium text-[#94a3b8]">
+                  Badge Theme (50 Themes)
+                </label>
                 <span className="font-mono text-xs text-emerald-400 capitalize">{theme}</span>
               </div>
-              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 border border-[#1e293b]/50 rounded-lg">
+              <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto rounded-lg border border-[#1e293b]/50 p-1">
                 {themes.map((t) => (
                   <button
                     key={t.id}
                     onClick={() => setTheme(t.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
+                    className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
                       theme === t.id
                         ? `border-${t.accent.replace('#', '')} bg-${t.accent.replace('#', '')}/20 text-${t.accent.replace('#', '')}`
                         : 'border-[#2a3a4f] text-[#94a3b8] hover:border-[#3a4a5f] hover:bg-[#161b22]'
@@ -430,7 +541,7 @@ export default function CraftPage() {
                     style={{
                       borderColor: theme === t.id ? t.accent : '#2a3a4f',
                       backgroundColor: theme === t.id ? t.accent + '20' : undefined,
-                      color: theme === t.id ? t.accent : '#94a3b8'
+                      color: theme === t.id ? t.accent : '#94a3b8',
                     }}
                   >
                     {t.name}
@@ -443,7 +554,7 @@ export default function CraftPage() {
             <button
               onClick={handleAnalyze}
               disabled={!repoUrl.trim()}
-              className="w-full py-4 px-6 bg-gradient-to-r from-[#10b981] to-[#059669] text-white font-bold text-lg rounded-xl hover:from-[#059669] hover:to-[#047857] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-xl bg-gradient-to-r from-[#10b981] to-[#059669] px-6 py-4 text-lg font-bold text-white transition-all hover:from-[#059669] hover:to-[#047857] disabled:cursor-not-allowed disabled:opacity-50"
             >
               🔍 Analyze & Generate README
             </button>
@@ -451,34 +562,38 @@ export default function CraftPage() {
         )}
 
         {step === 'analyzing' && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#10b981] border-t-transparent mb-4"></div>
-            <p className="text-[#94a3b8]">Fetching repo data, detecting project type, generating README...</p>
-            <p className="text-xs text-[#64748b] mt-2">This usually takes 5-10 seconds</p>
+          <div className="py-12 text-center">
+            <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-[#10b981] border-t-transparent"></div>
+            <p className="text-[#94a3b8]">
+              Fetching repo data, detecting project type, generating README...
+            </p>
+            <p className="mt-2 text-xs text-[#64748b]">This usually takes 5-10 seconds</p>
           </div>
         )}
 
         {step === 'result' && crafted && analysis && (
           <div className="space-y-6">
             {/* Result Header */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <span className={`text-2xl mr-2`}>{PROJECT_TYPES[crafted.projectType].icon}</span>
-                <span className="text-xl font-bold text-[#f1f5f9]">{PROJECT_TYPES[crafted.projectType].label}</span>
-                <span className="ml-3 px-2 py-0.5 bg-[#161b22] border border-[#2a3a4f] rounded text-xs text-[#94a3b8]">
+                <span className={`mr-2 text-2xl`}>{PROJECT_TYPES[crafted.projectType].icon}</span>
+                <span className="text-xl font-bold text-[#f1f5f9]">
+                  {PROJECT_TYPES[crafted.projectType].label}
+                </span>
+                <span className="ml-3 rounded border border-[#2a3a4f] bg-[#161b22] px-2 py-0.5 text-xs text-[#94a3b8]">
                   {crafted.projectType.toUpperCase()}
                 </span>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => copyToClipboard(crafted.markdown)}
-                  className="px-4 py-2 bg-[#10b981] text-white rounded-lg font-medium hover:bg-[#059669] transition-colors flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-lg bg-[#10b981] px-4 py-2 font-medium text-white transition-colors hover:bg-[#059669]"
                 >
                   {copied ? '✅ Copied!' : '📋 Copy Markdown'}
                 </button>
                 <button
                   onClick={downloadMarkdown}
-                  className="px-4 py-2 bg-[#8b5cf6] text-white rounded-lg font-medium hover:bg-[#7c3aed] transition-colors flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-lg bg-[#8b5cf6] px-4 py-2 font-medium text-white transition-colors hover:bg-[#7c3aed]"
                 >
                   💾 Download .md
                 </button>
@@ -486,17 +601,23 @@ export default function CraftPage() {
             </div>
 
             {/* Repo Info */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-[#090d16] rounded-xl border border-[#1e293b]">
+            <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#1e293b] bg-[#090d16] p-4 md:grid-cols-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-[#10b981]">{analysis.stars.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-[#10b981]">
+                  {analysis.stars.toLocaleString()}
+                </div>
                 <div className="text-xs text-[#94a3b8]">Stars</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-[#8b5cf6]">{analysis.forks.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-[#8b5cf6]">
+                  {analysis.forks.toLocaleString()}
+                </div>
                 <div className="text-xs text-[#94a3b8]">Forks</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-[#3b82f6]">{analysis.language || 'N/A'}</div>
+                <div className="text-2xl font-bold text-[#3b82f6]">
+                  {analysis.language || 'N/A'}
+                </div>
                 <div className="text-xs text-[#94a3b8]">Language</div>
               </div>
               <div className="text-center">
@@ -510,8 +631,8 @@ export default function CraftPage() {
               <h3 className="font-medium text-[#f1f5f9]">Live Badge Preview</h3>
               <div className="space-y-2">
                 {crafted.badges.map((badge, i) => (
-                  <div key={i} className="p-3 bg-[#090d16] rounded-lg border border-[#1e293b]">
-                    <img src={badge} alt="Badge" className="max-w-full h-auto" />
+                  <div key={i} className="rounded-lg border border-[#1e293b] bg-[#090d16] p-3">
+                    <img src={badge} alt="Badge" className="h-auto max-w-full" />
                   </div>
                 ))}
               </div>
@@ -521,24 +642,26 @@ export default function CraftPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-[#f1f5f9]">Generated README</h3>
-                <span className="text-xs text-[#64748b]">{crafted.markdown.length} chars • {crafted.markdown.split('\n').length} lines</span>
+                <span className="text-xs text-[#64748b]">
+                  {crafted.markdown.length} chars • {crafted.markdown.split('\n').length} lines
+                </span>
               </div>
-              <div className="bg-[#090d16] border border-[#1e293b] rounded-xl p-4 max-h-96 overflow-auto font-mono text-sm text-[#94a3b8] whitespace-pre-wrap">
+              <div className="max-h-96 overflow-auto rounded-xl border border-[#1e293b] bg-[#090d16] p-4 font-mono text-sm whitespace-pre-wrap text-[#94a3b8]">
                 {crafted.markdown}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-[#1e293b]">
+            <div className="flex gap-3 border-t border-[#1e293b] pt-4">
               <button
                 onClick={() => copyToClipboard(crafted.markdown)}
-                className="flex-1 py-3 px-4 bg-[#10b981] text-white rounded-lg font-medium hover:bg-[#059669] transition-colors"
+                className="flex-1 rounded-lg bg-[#10b981] px-4 py-3 font-medium text-white transition-colors hover:bg-[#059669]"
               >
                 📋 Copy to Clipboard
               </button>
               <button
                 onClick={downloadMarkdown}
-                className="flex-1 py-3 px-4 bg-[#8b5cf6] text-white rounded-lg font-medium hover:bg-[#7c3aed] transition-colors"
+                className="flex-1 rounded-lg bg-[#8b5cf6] px-4 py-3 font-medium text-white transition-colors hover:bg-[#7c3aed]"
               >
                 💾 Download README.md
               </button>
@@ -546,14 +669,15 @@ export default function CraftPage() {
                 href={`https://github.com/${analysis.name}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 px-4 bg-[#3b82f6] text-white rounded-lg font-medium hover:bg-[#2563eb] transition-colors text-center"
+                className="flex-1 rounded-lg bg-[#3b82f6] px-4 py-3 text-center font-medium text-white transition-colors hover:bg-[#2563eb]"
               >
                 🔗 View Repo
               </a>
             </div>
 
             <p className="text-center text-xs text-[#64748b]">
-              Paste the copied markdown into your repository's README.md • Badges update automatically via ReadmeCraft
+              Paste the copied markdown into your repository's README.md • Badges update
+              automatically via ReadmeCraft
             </p>
           </div>
         )}

@@ -68,11 +68,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-md pt-[15vh] px-4">
-      <div className="w-full max-w-xl rounded-2xl border border-emerald-500/30 bg-[#0c1220] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 px-4 pt-[15vh] backdrop-blur-md">
+      <div className="animate-in fade-in zoom-in-95 w-full max-w-xl overflow-hidden rounded-2xl border border-emerald-500/30 bg-[#0c1220] shadow-2xl duration-150">
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 border-b border-[#1e293b] px-4 py-3.5 bg-[#090d16]">
-          <Search className="h-5 w-5 text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-3 border-b border-[#1e293b] bg-[#090d16] px-4 py-3.5">
+          <Search className="h-5 w-5 shrink-0 text-emerald-400" />
           <input
             ref={inputRef}
             type="text"
@@ -83,17 +83,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           />
           <button
             onClick={onClose}
-            className="rounded p-1 text-slate-500 hover:text-white transition-colors"
+            className="rounded p-1 text-slate-500 transition-colors hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Results List */}
-        <div className="max-h-[60vh] overflow-y-auto p-2 space-y-4">
+        <div className="max-h-[60vh] space-y-4 overflow-y-auto p-2">
           {/* Quick Actions */}
           <div>
-            <div className="px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="px-3 py-1 font-mono text-[10px] font-bold tracking-wider text-slate-500 uppercase">
               Navigation & Actions
             </div>
             <div className="space-y-1">
@@ -102,13 +102,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   onCopyMarkdown();
                   onClose();
                 }}
-                className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-slate-300 hover:bg-[#131b2e] hover:text-emerald-300 transition-colors"
+                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-slate-300 transition-colors hover:bg-[#131b2e] hover:text-emerald-300"
               >
                 <div className="flex items-center gap-2.5">
                   <Copy className="h-4 w-4 text-emerald-400" />
                   <span>Copy Raw Markdown to Clipboard</span>
                 </div>
-                <kbd className="font-mono text-[10px] bg-[#1e293b] px-1.5 py-0.5 rounded text-slate-400">
+                <kbd className="rounded bg-[#1e293b] px-1.5 py-0.5 font-mono text-[10px] text-slate-400">
                   Ctrl+C
                 </kbd>
               </button>
@@ -118,13 +118,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   onDownload();
                   onClose();
                 }}
-                className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-slate-300 hover:bg-[#131b2e] hover:text-emerald-300 transition-colors"
+                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-slate-300 transition-colors hover:bg-[#131b2e] hover:text-emerald-300"
               >
                 <div className="flex items-center gap-2.5">
                   <Download className="h-4 w-4 text-emerald-400" />
                   <span>Download README.md</span>
                 </div>
-                <kbd className="font-mono text-[10px] bg-[#1e293b] px-1.5 py-0.5 rounded text-slate-400">
+                <kbd className="rounded bg-[#1e293b] px-1.5 py-0.5 font-mono text-[10px] text-slate-400">
                   Ctrl+S
                 </kbd>
               </button>
@@ -134,7 +134,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   router.push('/deploy');
                   onClose();
                 }}
-                className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-slate-300 hover:bg-[#131b2e] hover:text-emerald-300 transition-colors"
+                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-slate-300 transition-colors hover:bg-[#131b2e] hover:text-emerald-300"
               >
                 <div className="flex items-center gap-2.5">
                   <Rocket className="h-4 w-4 text-emerald-400" />
@@ -148,7 +148,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   router.push('/templates');
                   onClose();
                 }}
-                className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-slate-300 hover:bg-[#131b2e] hover:text-emerald-300 transition-colors"
+                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-slate-300 transition-colors hover:bg-[#131b2e] hover:text-emerald-300"
               >
                 <div className="flex items-center gap-2.5">
                   <Sparkles className="h-4 w-4 text-emerald-400" />
@@ -161,7 +161,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
           {/* Mode Switch */}
           <div>
-            <div className="px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="px-3 py-1 font-mono text-[10px] font-bold tracking-wider text-slate-500 uppercase">
               Studio Mode
             </div>
             <div className="grid grid-cols-2 gap-1.5 px-1">
@@ -198,7 +198,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
           {/* 50 Curated Themes Quick Select */}
           <div>
-            <div className="px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="px-3 py-1 font-mono text-[10px] font-bold tracking-wider text-slate-500 uppercase">
               50 Viral Themes ({filteredThemes.length} matches)
             </div>
             <div className="grid grid-cols-2 gap-1.5 px-1">
@@ -206,16 +206,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 <button
                   key={t.id}
                   onClick={() => handleSelectTheme(t.id)}
-                  className="flex items-center justify-between rounded-xl border border-[#1e293b] bg-[#090d16] p-2 text-left text-xs text-slate-300 hover:border-emerald-500/50 hover:bg-[#131b2e] hover:text-white transition-all"
+                  className="flex items-center justify-between rounded-xl border border-[#1e293b] bg-[#090d16] p-2 text-left text-xs text-slate-300 transition-all hover:border-emerald-500/50 hover:bg-[#131b2e] hover:text-white"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex min-w-0 items-center gap-2">
                     <span
-                      className="h-3.5 w-3.5 rounded-full shrink-0 border border-white/20"
+                      className="h-3.5 w-3.5 shrink-0 rounded-full border border-white/20"
                       style={{ backgroundColor: t.emerald }}
                     />
                     <span className="truncate">{t.name}</span>
                   </div>
-                  <span className="font-mono text-[9px] text-slate-500 uppercase shrink-0">
+                  <span className="shrink-0 font-mono text-[9px] text-slate-500 uppercase">
                     {t.category}
                   </span>
                 </button>
@@ -225,7 +225,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Footer shortcuts */}
-        <div className="border-t border-[#1e293b] bg-[#090d16] px-4 py-2.5 flex items-center justify-between text-[11px] font-mono text-slate-500">
+        <div className="flex items-center justify-between border-t border-[#1e293b] bg-[#090d16] px-4 py-2.5 font-mono text-[11px] text-slate-500">
           <div className="flex items-center gap-2">
             <Keyboard className="h-3.5 w-3.5 text-emerald-400" />
             <span>Navigation: ESC to close • Enter to select</span>

@@ -225,7 +225,7 @@ export interface ProfileData {
   monthlyEstimatedSponsorsIncomeInCents?: number;
   hasSponsorsListing?: boolean;
   pronouns?: string | null;
-  
+
   // Counts
   publicRepos: number;
   totalDiskUsage?: number;
@@ -234,15 +234,15 @@ export interface ProfileData {
   starredRepositoriesCount?: number;
   watchingCount?: number;
   gistsCount?: number;
-  
+
   // Languages & Skills
   languages: LanguageStat[];
   skills: string[];
-  
+
   // Pinned & Top repos
   pinnedRepos: PinnedRepo[];
   topRepositories?: TopRepository[];
-  
+
   // Contributions
   contributionCalendar?: ContributionCalendar;
   totalCommitContributions?: number;
@@ -252,24 +252,24 @@ export interface ProfileData {
   totalRepositoriesWithContributedCommits?: number;
   commitContributionsByRepository?: RepositoryContribution[];
   pullRequestContributionsByRepository?: PullRequestContribution[];
-  
+
   // Organizations
   organizations?: Organization[];
-  
+
   // Packages
   packages?: Package[];
-  
+
   // Sponsors
   sponsors?: Sponsor[];
   sponsorshipsAsMaintainer?: Array<{
     sponsorEntity: Sponsor;
     tier: SponsorshipTier;
   }>;
-  
+
   // Social
   socialAccounts?: SocialAccount[];
   status?: UserStatus | null;
-  
+
   // Activity
   recentPullRequests?: PullRequest[];
   recentIssues?: Issue[];
@@ -281,7 +281,7 @@ export interface ProfileData {
     primaryLanguage: { name: string; color: string } | null;
     contributions?: { totalCount: number };
   }>;
-  
+
   // Feature flags
   gitHoloEnabled: boolean;
   gitChronicleEnabled: boolean;
@@ -303,7 +303,7 @@ export interface ProjectData {
   url: string;
   homepageUrl?: string | null;
   shortDescriptionHTML?: string;
-  
+
   // Stats
   stars: number;
   stargazerCount?: number;
@@ -311,7 +311,7 @@ export interface ProjectData {
   openIssues: number;
   closedIssues?: number;
   diskUsage?: number;
-  
+
   // Metadata
   license: string;
   licenseName?: string;
@@ -321,13 +321,13 @@ export interface ProjectData {
   languages?: RepositoryLanguage[];
   totalLanguageSize?: number;
   repositoryTopics?: RepositoryTopic[];
-  
+
   // Dates
   createdAt?: string;
   updatedAt?: string;
   pushedAt?: string;
   lastCommitDate?: string | null;
-  
+
   // Flags
   isArchived?: boolean;
   isDisabled?: boolean;
@@ -348,30 +348,30 @@ export interface ProjectData {
   hasSponsorshipsEnabled?: boolean;
   usesCustomOpenGraphImage?: boolean;
   openGraphImageUrl?: string | null;
-  
+
   // Relations
   templateRepository?: { name: string; owner: { login: string }; url: string } | null;
   parent?: { name: string; owner: { login: string }; url: string } | null;
   mentionableUsers?: MentionableUser[];
-  
+
   // Releases & Deployments
   releases?: Release[];
   deployments?: Deployment[];
   environments?: Environment[];
-  
+
   // Packages
   packages?: Package[];
-  
+
   // Workflows & Security
   workflows?: Workflow[];
   vulnerabilityAlerts?: VulnerabilityAlert[];
   dependencyGraphManifests?: DependencyManifest[];
-  
+
   // Security & Community
   securityPolicyUrl?: string | null;
   codeOfConduct?: CodeOfConduct | null;
   fundingLinks?: FundingLink[];
-  
+
   // Derived/computed
   language: string;
   framework?: string;

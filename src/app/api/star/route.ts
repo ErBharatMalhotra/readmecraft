@@ -20,7 +20,11 @@ export async function POST(req: Request) {
     // Check if already starred
     try {
       await octokit.rest.activity.checkRepoIsStarredByAuthenticatedUser({ owner, repo });
-      return NextResponse.json({ starred: true, alreadyStarred: true, message: 'Already starred ⭐' });
+      return NextResponse.json({
+        starred: true,
+        alreadyStarred: true,
+        message: 'Already starred ⭐',
+      });
     } catch (e: any) {
       if (e.status !== 404) throw e;
       // Not starred, proceed to star
@@ -29,7 +33,11 @@ export async function POST(req: Request) {
     // Star the repo
     await octokit.rest.activity.starRepoForAuthenticatedUser({ owner, repo });
 
-    return NextResponse.json({ starred: true, alreadyStarred: false, message: 'Starred! Thanks ⭐' });
+    return NextResponse.json({
+      starred: true,
+      alreadyStarred: false,
+      message: 'Starred! Thanks ⭐',
+    });
   } catch (error: any) {
     console.error('Star error:', error);
     return NextResponse.json({ error: error?.message || 'Failed to star' }, { status: 500 });

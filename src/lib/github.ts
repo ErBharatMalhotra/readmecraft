@@ -1,11 +1,40 @@
-import type { ProfileData, ProjectData, LanguageStat, PinnedRepo, TopRepository, ContributionCalendar, RepositoryContribution, PullRequestContribution, Organization, Package, Sponsor, SponsorshipTier, SocialAccount, UserStatus, PullRequest, Issue, RepositoryLanguage, RepositoryTopic, Release, Deployment, Environment, Workflow, VulnerabilityAlert, DependencyManifest, FundingLink, MentionableUser, CodeOfConduct } from '@/types/readmecraft';
+import type {
+  ProfileData,
+  ProjectData,
+  LanguageStat,
+  PinnedRepo,
+  TopRepository,
+  ContributionCalendar,
+  RepositoryContribution,
+  PullRequestContribution,
+  Organization,
+  Package,
+  Sponsor,
+  SponsorshipTier,
+  SocialAccount,
+  UserStatus,
+  PullRequest,
+  Issue,
+  RepositoryLanguage,
+  RepositoryTopic,
+  Release,
+  Deployment,
+  Environment,
+  Workflow,
+  VulnerabilityAlert,
+  DependencyManifest,
+  FundingLink,
+  MentionableUser,
+  CodeOfConduct,
+} from '@/types/readmecraft';
 import { fetchProfileData, fetchRepoData, createOctokitClient } from './github-api';
 
 export const SAMPLE_PROFILE: ProfileData = {
   username: 'ErBharatMalhotra',
   name: 'Bharat Malhotra',
   bio: 'Full-stack software architect building high-performance developer tools, 3D web graphics, and scalable distributed systems.',
-  bioHTML: '<p>Full-stack software architect building high-performance developer tools, 3D web graphics, and scalable distributed systems.</p>',
+  bioHTML:
+    '<p>Full-stack software architect building high-performance developer tools, 3D web graphics, and scalable distributed systems.</p>',
   avatarUrl: 'https://avatars.githubusercontent.com/u/9919?v=4',
   company: 'BharatDN',
   companyHTML: 'BharatDN',
@@ -37,9 +66,25 @@ export const SAMPLE_PROFILE: ProfileData = {
     { name: 'Go', percentage: 10.5, color: '#00ADD8', bytes: 180000 },
   ],
   skills: [
-    'TypeScript', 'React', 'Next.js', 'Node.js', 'Rust', 'Go', 'Python',
-    'TailwindCSS', 'PostgreSQL', 'Docker', 'GraphQL', 'WebGL', 'WebAssembly',
-    'Kubernetes', 'AWS', 'Terraform', 'CI/CD', 'Microservices', 'System Design'
+    'TypeScript',
+    'React',
+    'Next.js',
+    'Node.js',
+    'Rust',
+    'Go',
+    'Python',
+    'TailwindCSS',
+    'PostgreSQL',
+    'Docker',
+    'GraphQL',
+    'WebGL',
+    'WebAssembly',
+    'Kubernetes',
+    'AWS',
+    'Terraform',
+    'CI/CD',
+    'Microservices',
+    'System Design',
   ],
   pinnedRepos: [
     {
@@ -55,8 +100,20 @@ export const SAMPLE_PROFILE: ProfileData = {
       isArchived: false,
       homepageUrl: 'https://githolo.bharatdn.com',
       releases: [
-        { name: 'v2.0.0', tagName: 'v2.0.0', publishedAt: '2024-01-15T00:00:00Z', url: 'https://github.com/ErBharatMalhotra/githolo/releases/tag/v2.0.0', isPrerelease: false },
-        { name: 'v1.5.0', tagName: 'v1.5.0', publishedAt: '2023-08-20T00:00:00Z', url: 'https://github.com/ErBharatMalhotra/githolo/releases/tag/v1.5.0', isPrerelease: false },
+        {
+          name: 'v2.0.0',
+          tagName: 'v2.0.0',
+          publishedAt: '2024-01-15T00:00:00Z',
+          url: 'https://github.com/ErBharatMalhotra/githolo/releases/tag/v2.0.0',
+          isPrerelease: false,
+        },
+        {
+          name: 'v1.5.0',
+          tagName: 'v1.5.0',
+          publishedAt: '2023-08-20T00:00:00Z',
+          url: 'https://github.com/ErBharatMalhotra/githolo/releases/tag/v1.5.0',
+          isPrerelease: false,
+        },
       ],
     },
     {
@@ -72,7 +129,13 @@ export const SAMPLE_PROFILE: ProfileData = {
       isArchived: false,
       homepageUrl: 'https://gitchronicle.bharatdn.com',
       releases: [
-        { name: 'v1.2.0', tagName: 'v1.2.0', publishedAt: '2024-02-01T00:00:00Z', url: 'https://github.com/ErBharatMalhotra/gitchronicle/releases/tag/v1.2.0', isPrerelease: false },
+        {
+          name: 'v1.2.0',
+          tagName: 'v1.2.0',
+          publishedAt: '2024-02-01T00:00:00Z',
+          url: 'https://github.com/ErBharatMalhotra/gitchronicle/releases/tag/v1.2.0',
+          isPrerelease: false,
+        },
       ],
     },
     {
@@ -88,22 +151,51 @@ export const SAMPLE_PROFILE: ProfileData = {
       isArchived: false,
       homepageUrl: 'https://readme.bharatdn.com',
       releases: [
-        { name: 'v3.0.0', tagName: 'v3.0.0', publishedAt: '2024-11-01T00:00:00Z', url: 'https://github.com/ErBharatMalhotra/readmecraft/releases/tag/v3.0.0', isPrerelease: false },
-        { name: 'v2.5.0', tagName: 'v2.5.0', publishedAt: '2024-06-15T00:00:00Z', url: 'https://github.com/ErBharatMalhotra/readmecraft/releases/tag/v2.5.0', isPrerelease: false },
+        {
+          name: 'v3.0.0',
+          tagName: 'v3.0.0',
+          publishedAt: '2024-11-01T00:00:00Z',
+          url: 'https://github.com/ErBharatMalhotra/readmecraft/releases/tag/v3.0.0',
+          isPrerelease: false,
+        },
+        {
+          name: 'v2.5.0',
+          tagName: 'v2.5.0',
+          publishedAt: '2024-06-15T00:00:00Z',
+          url: 'https://github.com/ErBharatMalhotra/readmecraft/releases/tag/v2.5.0',
+          isPrerelease: false,
+        },
       ],
     },
   ],
   topRepositories: [
-    { name: 'ReadmeCraft', stargazerCount: 1205, url: 'https://github.com/ErBharatMalhotra/readmecraft', primaryLanguage: { name: 'TypeScript', color: '#3178c6' } },
-    { name: 'GitHolo', stargazerCount: 842, url: 'https://github.com/ErBharatMalhotra/githolo', primaryLanguage: { name: 'TypeScript', color: '#3178c6' } },
-    { name: 'GitChronicle', stargazerCount: 512, url: 'https://github.com/ErBharatMalhotra/gitchronicle', primaryLanguage: { name: 'Rust', color: '#dea584' } },
+    {
+      name: 'ReadmeCraft',
+      stargazerCount: 1205,
+      url: 'https://github.com/ErBharatMalhotra/readmecraft',
+      primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
+    },
+    {
+      name: 'GitHolo',
+      stargazerCount: 842,
+      url: 'https://github.com/ErBharatMalhotra/githolo',
+      primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
+    },
+    {
+      name: 'GitChronicle',
+      stargazerCount: 512,
+      url: 'https://github.com/ErBharatMalhotra/gitchronicle',
+      primaryLanguage: { name: 'Rust', color: '#dea584' },
+    },
   ],
   contributionCalendar: {
     totalContributions: 2847,
     weeks: Array.from({ length: 53 }, (_, w) => ({
       contributionDays: Array.from({ length: 7 }, (_, d) => ({
         contributionCount: Math.floor(Math.random() * 5),
-        date: new Date(Date.now() - (53 - w) * 7 * 86400000 + d * 86400000).toISOString().split('T')[0],
+        date: new Date(Date.now() - (53 - w) * 7 * 86400000 + d * 86400000)
+          .toISOString()
+          .split('T')[0],
         weekday: d,
       })),
     })),
@@ -114,27 +206,96 @@ export const SAMPLE_PROFILE: ProfileData = {
   totalPullRequestReviewContributions: 77,
   totalRepositoriesWithContributedCommits: 28,
   commitContributionsByRepository: [
-    { repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' }, url: 'https://github.com/ErBharatMalhotra/readmecraft', primaryLanguage: { name: 'TypeScript', color: '#3178c6' } }, contributions: { totalCount: 450 } },
-    { repository: { name: 'githolo', owner: { login: 'ErBharatMalhotra' }, url: 'https://github.com/ErBharatMalhotra/githolo', primaryLanguage: { name: 'TypeScript', color: '#3178c6' } }, contributions: { totalCount: 320 } },
-    { repository: { name: 'gitchronicle', owner: { login: 'ErBharatMalhotra' }, url: 'https://github.com/ErBharatMalhotra/gitchronicle', primaryLanguage: { name: 'Rust', color: '#dea584' } }, contributions: { totalCount: 280 } },
+    {
+      repository: {
+        name: 'readmecraft',
+        owner: { login: 'ErBharatMalhotra' },
+        url: 'https://github.com/ErBharatMalhotra/readmecraft',
+        primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
+      },
+      contributions: { totalCount: 450 },
+    },
+    {
+      repository: {
+        name: 'githolo',
+        owner: { login: 'ErBharatMalhotra' },
+        url: 'https://github.com/ErBharatMalhotra/githolo',
+        primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
+      },
+      contributions: { totalCount: 320 },
+    },
+    {
+      repository: {
+        name: 'gitchronicle',
+        owner: { login: 'ErBharatMalhotra' },
+        url: 'https://github.com/ErBharatMalhotra/gitchronicle',
+        primaryLanguage: { name: 'Rust', color: '#dea584' },
+      },
+      contributions: { totalCount: 280 },
+    },
   ],
   pullRequestContributionsByRepository: [
-    { repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' }, url: 'https://github.com/ErBharatMalhotra/readmecraft' }, contributions: { totalCount: 45 } },
-    { repository: { name: 'githolo', owner: { login: 'ErBharatMalhotra' }, url: 'https://github.com/ErBharatMalhotra/githolo' }, contributions: { totalCount: 28 } },
+    {
+      repository: {
+        name: 'readmecraft',
+        owner: { login: 'ErBharatMalhotra' },
+        url: 'https://github.com/ErBharatMalhotra/readmecraft',
+      },
+      contributions: { totalCount: 45 },
+    },
+    {
+      repository: {
+        name: 'githolo',
+        owner: { login: 'ErBharatMalhotra' },
+        url: 'https://github.com/ErBharatMalhotra/githolo',
+      },
+      contributions: { totalCount: 28 },
+    },
   ],
   organizations: [
-    { login: 'BharatDN', name: 'BharatDN', avatarUrl: 'https://avatars.githubusercontent.com/u/123456?v=4', url: 'https://github.com/BharatDN' },
+    {
+      login: 'BharatDN',
+      name: 'BharatDN',
+      avatarUrl: 'https://avatars.githubusercontent.com/u/123456?v=4',
+      url: 'https://github.com/BharatDN',
+    },
   ],
   packages: [
-    { name: '@bharatdn/githolo', packageType: 'NPM', url: 'https://github.com/ErBharatMalhotra/githolo/packages', version: '2.0.0' },
-    { name: '@bharatdn/readmecraft', packageType: 'NPM', url: 'https://github.com/ErBharatMalhotra/readmecraft/packages', version: '3.0.0' },
+    {
+      name: '@bharatdn/githolo',
+      packageType: 'NPM',
+      url: 'https://github.com/ErBharatMalhotra/githolo/packages',
+      version: '2.0.0',
+    },
+    {
+      name: '@bharatdn/readmecraft',
+      packageType: 'NPM',
+      url: 'https://github.com/ErBharatMalhotra/readmecraft/packages',
+      version: '3.0.0',
+    },
   ],
   sponsors: [
-    { login: 'sponsor1', avatarUrl: 'https://avatars.githubusercontent.com/u/111?v=4', url: 'https://github.com/sponsor1' },
-    { login: 'sponsor2', avatarUrl: 'https://avatars.githubusercontent.com/u/222?v=4', url: 'https://github.com/sponsor2' },
+    {
+      login: 'sponsor1',
+      avatarUrl: 'https://avatars.githubusercontent.com/u/111?v=4',
+      url: 'https://github.com/sponsor1',
+    },
+    {
+      login: 'sponsor2',
+      avatarUrl: 'https://avatars.githubusercontent.com/u/222?v=4',
+      url: 'https://github.com/sponsor2',
+    },
   ],
   sponsorshipsAsMaintainer: [
-    { sponsorEntity: { login: 'supporter1', avatarUrl: 'https://avatars.githubusercontent.com/u/333?v=4', name: 'Supporter One', url: 'https://github.com/supporter1' }, tier: { monthlyPriceInCents: 500, name: 'Supporter' } },
+    {
+      sponsorEntity: {
+        login: 'supporter1',
+        avatarUrl: 'https://avatars.githubusercontent.com/u/333?v=4',
+        name: 'Supporter One',
+        url: 'https://github.com/supporter1',
+      },
+      tier: { monthlyPriceInCents: 500, name: 'Supporter' },
+    },
   ],
   socialAccounts: [
     { provider: 'TWITTER', url: 'https://twitter.com/ErBharatMalhotra' },
@@ -143,16 +304,50 @@ export const SAMPLE_PROFILE: ProfileData = {
   ],
   status: { emoji: '🚀', message: 'Building ReadmeCraft v3', expiresAt: null },
   recentPullRequests: [
-    { title: 'feat: Add new template system', url: 'https://github.com/ErBharatMalhotra/readmecraft/pull/42', state: 'MERGED', mergedAt: '2024-11-10T00:00:00Z', repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } } },
-    { title: 'fix: Resolve hydration mismatch', url: 'https://github.com/ErBharatMalhotra/readmecraft/pull/41', state: 'MERGED', mergedAt: '2024-11-08T00:00:00Z', repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } } },
+    {
+      title: 'feat: Add new template system',
+      url: 'https://github.com/ErBharatMalhotra/readmecraft/pull/42',
+      state: 'MERGED',
+      mergedAt: '2024-11-10T00:00:00Z',
+      repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } },
+    },
+    {
+      title: 'fix: Resolve hydration mismatch',
+      url: 'https://github.com/ErBharatMalhotra/readmecraft/pull/41',
+      state: 'MERGED',
+      mergedAt: '2024-11-08T00:00:00Z',
+      repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } },
+    },
   ],
   recentIssues: [
-    { title: 'Feature request: Add more themes', url: 'https://github.com/ErBharatMalhotra/readmecraft/issues/38', state: 'OPEN', repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } } },
-    { title: 'Bug: Mobile layout issue', url: 'https://github.com/ErBharatMalhotra/readmecraft/issues/37', state: 'CLOSED', repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } } },
+    {
+      title: 'Feature request: Add more themes',
+      url: 'https://github.com/ErBharatMalhotra/readmecraft/issues/38',
+      state: 'OPEN',
+      repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } },
+    },
+    {
+      title: 'Bug: Mobile layout issue',
+      url: 'https://github.com/ErBharatMalhotra/readmecraft/issues/37',
+      state: 'CLOSED',
+      repository: { name: 'readmecraft', owner: { login: 'ErBharatMalhotra' } },
+    },
   ],
   repositoriesContributedTo: [
-    { name: 'next.js', owner: { login: 'vercel' }, url: 'https://github.com/vercel/next.js', stargazerCount: 120000, primaryLanguage: { name: 'TypeScript', color: '#3178c6' } },
-    { name: 'rust', owner: { login: 'rust-lang' }, url: 'https://github.com/rust-lang/rust', stargazerCount: 95000, primaryLanguage: { name: 'Rust', color: '#dea584' } },
+    {
+      name: 'next.js',
+      owner: { login: 'vercel' },
+      url: 'https://github.com/vercel/next.js',
+      stargazerCount: 120000,
+      primaryLanguage: { name: 'TypeScript', color: '#3178c6' },
+    },
+    {
+      name: 'rust',
+      owner: { login: 'rust-lang' },
+      url: 'https://github.com/rust-lang/rust',
+      stargazerCount: 95000,
+      primaryLanguage: { name: 'Rust', color: '#dea584' },
+    },
   ],
   gitHoloEnabled: true,
   gitChronicleEnabled: true,
@@ -168,8 +363,10 @@ export const SAMPLE_PROJECT: ProjectData = {
   name: 'readmecraft',
   nameWithOwner: 'ErBharatMalhotra/readmecraft',
   title: 'ReadmeCraft',
-  description: 'The next-generation intelligent GitHub README Studio for Developer Profiles and Repositories with instant auto-detection and ecosystem interlinking.',
-  descriptionHTML: '<p>The next-generation intelligent GitHub README Studio for Developer Profiles and Repositories with instant auto-detection and ecosystem interlinking.</p>',
+  description:
+    'The next-generation intelligent GitHub README Studio for Developer Profiles and Repositories with instant auto-detection and ecosystem interlinking.',
+  descriptionHTML:
+    '<p>The next-generation intelligent GitHub README Studio for Developer Profiles and Repositories with instant auto-detection and ecosystem interlinking.</p>',
   url: 'https://github.com/ErBharatMalhotra/readmecraft',
   homepageUrl: 'https://readme.bharatdn.com',
   shortDescriptionHTML: '<p>Next-generation intelligent GitHub README Studio</p>',
@@ -200,19 +397,50 @@ export const SAMPLE_PROJECT: ProjectData = {
     { name: 'ai', stargazerCount: 25000 },
   ],
   releases: [
-    { name: 'v3.0.0', tagName: 'v3.0.0', description: 'Major release with new template system', publishedAt: '2024-11-01T00:00:00Z', url: 'https://github.com/ErBharatMalhotra/readmecraft/releases/tag/v3.0.0', isPrerelease: false, isDraft: false },
-    { name: 'v2.5.0', tagName: 'v2.5.0', description: 'Performance improvements', publishedAt: '2024-06-15T00:00:00Z', url: 'https://github.com/ErBharatMalhotra/readmecraft/releases/tag/v2.5.0', isPrerelease: false, isDraft: false },
+    {
+      name: 'v3.0.0',
+      tagName: 'v3.0.0',
+      description: 'Major release with new template system',
+      publishedAt: '2024-11-01T00:00:00Z',
+      url: 'https://github.com/ErBharatMalhotra/readmecraft/releases/tag/v3.0.0',
+      isPrerelease: false,
+      isDraft: false,
+    },
+    {
+      name: 'v2.5.0',
+      tagName: 'v2.5.0',
+      description: 'Performance improvements',
+      publishedAt: '2024-06-15T00:00:00Z',
+      url: 'https://github.com/ErBharatMalhotra/readmecraft/releases/tag/v2.5.0',
+      isPrerelease: false,
+      isDraft: false,
+    },
   ],
   deployments: [
-    { createdAt: '2024-11-01T12:00:00Z', environment: 'production', state: 'active', payload: 'Deployed to Vercel' },
-    { createdAt: '2024-10-28T10:00:00Z', environment: 'preview', state: 'success', payload: 'Preview deployment' },
+    {
+      createdAt: '2024-11-01T12:00:00Z',
+      environment: 'production',
+      state: 'active',
+      payload: 'Deployed to Vercel',
+    },
+    {
+      createdAt: '2024-10-28T10:00:00Z',
+      environment: 'preview',
+      state: 'success',
+      payload: 'Preview deployment',
+    },
   ],
   environments: [
     { name: 'production', url: 'https://readme.bharatdn.com' },
     { name: 'preview', url: 'https://readmecraft-preview.vercel.app' },
   ],
   packages: [
-    { name: '@readmecraft/core', packageType: 'NPM', version: '3.0.0', url: 'https://github.com/ErBharatMalhotra/readmecraft/packages' },
+    {
+      name: '@readmecraft/core',
+      packageType: 'NPM',
+      version: '3.0.0',
+      url: 'https://github.com/ErBharatMalhotra/readmecraft/packages',
+    },
   ],
   workflows: [
     { name: 'CI', state: 'active', filePath: '.github/workflows/ci.yml' },
@@ -221,7 +449,29 @@ export const SAMPLE_PROJECT: ProjectData = {
   ],
   vulnerabilityAlerts: [],
   dependencyGraphManifests: [
-    { filename: 'package.json', dependencies: [ { packageName: 'next', repository: { name: 'next.js', url: 'https://github.com/vercel/next.js' }, requirements: '^16.0.0', hasDependencies: true }, { packageName: 'react', repository: { name: 'react', url: 'https://github.com/facebook/react' }, requirements: '^19.0.0', hasDependencies: true }, { packageName: 'tailwindcss', repository: { name: 'tailwindcss', url: 'https://github.com/tailwindlabs/tailwindcss' }, requirements: '^4.0.0', hasDependencies: true } ] },
+    {
+      filename: 'package.json',
+      dependencies: [
+        {
+          packageName: 'next',
+          repository: { name: 'next.js', url: 'https://github.com/vercel/next.js' },
+          requirements: '^16.0.0',
+          hasDependencies: true,
+        },
+        {
+          packageName: 'react',
+          repository: { name: 'react', url: 'https://github.com/facebook/react' },
+          requirements: '^19.0.0',
+          hasDependencies: true,
+        },
+        {
+          packageName: 'tailwindcss',
+          repository: { name: 'tailwindcss', url: 'https://github.com/tailwindlabs/tailwindcss' },
+          requirements: '^4.0.0',
+          hasDependencies: true,
+        },
+      ],
+    },
   ],
   mergeCommitAllowed: true,
   rebaseMergeAllowed: true,
@@ -241,10 +491,17 @@ export const SAMPLE_PROJECT: ProjectData = {
   templateRepository: null,
   parent: null,
   mentionableUsers: [
-    { login: 'ErBharatMalhotra', name: 'Bharat Malhotra', avatarUrl: 'https://avatars.githubusercontent.com/u/9919?v=4' },
+    {
+      login: 'ErBharatMalhotra',
+      name: 'Bharat Malhotra',
+      avatarUrl: 'https://avatars.githubusercontent.com/u/9919?v=4',
+    },
   ],
   securityPolicyUrl: 'https://github.com/ErBharatMalhotra/readmecraft/security/policy',
-  codeOfConduct: { name: 'Contributor Covenant', url: 'https://github.com/ErBharatMalhotra/readmecraft/blob/main/CODE_OF_CONDUCT.md' },
+  codeOfConduct: {
+    name: 'Contributor Covenant',
+    url: 'https://github.com/ErBharatMalhotra/readmecraft/blob/main/CODE_OF_CONDUCT.md',
+  },
   fundingLinks: [
     { platform: 'GITHUB', url: 'https://github.com/sponsors/ErBharatMalhotra' },
     { platform: 'PATREON', url: 'https://patreon.com/bharatdn' },
@@ -271,7 +528,15 @@ export const SAMPLE_PROJECT: ProjectData = {
     '✨ Live Pixel-Perfect GitHub Markdown Preview with Instant Copy & Download',
     '🌙 Dark-mode-first, accessible, responsive, and performant by default',
   ],
-  techStack: ['Next.js 16', 'React 19', 'TypeScript', 'TailwindCSS v4', 'Octokit', 'Lucide Icons', 'Turbopack'],
+  techStack: [
+    'Next.js 16',
+    'React 19',
+    'TypeScript',
+    'TailwindCSS v4',
+    'Octokit',
+    'Lucide Icons',
+    'Turbopack',
+  ],
   architectureDiagram: `┌─────────────────┬──────────────────────────┬──────────────────────────┐
 │  Section Manager│    Markdown Editor       │   Live GitHub Preview    │
 │  (Bento/Minimal)│    (Syntax Highlight)    │   (GitHub README CSS)    │
@@ -324,10 +589,10 @@ const LANG_COLORS: Record<string, string> = {
 function calculateLanguages(repos: any[]): LanguageStat[] {
   const langBytes: Record<string, number> = {};
   let totalBytes = 0;
-  
+
   repos.forEach((repo) => {
     if (repo.isFork) return;
-    
+
     if (repo.languages?.nodes) {
       repo.languages.nodes.forEach((l: any) => {
         const size = l.size || 1000;
@@ -365,10 +630,10 @@ function calculateLanguages(repos: any[]): LanguageStat[] {
 
 function calculateLanguagesFromRepoData(languages: any[]): LanguageStat[] {
   if (!languages || languages.length === 0) return [];
-  
+
   const totalSize = languages.reduce((sum, l) => sum + (l.size || 0), 0);
   if (totalSize === 0) return [];
-  
+
   return languages
     .map((l) => ({
       name: l.name,
@@ -385,10 +650,28 @@ function extractSkillsFromData(data: any, languages: LanguageStat[]): string[] {
   const seen = new Set<string>();
   // Repo topics like "news", "tools" or "case-study" are not skills.
   const GENERIC_TOPICS = new Set([
-    'ai', 'ai agents', 'artificial intelligence', 'analytics', 'news', 'tools',
-    'benchmarks', 'dashboard', 'developer analytics', 'developer tools',
-    'github api', 'case study', 'cloudflare', 'programmatic seo', 'static site',
-    'pipeline', 'automation', 'llm', 'apps', 'web', 'website', 'readme',
+    'ai',
+    'ai agents',
+    'artificial intelligence',
+    'analytics',
+    'news',
+    'tools',
+    'benchmarks',
+    'dashboard',
+    'developer analytics',
+    'developer tools',
+    'github api',
+    'case study',
+    'cloudflare',
+    'programmatic seo',
+    'static site',
+    'pipeline',
+    'automation',
+    'llm',
+    'apps',
+    'web',
+    'website',
+    'readme',
   ]);
   const add = (value: string) => {
     const text = String(value || '').trim();
@@ -400,7 +683,7 @@ function extractSkillsFromData(data: any, languages: LanguageStat[]): string[] {
   };
 
   // Add top languages as skills
-  languages.slice(0, 6).forEach(l => add(l.name));
+  languages.slice(0, 6).forEach((l) => add(l.name));
 
   // Add skills from repo topics
   data.reposList?.nodes?.forEach((repo: any) => {
@@ -408,19 +691,39 @@ function extractSkillsFromData(data: any, languages: LanguageStat[]): string[] {
       const topic = t.topic?.name || '';
       if (topic && topic.length > 1) {
         // Convert kebab-case to Title Case for skills
-        add(topic.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
+        add(
+          topic
+            .split('-')
+            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ')
+        );
       }
     });
   });
 
   // Add common developer skills
   const commonSkills = [
-    'Git', 'Docker', 'REST APIs', 'GraphQL', 'CI/CD', 'Testing',
-    'System Design', 'Microservices', 'Kubernetes', 'AWS', 'PostgreSQL',
-    'Redis', 'WebSockets', 'TypeScript', 'React', 'Node.js',
-    'Performance Optimization', 'Security', 'Observability'
+    'Git',
+    'Docker',
+    'REST APIs',
+    'GraphQL',
+    'CI/CD',
+    'Testing',
+    'System Design',
+    'Microservices',
+    'Kubernetes',
+    'AWS',
+    'PostgreSQL',
+    'Redis',
+    'WebSockets',
+    'TypeScript',
+    'React',
+    'Node.js',
+    'Performance Optimization',
+    'Security',
+    'Observability',
   ];
-  commonSkills.forEach(s => add(s));
+  commonSkills.forEach((s) => add(s));
 
   return Array.from(skills).slice(0, 25);
 }
@@ -469,13 +772,14 @@ export async function fetchGitHubProfile(
       isFork: r.isFork,
       isArchived: r.isArchived,
       homepageUrl: r.homepageUrl || undefined,
-      releases: r.releases?.nodes?.map((rel: any) => ({
-        name: rel.name,
-        tagName: rel.tagName,
-        publishedAt: rel.publishedAt,
-        url: rel.url,
-        isPrerelease: rel.isPrerelease,
-      })) || [],
+      releases:
+        r.releases?.nodes?.map((rel: any) => ({
+          name: rel.name,
+          tagName: rel.tagName,
+          publishedAt: rel.publishedAt,
+          url: rel.url,
+          isPrerelease: rel.isPrerelease,
+        })) || [],
     }));
 
     // Process top repositories (filter private)
@@ -490,7 +794,10 @@ export async function fetchGitHubProfile(
       }));
 
     // Process contribution calendar
-    const calendar = userData.contributionsCollection?.contributionCalendar || { totalContributions: 0, weeks: [] };
+    const calendar = userData.contributionsCollection?.contributionCalendar || {
+      totalContributions: 0,
+      weeks: [],
+    };
     const contributionCalendar: ContributionCalendar = {
       totalContributions: calendar.totalContributions || 0,
       weeks: (calendar.weeks || []).map((w: any) => ({
@@ -503,7 +810,9 @@ export async function fetchGitHubProfile(
     };
 
     // Process commit contributions by repository
-    const commitContribs: RepositoryContribution[] = (userData.contributionsCollection?.commitContributionsByRepository?.nodes || []).map((c: any) => ({
+    const commitContribs: RepositoryContribution[] = (
+      userData.contributionsCollection?.commitContributionsByRepository?.nodes || []
+    ).map((c: any) => ({
       repository: {
         name: c.repository.name,
         owner: { login: c.repository.owner.login },
@@ -514,7 +823,9 @@ export async function fetchGitHubProfile(
     }));
 
     // Process PR contributions by repository
-    const prContribs: PullRequestContribution[] = (userData.contributionsCollection?.pullRequestContributionsByRepository?.nodes || []).map((c: any) => ({
+    const prContribs: PullRequestContribution[] = (
+      userData.contributionsCollection?.pullRequestContributionsByRepository?.nodes || []
+    ).map((c: any) => ({
       repository: {
         name: c.repository.name,
         owner: { login: c.repository.owner.login },
@@ -547,40 +858,48 @@ export async function fetchGitHubProfile(
     }));
 
     // Process sponsorships as maintainer
-    const sponsorshipsAsMaintainer = (userData.sponsorshipsAsMaintainer?.nodes || []).map((s: any) => ({
-      sponsorEntity: {
-        login: s.sponsorEntity.login,
-        avatarUrl: s.sponsorEntity.avatarUrl,
-        name: s.sponsorEntity.name,
-        url: s.sponsorEntity.url,
-      },
-      tier: {
-        monthlyPriceInCents: s.tier.monthlyPriceInCents,
-        name: s.tier.name,
-      },
-    }));
+    const sponsorshipsAsMaintainer = (userData.sponsorshipsAsMaintainer?.nodes || []).map(
+      (s: any) => ({
+        sponsorEntity: {
+          login: s.sponsorEntity.login,
+          avatarUrl: s.sponsorEntity.avatarUrl,
+          name: s.sponsorEntity.name,
+          url: s.sponsorEntity.url,
+        },
+        tier: {
+          monthlyPriceInCents: s.tier.monthlyPriceInCents,
+          name: s.tier.name,
+        },
+      })
+    );
 
     // Process social accounts
-    const socialAccounts: SocialAccount[] = (userData.socialAccounts?.nodes || []).map((s: any) => ({
-      provider: s.provider,
-      url: s.url,
-    }));
+    const socialAccounts: SocialAccount[] = (userData.socialAccounts?.nodes || []).map(
+      (s: any) => ({
+        provider: s.provider,
+        url: s.url,
+      })
+    );
 
     // Process status
-    const status: UserStatus | null = userData.status ? {
-      emoji: userData.status.emoji,
-      message: userData.status.message,
-      expiresAt: userData.status.expiresAt,
-    } : null;
+    const status: UserStatus | null = userData.status
+      ? {
+          emoji: userData.status.emoji,
+          message: userData.status.message,
+          expiresAt: userData.status.expiresAt,
+        }
+      : null;
 
     // Process recent PRs
-    const recentPullRequests: PullRequest[] = (userData.pullRequests?.nodes || []).map((pr: any) => ({
-      title: pr.title,
-      url: pr.url,
-      state: pr.state,
-      mergedAt: pr.mergedAt,
-      repository: { name: pr.repository.name, owner: { login: pr.repository.owner.login } },
-    }));
+    const recentPullRequests: PullRequest[] = (userData.pullRequests?.nodes || []).map(
+      (pr: any) => ({
+        title: pr.title,
+        url: pr.url,
+        state: pr.state,
+        mergedAt: pr.mergedAt,
+        repository: { name: pr.repository.name, owner: { login: pr.repository.owner.login } },
+      })
+    );
 
     // Process recent issues
     const recentIssues: Issue[] = (userData.issues?.nodes || []).map((issue: any) => ({
@@ -591,13 +910,15 @@ export async function fetchGitHubProfile(
     }));
 
     // Process repositories contributed to
-    const repositoriesContributedTo = (userData.repositoriesContributedTo?.nodes || []).map((r: any) => ({
-      name: r.name,
-      owner: { login: r.owner.login },
-      url: r.url,
-      stargazerCount: r.stargazerCount,
-      primaryLanguage: r.primaryLanguage,
-    }));
+    const repositoriesContributedTo = (userData.repositoriesContributedTo?.nodes || []).map(
+      (r: any) => ({
+        name: r.name,
+        owner: { login: r.owner.login },
+        url: r.url,
+        stargazerCount: r.stargazerCount,
+        primaryLanguage: r.primaryLanguage,
+      })
+    );
 
     return {
       username: userData.login,
@@ -635,9 +956,12 @@ export async function fetchGitHubProfile(
       contributionCalendar,
       totalCommitContributions: userData.contributionsCollection?.totalCommitContributions || 0,
       totalIssueContributions: userData.contributionsCollection?.totalIssueContributions || 0,
-      totalPullRequestContributions: userData.contributionsCollection?.totalPullRequestContributions || 0,
-      totalPullRequestReviewContributions: userData.contributionsCollection?.totalPullRequestReviewContributions || 0,
-      totalRepositoriesWithContributedCommits: userData.contributionsCollection?.totalRepositoriesWithContributedCommits || 0,
+      totalPullRequestContributions:
+        userData.contributionsCollection?.totalPullRequestContributions || 0,
+      totalPullRequestReviewContributions:
+        userData.contributionsCollection?.totalPullRequestReviewContributions || 0,
+      totalRepositoriesWithContributedCommits:
+        userData.contributionsCollection?.totalRepositoriesWithContributedCommits || 0,
       commitContributionsByRepository: commitContribs,
       pullRequestContributionsByRepository: prContribs,
       organizations,
@@ -658,7 +982,7 @@ export async function fetchGitHubProfile(
     };
   } catch (error) {
     console.warn('Failed to fetch real GitHub profile via GraphQL, using fallback:', error);
-    
+
     try {
       const client = createOctokitClient(token);
       const headers: Record<string, string> = {
@@ -681,7 +1005,7 @@ export async function fetchGitHubProfile(
       if (reposRes.ok) repos = await reposRes.json();
 
       const languages = calculateLanguagesFromRepoData(
-        repos.flatMap((r: any) => r.language ? [{ name: r.language, size: r.size || 1000 }] : [])
+        repos.flatMap((r: any) => (r.language ? [{ name: r.language, size: r.size || 1000 }] : []))
       );
       const skills = extractSkillsFromData({ reposList: { nodes: repos } }, languages);
 
@@ -892,12 +1216,18 @@ export async function fetchGitHubProject(
     }
 
     const languageStats = calculateLanguagesFromRepoData(repoData.languages?.nodes || []);
-    const languages = languageStats.map(l => ({ name: l.name, color: l.color, size: l.bytes || 0 }));
-    const techStack = languages.length > 0 
-      ? languages.map(l => l.name) 
-      : [repoData.primaryLanguage?.name || 'TypeScript', framework, 'Git', 'GitHub Actions'];
+    const languages = languageStats.map((l) => ({
+      name: l.name,
+      color: l.color,
+      size: l.bytes || 0,
+    }));
+    const techStack =
+      languages.length > 0
+        ? languages.map((l) => l.name)
+        : [repoData.primaryLanguage?.name || 'TypeScript', framework, 'Git', 'GitHub Actions'];
 
-    const lastCommitDate = repoData.defaultBranchRef?.target?.history?.nodes?.[0]?.committedDate || null;
+    const lastCommitDate =
+      repoData.defaultBranchRef?.target?.history?.nodes?.[0]?.committedDate || null;
 
     return {
       owner,
@@ -959,7 +1289,10 @@ export async function fetchGitHubProject(
       })),
       vulnerabilityAlerts: (repoData.vulnerabilityAlerts?.nodes || []).map((v: any) => ({
         severity: v.securityVulnerability.severity,
-        package: { name: v.securityVulnerability.package.name, ecosystem: v.securityVulnerability.package.ecosystem },
+        package: {
+          name: v.securityVulnerability.package.name,
+          ecosystem: v.securityVulnerability.package.ecosystem,
+        },
       })),
       dependencyGraphManifests: (repoData.dependencyGraphManifests?.nodes || []).map((m: any) => ({
         filename: m.filename,
@@ -1032,7 +1365,7 @@ export async function fetchGitHubProject(
     };
   } catch (error) {
     console.warn('Failed to fetch real GitHub repository via GraphQL, using fallback:', error);
-    
+
     try {
       let cleanSlug = repoUrlOrSlug.trim();
       if (cleanSlug.includes('github.com/')) {
@@ -1058,7 +1391,9 @@ export async function fetchGitHubProject(
           path: 'package.json',
         });
         if ('content' in contentRes.data) {
-          const pkgContent = JSON.parse(Buffer.from(contentRes.data.content, 'base64').toString('utf8'));
+          const pkgContent = JSON.parse(
+            Buffer.from(contentRes.data.content, 'base64').toString('utf8')
+          );
           if (pkgContent.devDependencies?.pnpm || pkgContent.dependencies?.pnpm) {
             packageManager = 'pnpm';
             installCommand = 'pnpm install';
@@ -1087,7 +1422,11 @@ export async function fetchGitHubProject(
       const languageStats = calculateLanguagesFromRepoData(
         repoData.language ? [{ name: repoData.language, size: repoData.size || 10000 }] : []
       );
-      const languages = languageStats.map(l => ({ name: l.name, color: l.color, size: l.bytes || 0 }));
+      const languages = languageStats.map((l) => ({
+        name: l.name,
+        color: l.color,
+        size: l.bytes || 0,
+      }));
 
       return {
         owner,
@@ -1110,7 +1449,9 @@ export async function fetchGitHubProject(
         licenseName: repoData.license?.name ?? undefined,
         licenseUrl: repoData.license?.url ?? undefined,
         defaultBranch: repoData.default_branch || 'main',
-        primaryLanguage: repoData.language ? { name: repoData.language, color: LANG_COLORS[repoData.language] || '#8b5cf6' } : null,
+        primaryLanguage: repoData.language
+          ? { name: repoData.language, color: LANG_COLORS[repoData.language] || '#8b5cf6' }
+          : null,
         languages,
         totalLanguageSize: repoData.size * 1024,
         repositoryTopics: (repoData.topics || []).map((t: string) => ({ name: t })),
@@ -1136,8 +1477,20 @@ export async function fetchGitHubProject(
         isMirror: false,
         isPrivate: repoData.private,
         isTemplate: repoData.is_template,
-        templateRepository: repoData.template_repository ? { name: repoData.template_repository.name, owner: { login: repoData.template_repository.owner.login }, url: repoData.template_repository.html_url } : null,
-        parent: repoData.parent ? { name: repoData.parent.name, owner: { login: repoData.parent.owner.login }, url: repoData.parent.html_url } : null,
+        templateRepository: repoData.template_repository
+          ? {
+              name: repoData.template_repository.name,
+              owner: { login: repoData.template_repository.owner.login },
+              url: repoData.template_repository.html_url,
+            }
+          : null,
+        parent: repoData.parent
+          ? {
+              name: repoData.parent.name,
+              owner: { login: repoData.parent.owner.login },
+              url: repoData.parent.html_url,
+            }
+          : null,
         mentionableUsers: [],
         securityPolicyUrl: null,
         codeOfConduct: null,

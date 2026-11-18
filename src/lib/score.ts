@@ -9,11 +9,11 @@ export interface ScoreBreakdown {
   score: number; // 0-100
   grade: 'A+' | 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-' | 'D' | 'F';
   metrics: {
-    completeness: number;      // 0-25 - Required sections present
-    visualRichness: number;    // 0-25 - Badges, images, diagrams
-    technicalDepth: number;    // 0-25 - Install, usage, API docs
-    socialProof: number;       // 0-15 - Stars, followers, trophies
-    accessibility: number;     // 0-10 - Alt text, contrast, structure
+    completeness: number; // 0-25 - Required sections present
+    visualRichness: number; // 0-25 - Badges, images, diagrams
+    technicalDepth: number; // 0-25 - Install, usage, API docs
+    socialProof: number; // 0-15 - Stars, followers, trophies
+    accessibility: number; // 0-10 - Alt text, contrast, structure
   };
   suggestions: Array<{
     type: 'critical' | 'warning' | 'info';
@@ -47,16 +47,16 @@ function colorForGrade(grade: ScoreBreakdown['grade']): string {
 }
 
 function checkSection(sections: Section[], id: string): boolean {
-  const s = sections.find(x => x.id === id);
+  const s = sections.find((x) => x.id === id);
   return Boolean(s?.enabled && (s.content?.trim().length ?? 0) > 0);
 }
 
 function countEnabledSections(sections: Section[]): number {
-  return sections.filter(s => s.enabled).length;
+  return sections.filter((s) => s.enabled).length;
 }
 
 function hasContent(sections: Section[], id: string): boolean {
-  const s = sections.find(x => x.id === id);
+  const s = sections.find((x) => x.id === id);
   return Boolean(s?.content && s.content.trim().length > 10);
 }
 
@@ -84,17 +84,17 @@ function hasImages(content: string): boolean {
 }
 
 function wordCount(content: string): number {
-  return content.trim().split(/\s+/).filter(w => w.length > 0).length;
+  return content
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0).length;
 }
 
 // ============================================================================
 // Profile README Scoring
 // ============================================================================
 
-export function scoreProfileReadme(
-  data: ProfileData,
-  sections: Section[]
-): ScoreBreakdown {
+export function scoreProfileReadme(data: ProfileData, sections: Section[]): ScoreBreakdown {
   const suggestions: ScoreBreakdown['suggestions'] = [];
   const highlights: string[] = [];
   let completeness = 0;
@@ -103,20 +103,27 @@ export function scoreProfileReadme(
   let socialProof = 0;
   let accessibility = 0;
 
-  const enabledSections = sections.filter(s => s.enabled);
+  const enabledSections = sections.filter((s) => s.enabled);
 
   // ---- COMPLETENESS (0-25) ----
-  const requiredSections = ['header', 'ecosystem', 'bento_grid', 'tech_stack', 'pinned_projects', 'github_metrics'];
-  const presentRequired = requiredSections.filter(id => checkSection(sections, id)).length;
+  const requiredSections = [
+    'header',
+    'ecosystem',
+    'bento_grid',
+    'tech_stack',
+    'pinned_projects',
+    'github_metrics',
+  ];
+  const presentRequired = requiredSections.filter((id) => checkSection(sections, id)).length;
   completeness = Math.round((presentRequired / requiredSections.length) * 25);
 
   if (presentRequired < requiredSections.length) {
-    const missing = requiredSections.filter(id => !checkSection(sections, id));
+    const missing = requiredSections.filter((id) => !checkSection(sections, id));
     suggestions.push({
       type: 'critical',
       title: 'Missing Core Sections',
       description: `Your README is missing: ${missing.join(', ')}`,
-      action: 'Enable these sections in the Layout panel'
+      action: 'Enable these sections in the Layout panel',
     });
   } else {
     highlights.push('All core sections present');
@@ -130,7 +137,7 @@ export function scoreProfileReadme(
       type: 'critical',
       title: 'Weak or Missing Header',
       description: 'Header should include name, bio, location, and social links',
-      action: 'Fill in your profile data in the ingestion panel'
+      action: 'Fill in your profile data in the ingestion panel',
     });
   }
 
@@ -142,14 +149,14 @@ export function scoreProfileReadme(
       type: 'warning',
       title: 'Bio Could Be Richer',
       description: 'A detailed bio (50+ chars) helps visitors understand your expertise',
-      action: 'Expand your bio in Profile Data'
+      action: 'Expand your bio in Profile Data',
     });
   } else {
     suggestions.push({
       type: 'critical',
       title: 'Missing Bio',
-      description: 'No bio means visitors don\'t know what you do',
-      action: 'Add a bio in Profile Data'
+      description: "No bio means visitors don't know what you do",
+      action: 'Add a bio in Profile Data',
     });
   }
 
@@ -163,19 +170,19 @@ export function scoreProfileReadme(
       type: 'warning',
       title: 'Add More Social Links',
       description: 'Website, Twitter/X, and Location build credibility',
-      action: 'Add website and Twitter in Profile Data'
+      action: 'Add website and Twitter in Profile Data',
     });
   } else {
     suggestions.push({
       type: 'critical',
       title: 'No Social Links',
       description: 'Zero external links makes it hard to connect',
-      action: 'Add at least website and Twitter'
+      action: 'Add at least website and Twitter',
     });
   }
 
   // ---- VISUAL RICHNESS (0-25) ----
-  const allContent = enabledSections.map(s => s.content).join('\n');
+  const allContent = enabledSections.map((s) => s.content).join('\n');
   const badgeCount = countBadges(allContent);
   const hasCustomBadges = /api\/badges/.test(allContent);
   const hasEcosystem = checkSection(sections, 'ecosystem');
@@ -210,13 +217,13 @@ export function scoreProfileReadme(
       type: 'warning',
       title: 'Low Visual Density',
       description: 'README feels text-heavy; add badges, images, or tables',
-      action: 'Enable GitHub Metrics badges and Ecosystem widgets'
+      action: 'Enable GitHub Metrics badges and Ecosystem widgets',
     });
   }
 
   // ---- TECHNICAL DEPTH (0-25) ----
   if (checkSection(sections, 'tech_stack')) {
-    const techContent = sections.find(s => s.id === 'tech_stack')?.content || '';
+    const techContent = sections.find((s) => s.id === 'tech_stack')?.content || '';
     const skillCount = (techContent.match(/img\.shields\.io|api\/badges/g) || []).length;
     if (skillCount >= 8) {
       technicalDepth += 10;
@@ -230,7 +237,7 @@ export function scoreProfileReadme(
         type: 'info',
         title: 'Expand Tech Stack',
         description: 'More skills = better discoverability for recruiters',
-        action: 'Use Tech Stack Quick Picker to add more skills'
+        action: 'Use Tech Stack Quick Picker to add more skills',
       });
     }
   } else {
@@ -238,12 +245,12 @@ export function scoreProfileReadme(
       type: 'critical',
       title: 'Missing Tech Stack Section',
       description: 'Tech stack is the #1 thing recruiters scan for',
-      action: 'Enable Tech Stack section and add skills'
+      action: 'Enable Tech Stack section and add skills',
     });
   }
 
   if (checkSection(sections, 'pinned_projects')) {
-    const pinnedContent = sections.find(s => s.id === 'pinned_projects')?.content || '';
+    const pinnedContent = sections.find((s) => s.id === 'pinned_projects')?.content || '';
     const repoCount = (pinnedContent.match(/github\.com/g) || []).length;
     if (repoCount >= 3) {
       technicalDepth += 10;
@@ -263,7 +270,7 @@ export function scoreProfileReadme(
       type: 'warning',
       title: 'No Pinned Repositories',
       description: 'Showcase your best work with pinned repos',
-      action: 'Add repositories in Profile Data or enable GitHub ingestion'
+      action: 'Add repositories in Profile Data or enable GitHub ingestion',
     });
   }
 
@@ -293,7 +300,7 @@ export function scoreProfileReadme(
   // ---- ACCESSIBILITY (0-10) ----
   // Check alt text on images
   const imgTags = allContent.match(/!\[(.*?)\]\(/g) || [];
-  const altTexts = imgTags.filter(t => t.length > 3); // Not just ![](url)
+  const altTexts = imgTags.filter((t) => t.length > 3); // Not just ![](url)
   if (altTexts.length === imgTags.length && imgTags.length > 0) {
     accessibility += 5;
     highlights.push('All images have alt text');
@@ -302,7 +309,7 @@ export function scoreProfileReadme(
       type: 'warning',
       title: 'Missing Alt Text on Images',
       description: 'Screen readers need descriptive alt text for accessibility',
-      action: 'Add alt text to all badge images: ![Description](url)'
+      action: 'Add alt text to all badge images: ![Description](url)',
     });
   }
 
@@ -317,14 +324,14 @@ export function scoreProfileReadme(
       type: 'warning',
       title: 'Multiple H1 Headings',
       description: 'Only one H1 (# ) should exist per document',
-      action: 'Use ## and ### for subsections'
+      action: 'Use ## and ### for subsections',
     });
   } else if (headings.length < 3) {
     suggestions.push({
       type: 'info',
       title: 'Sparse Heading Structure',
       description: 'More headings improve scannability and SEO',
-      action: 'Add ## section headers for each major area'
+      action: 'Add ## section headers for each major area',
     });
   }
 
@@ -349,10 +356,7 @@ export function scoreProfileReadme(
 // Project README Scoring
 // ============================================================================
 
-export function scoreProjectReadme(
-  data: ProjectData,
-  sections: Section[]
-): ScoreBreakdown {
+export function scoreProjectReadme(data: ProjectData, sections: Section[]): ScoreBreakdown {
   const suggestions: ScoreBreakdown['suggestions'] = [];
   const highlights: string[] = [];
   let completeness = 0;
@@ -361,28 +365,28 @@ export function scoreProjectReadme(
   let socialProof = 0;
   let accessibility = 0;
 
-  const enabledSections = sections.filter(s => s.enabled);
-  const allContent = enabledSections.map(s => s.content).join('\n');
+  const enabledSections = sections.filter((s) => s.enabled);
+  const allContent = enabledSections.map((s) => s.content).join('\n');
 
   // ---- COMPLETENESS (0-25) ----
   const requiredProjectSections = ['header', 'features', 'tech_stack', 'getting_started'];
-  const presentRequired = requiredProjectSections.filter(id => checkSection(sections, id)).length;
+  const presentRequired = requiredProjectSections.filter((id) => checkSection(sections, id)).length;
   completeness = Math.round((presentRequired / requiredProjectSections.length) * 25);
 
   if (presentRequired < requiredProjectSections.length) {
-    const missing = requiredProjectSections.filter(id => !checkSection(sections, id));
+    const missing = requiredProjectSections.filter((id) => !checkSection(sections, id));
     suggestions.push({
       type: 'critical',
       title: 'Missing Core Project Sections',
       description: `Missing: ${missing.join(', ')}`,
-      action: 'Enable these sections in Layout panel'
+      action: 'Enable these sections in Layout panel',
     });
   } else {
     highlights.push('All essential project sections present');
   }
 
   // Header badges
-  const headerContent = sections.find(s => s.id === 'header')?.content || '';
+  const headerContent = sections.find((s) => s.id === 'header')?.content || '';
   const headerBadges = countBadges(headerContent);
   if (headerBadges >= 4) {
     completeness += 5;
@@ -394,7 +398,7 @@ export function scoreProjectReadme(
       type: 'critical',
       title: 'Sparse Header Badges',
       description: 'Header should show Stars, Forks, License, Language at minimum',
-      action: 'Ensure header section is enabled and project data is complete'
+      action: 'Ensure header section is enabled and project data is complete',
     });
   }
 
@@ -409,7 +413,7 @@ export function scoreProjectReadme(
       type: 'warning',
       title: 'Add Visual Elements',
       description: 'Code blocks, architecture diagrams, and tech badges boost engagement',
-      action: 'Add architecture diagram and ensure code examples exist'
+      action: 'Add architecture diagram and ensure code examples exist',
     });
   } else {
     highlights.push('Good visual/code balance');
@@ -417,7 +421,7 @@ export function scoreProjectReadme(
 
   // ---- TECHNICAL DEPTH (0-25) ----
   if (checkSection(sections, 'getting_started')) {
-    const gsContent = sections.find(s => s.id === 'getting_started')?.content || '';
+    const gsContent = sections.find((s) => s.id === 'getting_started')?.content || '';
     if (gsContent.includes('install') && gsContent.includes('run')) {
       technicalDepth += 10;
       highlights.push('Complete install & run instructions');
@@ -427,13 +431,13 @@ export function scoreProjectReadme(
         type: 'warning',
         title: 'Incomplete Getting Started',
         description: 'Should have clear install, run, and test commands',
-        action: 'Expand Getting Started section with all commands'
+        action: 'Expand Getting Started section with all commands',
       });
     }
   }
 
   if (checkSection(sections, 'architecture')) {
-    const archContent = sections.find(s => s.id === 'architecture')?.content || '';
+    const archContent = sections.find((s) => s.id === 'architecture')?.content || '';
     if (archContent.length > 50) {
       technicalDepth += 8;
       highlights.push('System architecture documented');
@@ -470,7 +474,7 @@ export function scoreProjectReadme(
       type: 'warning',
       title: 'Missing License',
       description: 'Open source projects need a license for adoption',
-      action: 'Add a license (MIT, Apache-2.0, etc.)'
+      action: 'Add a license (MIT, Apache-2.0, etc.)',
     });
   }
 
@@ -503,7 +507,7 @@ export function scoreProjectReadme(
 }
 
 function hasBadgesInTechStack(sections: Section[]): boolean {
-  const techContent = sections.find(s => s.id === 'tech_stack')?.content || '';
+  const techContent = sections.find((s) => s.id === 'tech_stack')?.content || '';
   return /img\.shields\.io|api\/badges/.test(techContent);
 }
 
@@ -539,19 +543,22 @@ export function runQuickChecks(
   const checks: QuickCheck[] = [];
 
   // Universal checks
-  const enabledCount = sections.filter(s => s.enabled).length;
+  const enabledCount = sections.filter((s) => s.enabled).length;
   checks.push({
     passed: enabledCount >= 5,
     label: 'Minimum Sections',
-    description: `${enabledCount}/5+ sections enabled`
+    description: `${enabledCount}/5+ sections enabled`,
   });
 
-  const allContent = sections.filter(s => s.enabled).map(s => s.content).join('\n');
+  const allContent = sections
+    .filter((s) => s.enabled)
+    .map((s) => s.content)
+    .join('\n');
   const badgeCount = countBadges(allContent);
   checks.push({
     passed: badgeCount >= 3,
     label: 'Visual Badges',
-    description: `${badgeCount} badges detected`
+    description: `${badgeCount} badges detected`,
   });
 
   if (mode === 'profile') {
@@ -559,44 +566,44 @@ export function runQuickChecks(
     checks.push({
       passed: (pData.bio?.length || 0) > 50,
       label: 'Descriptive Bio',
-      description: pData.bio ? `${pData.bio.length} chars` : 'Missing'
+      description: pData.bio ? `${pData.bio.length} chars` : 'Missing',
     });
     checks.push({
       passed: pData.pinnedRepos.length >= 3,
       label: 'Pinned Repos',
-      description: `${pData.pinnedRepos.length}/3+ repos`
+      description: `${pData.pinnedRepos.length}/3+ repos`,
     });
     checks.push({
       passed: pData.skills.length >= 5,
       label: 'Tech Stack Skills',
-      description: `${pData.skills.length}/5+ skills`
+      description: `${pData.skills.length}/5+ skills`,
     });
     checks.push({
       passed: !!pData.website || !!pData.twitter,
       label: 'Social Links',
-      description: 'Website or Twitter connected'
+      description: 'Website or Twitter connected',
     });
   } else {
     const prData = data as ProjectData;
     checks.push({
       passed: prData.features.length >= 3,
       label: 'Features Listed',
-      description: `${prData.features.length}/3+ features`
+      description: `${prData.features.length}/3+ features`,
     });
     checks.push({
       passed: prData.techStack.length >= 3,
       label: 'Tech Stack Depth',
-      description: `${prData.techStack.length}/3+ technologies`
+      description: `${prData.techStack.length}/3+ technologies`,
     });
     checks.push({
       passed: Boolean(prData.license && prData.license !== 'UNLICENSED'),
       label: 'License Present',
-      description: prData.license || 'Missing'
+      description: prData.license || 'Missing',
     });
     checks.push({
       passed: !!prData.demoUrl || !!prData.repo,
       label: 'Live Demo / Repo Link',
-      description: prData.demoUrl ? 'Demo URL' : 'Repo only'
+      description: prData.demoUrl ? 'Demo URL' : 'Repo only',
     });
   }
 

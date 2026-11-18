@@ -7,7 +7,10 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 // In-memory or KV store simulation for telemetry
-const telemetryStore = new Map<string, { views: number; uniqueVisitors: Set<string>; clicks: Record<string, number> }>();
+const telemetryStore = new Map<
+  string,
+  { views: number; uniqueVisitors: Set<string>; clicks: Record<string, number> }
+>();
 
 export function recordView(username: string, visitorIp: string) {
   if (!telemetryStore.has(username)) {
@@ -27,7 +30,11 @@ export function recordClick(username: string, targetId: string) {
 }
 
 export function getTelemetry(username: string) {
-  const record = telemetryStore.get(username) || { views: 142, uniqueVisitors: new Set(['127.0.0.1']), clicks: { 'portfolio': 38, 'github': 56 } };
+  const record = telemetryStore.get(username) || {
+    views: 142,
+    uniqueVisitors: new Set(['127.0.0.1']),
+    clicks: { portfolio: 38, github: 56 },
+  };
   return {
     views: record.views,
     uniqueVisitors: record.uniqueVisitors.size || 1,

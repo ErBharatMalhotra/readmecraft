@@ -14,9 +14,12 @@ export interface ActionConfig {
 }
 
 export function generateGitHubWorkflowYaml(config: ActionConfig): string {
-  const cronExpression = 
-    config.updateFrequency === 'hourly' ? '0 * * * *' :
-    config.updateFrequency === 'weekly' ? '0 0 * * 0' : '0 0 * * *'; // daily default
+  const cronExpression =
+    config.updateFrequency === 'hourly'
+      ? '0 * * * *'
+      : config.updateFrequency === 'weekly'
+        ? '0 0 * * 0'
+        : '0 0 * * *'; // daily default
 
   return `name: 🚀 ReadmeCraft Auto-Updater
 # Automatically updates GitHub Profile README with live stats, Wakatime, and telemetry

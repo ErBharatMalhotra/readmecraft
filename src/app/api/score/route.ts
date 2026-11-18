@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getThemeById } from '@/lib/themes';
 
-export async function GET(req: NextRequest) {
+export function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const username = searchParams.get('username') || 'developer';
   const score = searchParams.get('score') || '96';

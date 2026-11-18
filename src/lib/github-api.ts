@@ -1,5 +1,5 @@
-import { Octokit } from "@octokit/rest";
-import { graphql } from "@octokit/graphql";
+import { Octokit } from '@octokit/rest';
+import { graphql } from '@octokit/graphql';
 
 // ============================================================================
 // IN-MEMORY CACHE & DEDUPLICATION
@@ -259,7 +259,7 @@ interface GitHubClientOptions {
 
 function createGraphQLClient(options: GitHubClientOptions = {}) {
   const authToken = options.userToken || options.token || process.env.GITHUB_TOKEN;
-  
+
   return graphql.defaults({
     headers: {
       authorization: authToken ? `Bearer ${authToken}` : undefined,
@@ -307,7 +307,9 @@ export interface ProfileDataRaw {
     totalRepositoriesWithContributedCommits: number;
     contributionCalendar: {
       totalContributions: number;
-      weeks: Array<{ contributionDays: Array<{ contributionCount: number; date: string; weekday: number }> }>;
+      weeks: Array<{
+        contributionDays: Array<{ contributionCount: number; date: string; weekday: number }>;
+      }>;
     };
     commitContributionsByRepository: {
       nodes: Array<{
@@ -347,11 +349,26 @@ export interface ProfileDataRaw {
       isPrivate: boolean;
       isTemplate: boolean;
       primaryLanguage: { name: string; color: string } | null;
-      languages: { nodes: Array<{ name: string; color: string; size: number }>; totalSize?: number };
+      languages: {
+        nodes: Array<{ name: string; color: string; size: number }>;
+        totalSize?: number;
+      };
       repositoryTopics: { nodes: Array<{ topic: { name: string } }> };
       licenseInfo: { spdxId: string; name: string; url: string } | null;
-      defaultBranchRef: { name: string; target: { history: { nodes: Array<{ committedDate: string }> } } } | null;
-      releases: { nodes: Array<{ name: string; tagName: string; publishedAt: string; url: string; isPrerelease: boolean; isDraft: boolean }> };
+      defaultBranchRef: {
+        name: string;
+        target: { history: { nodes: Array<{ committedDate: string }> } };
+      } | null;
+      releases: {
+        nodes: Array<{
+          name: string;
+          tagName: string;
+          publishedAt: string;
+          url: string;
+          isPrerelease: boolean;
+          isDraft: boolean;
+        }>;
+      };
       deployments: { nodes: Array<{ createdAt: string; environment: string; state: string }> };
       mergeCommitAllowed: boolean;
       rebaseMergeAllowed: boolean;
@@ -442,7 +459,10 @@ export interface RepoDataRaw {
   openIssues: { totalCount: number };
   closedIssues: { totalCount: number };
   primaryLanguage: { name: string; color: string } | null;
-  defaultBranchRef: { name: string; target: { history: { nodes: Array<{ committedDate: string }> } } } | null;
+  defaultBranchRef: {
+    name: string;
+    target: { history: { nodes: Array<{ committedDate: string }> } };
+  } | null;
   licenseInfo: { spdxId: string; name: string; url: string } | null;
   homepageUrl: string | null;
   languages: { nodes: Array<{ name: string; color: string; size: number }>; totalSize: number };
@@ -471,7 +491,9 @@ export interface RepoDataRaw {
     nodes: Array<{ name: string; state: string; filePath: string }>;
   };
   vulnerabilityAlerts: {
-    nodes: Array<{ securityVulnerability: { severity: string; package: { name: string; ecosystem: string } } }>;
+    nodes: Array<{
+      securityVulnerability: { severity: string; package: { name: string; ecosystem: string } };
+    }>;
   };
   dependencyGraphManifests: {
     nodes: Array<{
@@ -520,10 +542,7 @@ export interface RepoDataRaw {
   autoMergeAllowed: boolean;
 }
 
-async function fetchWithDeduplication<T>(
-  key: string,
-  fetcher: () => Promise<T>
-): Promise<T> {
+async function fetchWithDeduplication<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
   const existing = deduplication.get(key);
   if (existing && isDeduplicationFresh(existing)) {
     return existing.promise;
@@ -549,8 +568,8 @@ export async function fetchProfileData(
   username: string,
   options: GitHubClientOptions = {}
 ): Promise<{ data: ProfileDataRaw; etag: string; fromCache: boolean }> {
-  const cacheKey = getCacheKey(username, "profile");
-  
+  const cacheKey = getCacheKey(username, 'profile');
+
   const cached = cache.get(cacheKey);
   if (cached && isCacheFresh(cached)) {
     return { data: cached.data, etag: cached.etag, fromCache: true };
@@ -572,9 +591,9 @@ export async function fetchProfileData(
         throw new Error(`GitHub user "${username}" not found`);
       }
 
-      const data = result.user as ProfileDataRaw;
+      const data = result.user;
       const etag = getETag(data);
-      
+
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };
     } catch (error: any) {
@@ -605,8 +624,8 @@ export async function fetchRepoData(
   repo: string,
   options: GitHubClientOptions = {}
 ): Promise<{ data: RepoDataRaw; etag: string; fromCache: boolean }> {
-  const cacheKey = getCacheKey(`${owner}/${repo}`, "repo");
-  
+  const cacheKey = getCacheKey(`${owner}/${repo}`, 'repo');
+
   const cached = cache.get(cacheKey);
   if (cached && isCacheFresh(cached)) {
     return { data: cached.data, etag: cached.etag, fromCache: true };
@@ -615,7 +634,7 @@ export async function fetchRepoData(
   const fetcher = async () => {
     try {
       const graphqlClient = createGraphQLClient(options);
-      
+
       const result = await graphqlClient<{ repository: RepoDataRaw }>(UNIFIED_REPO_QUERY, {
         owner,
         name: repo,
@@ -625,9 +644,9 @@ export async function fetchRepoData(
         throw new Error(`Repository "${owner}/${repo}" not found`);
       }
 
-      const data = result.repository as RepoDataRaw;
+      const data = result.repository;
       const etag = getETag(data);
-      
+
       cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };
     } catch (error: any) {
@@ -654,7 +673,10 @@ export async function fetchRepoData(
         openIssues: { totalCount: 0 },
         closedIssues: { totalCount: 0 },
         primaryLanguage: null,
-        defaultBranchRef: { name: 'main', target: { history: { nodes: [{ committedDate: new Date().toISOString() }] } } },
+        defaultBranchRef: {
+          name: 'main',
+          target: { history: { nodes: [{ committedDate: new Date().toISOString() }] } },
+        },
         licenseInfo: null,
         homepageUrl: null,
         languages: { nodes: [], totalSize: 0 },
@@ -713,16 +735,16 @@ export function createOctokitClient(token?: string): Octokit {
 }
 
 export function checkETag(request: Request, etag: string): boolean {
-  const ifNoneMatch = request.headers.get("if-none-match");
+  const ifNoneMatch = request.headers.get('if-none-match');
   return ifNoneMatch === etag;
 }
 
 export function createETagResponse(data: any, etag: string): Response {
   return new Response(JSON.stringify(data), {
     headers: {
-      "Content-Type": "application/json",
-      "ETag": etag,
-      "Cache-Control": "public, max-age=21600, stale-while-revalidate=21600",
+      'Content-Type': 'application/json',
+      ETag: etag,
+      'Cache-Control': 'public, max-age=21600, stale-while-revalidate=21600',
     },
   });
 }
@@ -731,8 +753,8 @@ export function createNotModifiedResponse(etag: string): Response {
   return new Response(null, {
     status: 304,
     headers: {
-      "ETag": etag,
-      "Cache-Control": "public, max-age=21600, stale-while-revalidate=21600",
+      ETag: etag,
+      'Cache-Control': 'public, max-age=21600, stale-while-revalidate=21600',
     },
   });
 }

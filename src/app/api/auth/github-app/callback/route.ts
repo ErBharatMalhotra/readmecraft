@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { jwtVerify, SignJWT, importPKCS8 } from 'jose';
 import { Octokit } from '@octokit/rest';
-import { ProfileData, ProfilePreset, RepositoryLanguage, RepositoryTopic } from '@/types/readmecraft';
+import type { ProfileData, ProfilePreset } from '@/types/readmecraft';
+import { RepositoryLanguage, RepositoryTopic } from '@/types/readmecraft';
 import { fetchProfileData } from '@/lib/github-api';
 import { fetchGitHubProfile } from '@/lib/github';
 
@@ -12,7 +14,7 @@ async function createAppJWT(appId: string, privateKeyPem: string): Promise<strin
   // jose v6 importPKCS8 accepts PEM string or Uint8Array (DER)
   // TypeScript types may be restrictive, so use the PEM directly
   const privateKey = await importPKCS8(privateKeyPem, 'RS256');
-  
+
   const now = Math.floor(Date.now() / 1000);
   return new SignJWT({})
     .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
@@ -25,13 +27,13 @@ async function createAppJWT(appId: string, privateKeyPem: string): Promise<strin
 async function getInstallationToken(installationId: string): Promise<string> {
   const appId = process.env.GITHUB_APP_ID;
   const privateKeyPem = process.env.GITHUB_APP_PRIVATE_KEY;
-  
+
   if (!appId || !privateKeyPem) {
     throw new Error('GitHub App credentials not configured');
   }
 
   const jwt = await createAppJWT(appId, privateKeyPem);
-  
+
   const res = await fetch(
     `https://api.github.com/app/installations/${installationId}/access_tokens`,
     {
@@ -56,17 +58,17 @@ async function getInstallationToken(installationId: string): Promise<string> {
 async function fetchRealProfileData(octokit: Octokit, username: string): Promise<ProfileData> {
   // Fetch user profile
   const { data: user } = await octokit.rest.users.getByUsername({ username });
-  
+
   // Fetch pinned repos
   const { data: repos } = await octokit.rest.repos.listForUser({
     username,
     sort: 'updated',
     per_page: 100,
-    type: 'owner'
+    type: 'owner',
   });
-  
-  const publicRepos = repos.filter(r => !r.fork && r.visibility === 'public');
-  const pinnedRepos = publicRepos.slice(0, 6).map(r => ({
+
+  const publicRepos = repos.filter((r) => !r.fork && r.visibility === 'public');
+  const pinnedRepos = publicRepos.slice(0, 6).map((r) => ({
     name: r.name,
     description: r.description || '',
     url: r.html_url,
@@ -79,47 +81,47 @@ async function fetchRealProfileData(octokit: Octokit, username: string): Promise
     releases: [],
     homepageUrl: r.homepage,
   }));
-  
+
   // Fetch languages across all repos
   const languageMap = new Map<string, { bytes: number; color: string }>();
   for (const repo of publicRepos.slice(0, 20)) {
     try {
       const { data: langs } = await octokit.rest.repos.listLanguages({
         owner: username,
-        repo: repo.name
+        repo: repo.name,
       });
       for (const [lang, bytes] of Object.entries(langs)) {
         const existing = languageMap.get(lang) || { bytes: 0, color: '' };
-        existing.bytes += bytes as number;
+        existing.bytes += bytes;
         languageMap.set(lang, existing);
       }
     } catch {}
   }
-  
+
   const totalBytes = Array.from(languageMap.values()).reduce((sum, l) => sum + l.bytes, 0);
   const languages = Array.from(languageMap.entries())
     .map(([name, { bytes }]) => ({
       name,
       percentage: Math.round((bytes / totalBytes) * 1000) / 10,
       color: '#586069', // default color
-      bytes
+      bytes,
     }))
     .sort((a, b) => b.percentage - a.percentage)
     .slice(0, 10);
-  
+
   // Get top repositories by stars
   const topRepos = [...publicRepos]
     .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
     .slice(0, 5)
-    .map(r => ({
+    .map((r) => ({
       name: r.name,
       owner: { login: r.owner.login },
       url: r.html_url,
       stargazerCount: r.stargazers_count || 0,
       primaryLanguage: r.language ? { name: r.language, color: '#586069' } : null,
     }));
-  
-  const pinnedReposData = publicRepos.slice(0, 6).map(r => ({
+
+  const pinnedReposData = publicRepos.slice(0, 6).map((r) => ({
     name: r.name,
     description: r.description || '',
     url: r.html_url,
@@ -132,15 +134,15 @@ async function fetchRealProfileData(octokit: Octokit, username: string): Promise
     releases: [],
     homepageUrl: r.homepage || undefined,
   }));
-  
-  const topReposData = topRepos.map(r => ({
+
+  const topReposData = topRepos.map((r) => ({
     name: r.name,
     owner: { login: r.owner.login },
     url: r.url,
     stargazerCount: r.stargazerCount,
     primaryLanguage: r.primaryLanguage,
   }));
-  
+
   return {
     username: user.login,
     name: user.name || user.login,
@@ -170,7 +172,7 @@ async function fetchRealProfileData(octokit: Octokit, username: string): Promise
     watchingCount: 0,
     gistsCount: user.public_gists,
     languages,
-    skills: languages.map(l => l.name).slice(0, 10),
+    skills: languages.map((l) => l.name).slice(0, 10),
     pinnedRepos: pinnedReposData,
     topRepositories: topReposData,
     contributionCalendar: { totalContributions: 0, weeks: [] },
@@ -200,7 +202,8 @@ async function fetchRealProfileData(octokit: Octokit, username: string): Promise
 }
 
 async function generateReadmeMarkdown(config: any, realProfileData?: ProfileData): Promise<string> {
-  const { getProfileSections, compileSectionsToMarkdown, appendDeployExtras } = await import('@/lib/generators');
+  const { getProfileSections, compileSectionsToMarkdown, appendDeployExtras } =
+    await import('@/lib/generators');
 
   // Use real profile data if available, otherwise fall back to config-based mock data
   const profileData: ProfileData = realProfileData || {
@@ -225,7 +228,7 @@ async function generateReadmeMarkdown(config: any, realProfileData?: ProfileData
     githubStatsEnabled: true,
     githubStreakEnabled: true,
     topLanguagesEnabled: true,
-  } as ProfileData;
+  };
 
   const preset: ProfilePreset = config.template || 'bento';
   const theme = config.theme || 'gta6';
@@ -298,7 +301,7 @@ export async function GET(request: NextRequest) {
   let installationId = searchParams.get('installation_id');
   const setupAction = searchParams.get('setup_action');
   const state = searchParams.get('state');
-  
+
   if (!state) {
     return new NextResponse(
       `<html><body style="font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem; background: #090d16; color: #f1f5f9;">
@@ -313,7 +316,7 @@ export async function GET(request: NextRequest) {
     // Verify state first to get the username
     const cookieStore = await cookies();
     const stateCookie = cookieStore.get(COOKIE_NAME)?.value;
-    
+
     if (!stateCookie || stateCookie !== state) {
       return new NextResponse(
         `<html><body style="font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem; background: #090d16; color: #f1f5f9;">
@@ -338,7 +341,7 @@ export async function GET(request: NextRequest) {
     // Fetch installation for this user/account
     const appId = process.env.GITHUB_APP_ID;
     const privateKeyPem = process.env.GITHUB_APP_PRIVATE_KEY;
-    
+
     if (!appId || !privateKeyPem) {
       return new NextResponse(
         `<html><body style="font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem; background: #090d16; color: #f1f5f9;">
@@ -359,26 +362,23 @@ export async function GET(request: NextRequest) {
       .sign(privateKey);
 
     // Get installations for the app
-    const installationsRes = await fetch(
-      'https://api.github.com/app/installations',
-      {
-        headers: {
-          Authorization: `Bearer ${appJwt}`,
-          Accept: 'application/vnd.github.v3+json',
-          'User-Agent': 'ReadmeCraft',
-        },
-      }
-    );
+    const installationsRes = await fetch('https://api.github.com/app/installations', {
+      headers: {
+        Authorization: `Bearer ${appJwt}`,
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'ReadmeCraft',
+      },
+    });
 
     if (!installationsRes.ok) {
       throw new Error('Failed to fetch app installations');
     }
 
     const installations = await installationsRes.json();
-    
+
     // Find installation for this user/account
-    const installation = installations.find((inst: any) => 
-      inst.account?.login?.toLowerCase() === username.toLowerCase()
+    const installation = installations.find(
+      (inst: any) => inst.account?.login?.toLowerCase() === username.toLowerCase()
     );
 
     if (!installation) {
@@ -408,7 +408,7 @@ export async function GET(request: NextRequest) {
   // Verify state cookie
   const cookieStore = await cookies();
   const stateCookie = cookieStore.get(COOKIE_NAME)?.value;
-  
+
   if (!stateCookie || stateCookie !== state) {
     return new NextResponse(
       `<html><body style="font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem; background: #090d16; color: #f1f5f9;">
@@ -426,7 +426,7 @@ export async function GET(request: NextRequest) {
 
     // Get installation token
     const token = await getInstallationToken(installationId);
-    
+
     // Create Octokit with installation token
     const octokit = new Octokit({ auth: token });
 
@@ -440,7 +440,7 @@ export async function GET(request: NextRequest) {
       );
     }
     const profileRepo = await findProfileRepo(octokit, username);
-    
+
     if (!profileRepo) {
       cookieStore.delete(COOKIE_NAME);
 
@@ -483,7 +483,9 @@ export async function GET(request: NextRequest) {
     // exactly; fall back to REST via the installation token if unavailable.
     let realProfileData: ProfileData;
     try {
-      const { data: graphqlData } = await fetchProfileData(username, { token: process.env.GITHUB_TOKEN });
+      const { data: graphqlData } = await fetchProfileData(username, {
+        token: process.env.GITHUB_TOKEN,
+      });
       if ((graphqlData as any)?.__graphQLError) throw new Error('GraphQL profile fetch failed');
       realProfileData = await fetchGitHubProfile(username, process.env.GITHUB_TOKEN);
     } catch {
@@ -492,10 +494,10 @@ export async function GET(request: NextRequest) {
 
     // Drop a stale X/Twitter handle so the README never ships a dead 404 link
     realProfileData.twitter = await dropDeadTwitterHandle(realProfileData.twitter);
-    
+
     // Generate README with real data
     const readme = await generateReadmeMarkdown(config, realProfileData);
-    
+
     // Push to repo - handle both create and update
     const defaultBranch = profileRepo.default_branch || 'main';
     let fileSha: string | undefined;
@@ -521,13 +523,13 @@ export async function GET(request: NextRequest) {
       content: Buffer.from(readme).toString('base64'),
       branch: defaultBranch,
       sha: fileSha,
-      committer: { 
-        name: 'ReadmeCraft Bot', 
-        email: 'bot@readmecraft.app' 
+      committer: {
+        name: 'ReadmeCraft Bot',
+        email: 'bot@readmecraft.app',
       },
-      author: { 
-        name: username, 
-        email: `${username}@users.noreply.github.com` 
+      author: {
+        name: username,
+        email: `${username}@users.noreply.github.com`,
       },
     });
 
@@ -545,9 +547,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error: any) {
     console.error('Deploy error:', error);
-    
+
     cookieStore.delete(COOKIE_NAME);
-    
+
     return new NextResponse(
       `<html><body style="font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem; background: #090d16; color: #f1f5f9;">
         <h1>Deployment Failed</h1>

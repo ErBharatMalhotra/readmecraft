@@ -46,9 +46,9 @@ const PERSONA_SLUGS = [
 const BASE_URL = 'https://readme.bharatdn.com';
 const AMP = '&';
 
-export async function GET() {
+export function GET() {
   const now = new Date().toISOString();
-  
+
   const staticUrls = [
     { url: BASE_URL, changefreq: 'daily', priority: '1.0' },
     { url: BASE_URL + '/deploy', changefreq: 'monthly', priority: '0.5' },
@@ -68,9 +68,23 @@ export async function GET() {
 
   const allUrls = [...staticUrls, ...templateUrls, ...templatePageUrls];
 
-  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-    allUrls.map(u => '  <url>\n    <loc>' + u.url + '</loc>\n    <lastmod>' + now + '</lastmod>\n    <changefreq>' + u.changefreq + '</changefreq>\n    <priority>' + u.priority + '</priority>\n  </url>').join('\n') +
+    allUrls
+      .map(
+        (u) =>
+          '  <url>\n    <loc>' +
+          u.url +
+          '</loc>\n    <lastmod>' +
+          now +
+          '</lastmod>\n    <changefreq>' +
+          u.changefreq +
+          '</changefreq>\n    <priority>' +
+          u.priority +
+          '</priority>\n  </url>'
+      )
+      .join('\n') +
     '\n</urlset>';
 
   return new NextResponse(xml, {

@@ -33,7 +33,11 @@ function formatBytes(bytes: number): string {
 
 function formatDate(dateStr: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   } catch {
     return dateStr;
   }
@@ -70,7 +74,11 @@ function getLanguageBadge(lang: LanguageStat, bgHex: string, accentHex: string):
   return `<img src="https://img.shields.io/badge/-${shieldsEscape(lang.name)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(logoSlug(lang.name))}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${lang.name} ${lang.percentage}%" />`;
 }
 
-export function getProfileSections(data: ProfileData, preset: ProfilePreset, theme: string = 'gta6'): Section[] {
+export function getProfileSections(
+  data: ProfileData,
+  preset: ProfilePreset,
+  theme: string = 'gta6'
+): Section[] {
   const username = data.username || 'developer';
   const name = data.name || username;
   const themeObj = getThemeById(theme);
@@ -91,7 +99,7 @@ export function getProfileSections(data: ProfileData, preset: ProfilePreset, the
       order: 1,
       content: generateHeaderSection(data, username, name, themeObj, bgHex, accentHex, goldHex),
     },
-    
+
     // Ecosystem widgets
     {
       id: 'ecosystem',
@@ -116,7 +124,15 @@ export function getProfileSections(data: ProfileData, preset: ProfilePreset, the
       title: 'Comprehensive GitHub Stats',
       enabled: data.githubStatsEnabled,
       order: 4,
-      content: generateStatsGridSection(data, username, themeObj, bgHex, accentHex, subtextHex, themeParam),
+      content: generateStatsGridSection(
+        data,
+        username,
+        themeObj,
+        bgHex,
+        accentHex,
+        subtextHex,
+        themeParam
+      ),
     },
 
     // Languages with bytes
@@ -220,14 +236,22 @@ export function getProfileSections(data: ProfileData, preset: ProfilePreset, the
   ];
 
   // Filter enabled sections and return
-  return commonSections.filter(s => s.enabled);
+  return commonSections.filter((s) => s.enabled);
 }
 
 // ============================================================================
 // SECTION GENERATORS
 // ============================================================================
 
-function generateHeaderSection(data: ProfileData, username: string, name: string, themeObj: any, bgHex: string, accentHex: string, goldHex: string): string {
+function generateHeaderSection(
+  data: ProfileData,
+  username: string,
+  name: string,
+  themeObj: any,
+  bgHex: string,
+  accentHex: string,
+  goldHex: string
+): string {
   const location = data.location || 'Global';
   const website = data.website || `https://github.com/${username}`;
   const company = data.company ? `🏢 **${data.company}**` : '';
@@ -275,7 +299,13 @@ ${data.pronouns ? `> **Pronouns:** ${data.pronouns}` : ''}
 ---`;
 }
 
-function generateEcosystemSection(data: ProfileData, username: string, themeObj: any, bgHex: string, accentHex: string): string {
+function generateEcosystemSection(
+  data: ProfileData,
+  username: string,
+  themeObj: any,
+  bgHex: string,
+  accentHex: string
+): string {
   return `### 🛰️ Live Ecosystem
 
 <div align="center">
@@ -287,7 +317,12 @@ ${data.gitChronicleEnabled ? `[![GitChronicle Cadence](https://gitchronicle.bhar
 </div>`;
 }
 
-function generateStatusSocialSection(data: ProfileData, username: string, bgHex: string, accentHex: string): string {
+function generateStatusSocialSection(
+  data: ProfileData,
+  username: string,
+  bgHex: string,
+  accentHex: string
+): string {
   const hasSocial = (data.socialAccounts?.length ?? 0) > 0;
   let content = `### 🎯 ${hasSocial ? 'Current Status & Social Presence' : 'Current Status'}
 
@@ -306,8 +341,15 @@ function generateStatusSocialSection(data: ProfileData, username: string, bgHex:
 
   if ((data.socialAccounts?.length ?? 0) > 0) {
     content += `**Social Accounts:**\n\n`;
-    data.socialAccounts!.forEach(acc => {
-      const icon = acc.provider === 'TWITTER' ? '𝕏' : acc.provider === 'LINKEDIN' ? '💼' : acc.provider === 'WEBSITE' ? '🌐' : '🔗';
+    data.socialAccounts!.forEach((acc) => {
+      const icon =
+        acc.provider === 'TWITTER'
+          ? '𝕏'
+          : acc.provider === 'LINKEDIN'
+            ? '💼'
+            : acc.provider === 'WEBSITE'
+              ? '🌐'
+              : '🔗';
       content += `- ${icon} [${acc.provider}](${acc.url})\n`;
     });
     content += '\n';
@@ -316,10 +358,22 @@ function generateStatusSocialSection(data: ProfileData, username: string, bgHex:
   return content;
 }
 
-function generateStatsGridSection(data: ProfileData, username: string, themeObj: any, bgHex: string, accentHex: string, subtextHex: string, themeParam: string): string {
+function generateStatsGridSection(
+  data: ProfileData,
+  username: string,
+  themeObj: any,
+  bgHex: string,
+  accentHex: string,
+  subtextHex: string,
+  themeParam: string
+): string {
   const totalContributions = data.contributionCalendar?.totalContributions ?? 0;
-  const currentStreak = calculateCurrentStreak(data.contributionCalendar ?? { totalContributions: 0, weeks: [] });
-  const longestStreak = calculateLongestStreak(data.contributionCalendar ?? { totalContributions: 0, weeks: [] });
+  const currentStreak = calculateCurrentStreak(
+    data.contributionCalendar ?? { totalContributions: 0, weeks: [] }
+  );
+  const longestStreak = calculateLongestStreak(
+    data.contributionCalendar ?? { totalContributions: 0, weeks: [] }
+  );
 
   return `### 📈 Velocity & Metrics
 
@@ -359,7 +413,11 @@ ${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges
 </details>`;
 }
 
-function generateLanguagesDetailedSection(data: ProfileData, bgHex: string, accentHex: string): string {
+function generateLanguagesDetailedSection(
+  data: ProfileData,
+  bgHex: string,
+  accentHex: string
+): string {
   if ((data.languages?.length ?? 0) === 0) return '';
 
   const totalBytes = (data.languages ?? []).reduce((sum, l) => sum + (l.bytes || 0), 0);
@@ -368,7 +426,7 @@ function generateLanguagesDetailedSection(data: ProfileData, bgHex: string, acce
 
 <div align="center">
 
-${(data.languages ?? []).map(l => getLanguageBadge(l, bgHex, accentHex)).join(' ')}
+${(data.languages ?? []).map((l) => getLanguageBadge(l, bgHex, accentHex)).join(' ')}
 
 </div>
 
@@ -377,35 +435,130 @@ ${(data.languages ?? []).map(l => getLanguageBadge(l, bgHex, accentHex)).join(' 
 
 | Language | Percentage | Estimated Bytes |
 | :--- | :---: | :--- |
-${(data.languages ?? []).map(l => `| **${l.name}** | ${l.percentage}% | ${l.bytes ? formatBytes(l.bytes) : 'N/A'} |`).join('\n')}
+${(data.languages ?? []).map((l) => `| **${l.name}** | ${l.percentage}% | ${l.bytes ? formatBytes(l.bytes) : 'N/A'} |`).join('\n')}
 | **Total** | **100%** | ${totalBytes > 0 ? formatBytes(totalBytes) : 'N/A'} |
 
 </details>`;
 }
 
-function generateSkillsEnhancedSection(data: ProfileData, bgHex: string, accentHex: string): string {
+function generateSkillsEnhancedSection(
+  data: ProfileData,
+  bgHex: string,
+  accentHex: string
+): string {
   if ((data.skills?.length ?? 0) === 0) return '';
 
   // Group skills by category. Repo topics are noisy, so drop generic ones and
   // dedupe case-insensitively (avoids "JavaScript" + "Javascript" duplicates).
   const GENERIC_TOPICS = new Set([
-    'ai', 'ai agents', 'artificial intelligence', 'analytics', 'news', 'tools',
-    'benchmarks', 'dashboard', 'developer analytics', 'developer tools',
-    'github api', 'case study', 'cloudflare', 'programmatic seo', 'static site',
-    'pipeline', 'automation', 'llm', 'apps', 'web', 'website', 'readme',
+    'ai',
+    'ai agents',
+    'artificial intelligence',
+    'analytics',
+    'news',
+    'tools',
+    'benchmarks',
+    'dashboard',
+    'developer analytics',
+    'developer tools',
+    'github api',
+    'case study',
+    'cloudflare',
+    'programmatic seo',
+    'static site',
+    'pipeline',
+    'automation',
+    'llm',
+    'apps',
+    'web',
+    'website',
+    'readme',
   ]);
   const seen = new Set<string>();
   const skills = (data.skills ?? []).filter((s) => {
-    const k = String(s || '').trim().toLowerCase();
+    const k = String(s || '')
+      .trim()
+      .toLowerCase();
     if (!k || seen.has(k) || GENERIC_TOPICS.has(k)) return false;
     seen.add(k);
     return true;
   });
-  const LANG_SET = new Set(['typescript', 'javascript', 'python', 'rust', 'go', 'java', 'c', 'c++', 'c#', 'ruby', 'php', 'swift', 'kotlin', 'dart', 'scala', 'html', 'css', 'shell', 'sql', 'graphql']);
-  const langSkills = skills.filter(s => LANG_SET.has(s.toLowerCase()));
-  const frameworkSkills = skills.filter(s => !langSkills.includes(s) && ['React', 'Next.js', 'Vue', 'Svelte', 'Express', 'FastAPI', 'Django', 'Spring', 'Rails', 'Laravel', 'TailwindCSS', 'Node.js', 'Deno', 'Bun'].some(f => s.toLowerCase().includes(f.toLowerCase())));
-  const infraSkills = skills.filter(s => !langSkills.includes(s) && !frameworkSkills.includes(s) && ['Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Terraform', 'Ansible', 'CI/CD', 'GitHub Actions', 'GitLab CI', 'Jenkins', 'Linux', 'Nginx', 'PostgreSQL', 'Redis', 'MongoDB', 'MySQL', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Prometheus', 'Grafana', 'Jaeger'].some(f => s.toLowerCase().includes(f.toLowerCase())));
-  const otherSkills = skills.filter(s => !langSkills.includes(s) && !frameworkSkills.includes(s) && !infraSkills.includes(s));
+  const LANG_SET = new Set([
+    'typescript',
+    'javascript',
+    'python',
+    'rust',
+    'go',
+    'java',
+    'c',
+    'c++',
+    'c#',
+    'ruby',
+    'php',
+    'swift',
+    'kotlin',
+    'dart',
+    'scala',
+    'html',
+    'css',
+    'shell',
+    'sql',
+    'graphql',
+  ]);
+  const langSkills = skills.filter((s) => LANG_SET.has(s.toLowerCase()));
+  const frameworkSkills = skills.filter(
+    (s) =>
+      !langSkills.includes(s) &&
+      [
+        'React',
+        'Next.js',
+        'Vue',
+        'Svelte',
+        'Express',
+        'FastAPI',
+        'Django',
+        'Spring',
+        'Rails',
+        'Laravel',
+        'TailwindCSS',
+        'Node.js',
+        'Deno',
+        'Bun',
+      ].some((f) => s.toLowerCase().includes(f.toLowerCase()))
+  );
+  const infraSkills = skills.filter(
+    (s) =>
+      !langSkills.includes(s) &&
+      !frameworkSkills.includes(s) &&
+      [
+        'Docker',
+        'Kubernetes',
+        'AWS',
+        'GCP',
+        'Azure',
+        'Terraform',
+        'Ansible',
+        'CI/CD',
+        'GitHub Actions',
+        'GitLab CI',
+        'Jenkins',
+        'Linux',
+        'Nginx',
+        'PostgreSQL',
+        'Redis',
+        'MongoDB',
+        'MySQL',
+        'Elasticsearch',
+        'Kafka',
+        'RabbitMQ',
+        'Prometheus',
+        'Grafana',
+        'Jaeger',
+      ].some((f) => s.toLowerCase().includes(f.toLowerCase()))
+  );
+  const otherSkills = skills.filter(
+    (s) => !langSkills.includes(s) && !frameworkSkills.includes(s) && !infraSkills.includes(s)
+  );
 
   let content = `### ⚔️ Technology Arsenal
 
@@ -415,22 +568,46 @@ function generateSkillsEnhancedSection(data: ProfileData, bgHex: string, accentH
 
   if (langSkills.length > 0) {
     content += `<details open><summary><b>🗣️ Languages (${langSkills.length})</b></summary>\n\n`;
-    content += langSkills.map(s => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`).join(' ') + '\n\n</details>\n\n';
+    content +=
+      langSkills
+        .map(
+          (s) =>
+            `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`
+        )
+        .join(' ') + '\n\n</details>\n\n';
   }
 
   if (frameworkSkills.length > 0) {
     content += `<details open><summary><b>⚡ Frameworks & Libraries (${frameworkSkills.length})</b></summary>\n\n`;
-    content += frameworkSkills.map(s => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`).join(' ') + '\n\n</details>\n\n';
+    content +=
+      frameworkSkills
+        .map(
+          (s) =>
+            `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`
+        )
+        .join(' ') + '\n\n</details>\n\n';
   }
 
   if (infraSkills.length > 0) {
     content += `<details open><summary><b>☁️ Infrastructure & DevOps (${infraSkills.length})</b></summary>\n\n`;
-    content += infraSkills.map(s => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`).join(' ') + '\n\n</details>\n\n';
+    content +=
+      infraSkills
+        .map(
+          (s) =>
+            `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logo=${encodeURIComponent(s.toLowerCase())}&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`
+        )
+        .join(' ') + '\n\n</details>\n\n';
   }
 
   if (otherSkills.length > 0) {
     content += `<details open><summary><b>🛠️ Other Skills (${otherSkills.length})</b></summary>\n\n`;
-    content += otherSkills.map(s => `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`).join(' ') + '\n\n</details>\n\n';
+    content +=
+      otherSkills
+        .map(
+          (s) =>
+            `<img src="https://img.shields.io/badge/-${encodeURIComponent(s)}-${bgHex}?style=flat-square&logoColor=${accentHex}&labelColor=${bgHex}" alt="${s}" />`
+        )
+        .join(' ') + '\n\n</details>\n\n';
   }
 
   content += `</div>`;
@@ -438,10 +615,14 @@ function generateSkillsEnhancedSection(data: ProfileData, bgHex: string, accentH
   return content;
 }
 
-function generatePinnedReposDetailedSection(data: ProfileData, bgHex: string, accentHex: string): string {
+function generatePinnedReposDetailedSection(
+  data: ProfileData,
+  bgHex: string,
+  accentHex: string
+): string {
   if (data.pinnedRepos.length === 0) return '';
 
-  let content = `### 🚀 Featured Repositories
+  const content = `### 🚀 Featured Repositories
 
 <div align="center">
 
@@ -454,17 +635,51 @@ ${data.pinnedRepos
 
 </div>
 
-${data.pinnedRepos.length > 0 ? `
+${
+  data.pinnedRepos.length > 0
+    ? `
 <details open>
 <summary><b>Repository Details</b></summary>
 
 ${data.pinnedRepos
   .map(
-    (repo) => '- **[' + repo.name + '](' + repo.url + ')** ' + (repo.description && repo.description !== 'No description provided.' ? '\u2014 ' + repo.description : '') + ' ' + (repo.language ? '`' + repo.language + '`' : '') + ' ' + (repo.topics && repo.topics.length > 0 ? '[' + repo.topics.slice(0, 5).join(', ') + ']' : '') + ' \u2B50 ' + repo.stargazersCount + ' ' + (repo.forksCount ? '\uD83C\uDF74 ' + repo.forksCount : '') + ' ' + (repo.license ? '\uD83D\uDCC4 ' + repo.license : '') + ' ' + (repo.isFork ? '\uD83C\uDF74 Fork' : '') + ' ' + (repo.isArchived ? '\uD83D\uDCE6 Archived' : '') + ' ' + (repo.homepageUrl ? '\uD83D\uDD17 [Demo](' + repo.homepageUrl + ')' : '') + ' ' + (repo.releases && repo.releases.length > 0 ? '\uD83C\uDFF7\uFE0F Latest: ' + repo.releases[0].tagName : '')
+    (repo) =>
+      '- **[' +
+      repo.name +
+      '](' +
+      repo.url +
+      ')** ' +
+      (repo.description && repo.description !== 'No description provided.'
+        ? '\u2014 ' + repo.description
+        : '') +
+      ' ' +
+      (repo.language ? '`' + repo.language + '`' : '') +
+      ' ' +
+      (repo.topics && repo.topics.length > 0
+        ? '[' + repo.topics.slice(0, 5).join(', ') + ']'
+        : '') +
+      ' \u2B50 ' +
+      repo.stargazersCount +
+      ' ' +
+      (repo.forksCount ? '\uD83C\uDF74 ' + repo.forksCount : '') +
+      ' ' +
+      (repo.license ? '\uD83D\uDCC4 ' + repo.license : '') +
+      ' ' +
+      (repo.isFork ? '\uD83C\uDF74 Fork' : '') +
+      ' ' +
+      (repo.isArchived ? '\uD83D\uDCE6 Archived' : '') +
+      ' ' +
+      (repo.homepageUrl ? '\uD83D\uDD17 [Demo](' + repo.homepageUrl + ')' : '') +
+      ' ' +
+      (repo.releases && repo.releases.length > 0
+        ? '\uD83C\uDFF7\uFE0F Latest: ' + repo.releases[0].tagName
+        : '')
   )
   .join('\n')}
 
-</details>` : ''}`;
+</details>`
+    : ''
+}`;
 
   return content;
 }
@@ -476,8 +691,20 @@ function generateTopReposSection(data: ProfileData, bgHex: string, accentHex: st
 
 | Repository | Stars | Language | Description |
 | :--- | :---: | :--- | :--- |
-${(data.topRepositories ?? []).map(
-    (repo) => '| **[' + repo.name + '](' + repo.url + ')** | \u2B50 ' + formatNumber(repo.stargazerCount) + ' | ' + (repo.primaryLanguage ? '`' + repo.primaryLanguage.name + '`' : '\u2014') + ' | ' + (repo.description || 'No description') + ' |'
+${(data.topRepositories ?? [])
+  .map(
+    (repo) =>
+      '| **[' +
+      repo.name +
+      '](' +
+      repo.url +
+      ')** | \u2B50 ' +
+      formatNumber(repo.stargazerCount) +
+      ' | ' +
+      (repo.primaryLanguage ? '`' + repo.primaryLanguage.name + '`' : '\u2014') +
+      ' | ' +
+      (repo.description || 'No description') +
+      ' |'
   )
   .join('\n')}`;
 }
@@ -489,16 +716,14 @@ function generateOrganizationsSection(data: ProfileData, bgHex: string, accentHe
 
 <div align="center">
 
-${(data.organizations ?? []).map(
-    (org) => `[![${org.name || org.login}](${org.avatarUrl}&s=64)](${org.url})`
-  )
+${(data.organizations ?? [])
+  .map((org) => `[![${org.name || org.login}](${org.avatarUrl}&s=64)](${org.url})`)
   .join(' ')}
 
 </div>
 
-${(data.organizations ?? []).map(
-    (org) => `- **${org.name || org.login}** — [${org.login}](${org.url})`
-  )
+${(data.organizations ?? [])
+  .map((org) => `- **${org.name || org.login}** — [${org.login}](${org.url})`)
   .join('\n')}`;
 }
 
@@ -509,24 +734,26 @@ function generatePackagesSection(data: ProfileData, bgHex: string, accentHex: st
 
 | Package | Type | Version | Link |
 | :--- | :--- | :--- | :--- |
-${(data.packages ?? []).map(
+${(data.packages ?? [])
+  .map(
     (pkg) => `| \`${pkg.name}\` | ${pkg.packageType} | ${pkg.version || '—'} | [View](${pkg.url}) |`
   )
   .join('\n')}`;
 }
 
 function generateSponsorsSection(data: ProfileData, bgHex: string, accentHex: string): string {
-  if ((data.sponsors?.length ?? 0) === 0 && (data.sponsorshipsAsMaintainer?.length ?? 0) === 0) return '';
+  if ((data.sponsors?.length ?? 0) === 0 && (data.sponsorshipsAsMaintainer?.length ?? 0) === 0)
+    return '';
 
   let content = `### 💖 Sponsors & Sponsorships\n\n`;
 
   if ((data.sponsors?.length ?? 0) > 0) {
-    content += `**Sponsors (${data.sponsors!.length}):**\n\n<div align="center">\n\n${data.sponsors!.map(s => `[![${s.login}](${s.avatarUrl}&s=40)](${s.url})`).join(' ')}\n\n</div>\n\n`;
+    content += `**Sponsors (${data.sponsors!.length}):**\n\n<div align="center">\n\n${data.sponsors!.map((s) => `[![${s.login}](${s.avatarUrl}&s=40)](${s.url})`).join(' ')}\n\n</div>\n\n`;
   }
 
   if ((data.sponsorshipsAsMaintainer?.length ?? 0) > 0) {
     content += `**Sponsorships as Maintainer:**\n\n`;
-    (data.sponsorshipsAsMaintainer ?? []).forEach(s => {
+    (data.sponsorshipsAsMaintainer ?? []).forEach((s) => {
       const tierName = s.tier.name;
       const monthly = (s.tier.monthlyPriceInCents / 100).toFixed(2);
       content += `- **${s.sponsorEntity.name || s.sponsorEntity.login}** — ${tierName} ($${monthly}/mo)\n`;
@@ -541,7 +768,12 @@ function generateSponsorsSection(data: ProfileData, bgHex: string, accentHex: st
   return content;
 }
 
-function generateContributionDetailsSection(data: ProfileData, bgHex: string, accentHex: string, themeParam: string = ''): string {
+function generateContributionDetailsSection(
+  data: ProfileData,
+  bgHex: string,
+  accentHex: string,
+  themeParam: string = ''
+): string {
   return `### 📊 Contribution Breakdown
 
 <details open>
@@ -578,37 +810,65 @@ ${generateWeeklyBreakdown(data.contributionCalendar ?? { totalContributions: 0, 
 
 function generateWeeklyBreakdown(calendar: any): string {
   if (!calendar.weeks || calendar.weeks.length === 0) return 'No data available';
-  
+
   // Show last 4 weeks
   const recentWeeks = calendar.weeks.slice(-4);
-  return recentWeeks.map((week: any, i: number) => {
-    const weekTotal = week.contributionDays.reduce((sum: number, d: any) => sum + (d.contributionCount || 0), 0);
-    const startDate = week.contributionDays[0]?.date;
-    const endDate =
-      week.contributionDays[week.contributionDays.length - 1]?.date || startDate || 'N/A';
-    return `- **Week ${recentWeeks.length - i}** (${startDate} to ${endDate}): ${weekTotal} contributions`;
-  }).join('\n');
+  return recentWeeks
+    .map((week: any, i: number) => {
+      const weekTotal = week.contributionDays.reduce(
+        (sum: number, d: any) => sum + (d.contributionCount || 0),
+        0
+      );
+      const startDate = week.contributionDays[0]?.date;
+      const endDate =
+        week.contributionDays[week.contributionDays.length - 1]?.date || startDate || 'N/A';
+      return `- **Week ${recentWeeks.length - i}** (${startDate} to ${endDate}): ${weekTotal} contributions`;
+    })
+    .join('\n');
 }
 
-function generateReposContributedSection(data: ProfileData, bgHex: string, accentHex: string): string {
+function generateReposContributedSection(
+  data: ProfileData,
+  bgHex: string,
+  accentHex: string
+): string {
   if ((data.repositoriesContributedTo?.length ?? 0) === 0) return '';
 
   return `### 🤝 Repositories Contributed To
 
 | Repository | Owner | Stars | Language | Contributions |
 | :--- | :--- | :---: | :--- | :---: |
-${(data.repositoriesContributedTo ?? []).slice(0, 10).map(
-    (repo) => '| **[' + repo.name + '](' + repo.url + ')** | ' + repo.owner.login + ' | \u2B50 ' + formatNumber(repo.stargazerCount) + ' | ' + (repo.primaryLanguage ? '`' + repo.primaryLanguage.name + '`' : '\u2014') + ' | ' + (repo.contributions?.totalCount || 0) + ' |'
+${(data.repositoriesContributedTo ?? [])
+  .slice(0, 10)
+  .map(
+    (repo) =>
+      '| **[' +
+      repo.name +
+      '](' +
+      repo.url +
+      ')** | ' +
+      repo.owner.login +
+      ' | \u2B50 ' +
+      formatNumber(repo.stargazerCount) +
+      ' | ' +
+      (repo.primaryLanguage ? '`' + repo.primaryLanguage.name + '`' : '\u2014') +
+      ' | ' +
+      (repo.contributions?.totalCount || 0) +
+      ' |'
   )
   .join('\n')}`;
 }
 
-function generateRecentActivitySection(data: ProfileData, bgHex: string, accentHex: string): string {
+function generateRecentActivitySection(
+  data: ProfileData,
+  bgHex: string,
+  accentHex: string
+): string {
   let content = `### 🔄 Recent Activity\n\n`;
 
   if ((data.recentPullRequests?.length ?? 0) > 0) {
     content += `**Recent Pull Requests:**\n\n`;
-    (data.recentPullRequests ?? []).slice(0, 5).forEach(pr => {
+    (data.recentPullRequests ?? []).slice(0, 5).forEach((pr) => {
       const stateIcon = pr.state === 'MERGED' ? '✅' : pr.state === 'OPEN' ? '🔄' : '❌';
       content += `- ${stateIcon} **[${pr.title}](${pr.url})** in \`${pr.repository.owner.login}/${pr.repository.name}\` ${pr.mergedAt ? `(merged ${formatDate(pr.mergedAt)})` : ''}\n`;
     });
@@ -617,7 +877,7 @@ function generateRecentActivitySection(data: ProfileData, bgHex: string, accentH
 
   if ((data.recentIssues?.length ?? 0) > 0) {
     content += `**Recent Issues:**\n\n`;
-    (data.recentIssues ?? []).slice(0, 5).forEach(issue => {
+    (data.recentIssues ?? []).slice(0, 5).forEach((issue) => {
       const stateIcon = issue.state === 'OPEN' ? '🔴' : '✅';
       content += `- ${stateIcon} **[${issue.title}](${issue.url})** in \`${issue.repository.owner.login}/${issue.repository.name}\`\n`;
     });
@@ -627,7 +887,12 @@ function generateRecentActivitySection(data: ProfileData, bgHex: string, accentH
   return content;
 }
 
-function generateContactSection(data: ProfileData, username: string, bgHex: string, accentHex: string): string {
+function generateContactSection(
+  data: ProfileData,
+  username: string,
+  bgHex: string,
+  accentHex: string
+): string {
   const website = data.website || `https://github.com/${username}`;
   const twitter = getTwitterHandle(data);
   const showTwitter = !!twitter;
@@ -660,23 +925,23 @@ function getTwitterHandle(data: ProfileData): string {
 
 function calculateCurrentStreak(calendar: any): number {
   if (!calendar.weeks || calendar.weeks.length === 0) return 0;
-  
+
   let streak = 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   // Check from most recent week backwards
   for (let w = calendar.weeks.length - 1; w >= 0; w--) {
     const week = calendar.weeks[w];
     for (let d = 6; d >= 0; d--) {
       const day = week.contributionDays[d];
       if (!day) continue;
-      
+
       const dayDate = new Date(day.date);
       dayDate.setHours(0, 0, 0, 0);
-      
+
       if (dayDate > today) continue; // Future date
-      
+
       if (day.contributionCount > 0) {
         streak++;
       } else if (dayDate < today) {
@@ -684,16 +949,16 @@ function calculateCurrentStreak(calendar: any): number {
       }
     }
   }
-  
+
   return streak;
 }
 
 function calculateLongestStreak(calendar: any): number {
   if (!calendar.weeks || calendar.weeks.length === 0) return 0;
-  
+
   let maxStreak = 0;
   let currentStreak = 0;
-  
+
   for (const week of calendar.weeks) {
     for (const day of week.contributionDays) {
       if (day.contributionCount > 0) {
@@ -704,7 +969,7 @@ function calculateLongestStreak(calendar: any): number {
       }
     }
   }
-  
+
   return maxStreak;
 }
 
@@ -712,7 +977,11 @@ function calculateLongestStreak(calendar: any): number {
 // PROJECT SECTIONS (Enhanced with rich data)
 // ============================================================================
 
-export function getProjectSections(data: ProjectData, preset: ProjectPreset, theme: string = 'gta6'): Section[] {
+export function getProjectSections(
+  data: ProjectData,
+  preset: ProjectPreset,
+  theme: string = 'gta6'
+): Section[] {
   const themeObj = getThemeById(theme);
   const bgHex = themeObj.bg.replace('#', '');
   const accentHex = themeObj.emerald.replace('#', '');
@@ -730,7 +999,14 @@ export function getProjectSections(data: ProjectData, preset: ProjectPreset, the
   return getStandardProjectSections(data, themeObj, bgHex, accentHex, goldHex, themeParam);
 }
 
-function getCLIProjectSections(data: ProjectData, themeObj: any, bgHex: string, accentHex: string, goldHex: string, themeParam: string): Section[] {
+function getCLIProjectSections(
+  data: ProjectData,
+  themeObj: any,
+  bgHex: string,
+  accentHex: string,
+  goldHex: string,
+  themeParam: string
+): Section[] {
   return [
     {
       id: 'header',
@@ -791,7 +1067,14 @@ function getCLIProjectSections(data: ProjectData, themeObj: any, bgHex: string, 
   ];
 }
 
-function getAPIProjectSections(data: ProjectData, themeObj: any, bgHex: string, accentHex: string, goldHex: string, themeParam: string): Section[] {
+function getAPIProjectSections(
+  data: ProjectData,
+  themeObj: any,
+  bgHex: string,
+  accentHex: string,
+  goldHex: string,
+  themeParam: string
+): Section[] {
   return [
     {
       id: 'header',
@@ -859,7 +1142,14 @@ function getAPIProjectSections(data: ProjectData, themeObj: any, bgHex: string, 
   ];
 }
 
-function getStandardProjectSections(data: ProjectData, themeObj: any, bgHex: string, accentHex: string, goldHex: string, themeParam: string): Section[] {
+function getStandardProjectSections(
+  data: ProjectData,
+  themeObj: any,
+  bgHex: string,
+  accentHex: string,
+  goldHex: string,
+  themeParam: string
+): Section[] {
   return [
     {
       id: 'header',
@@ -941,7 +1231,9 @@ function getStandardProjectSections(data: ProjectData, themeObj: any, bgHex: str
     {
       id: 'security',
       title: 'Security & Dependencies',
-      enabled: (data.vulnerabilityAlerts?.length ?? 0) > 0 || (data.dependencyGraphManifests?.length ?? 0) > 0,
+      enabled:
+        (data.vulnerabilityAlerts?.length ?? 0) > 0 ||
+        (data.dependencyGraphManifests?.length ?? 0) > 0,
       order: 12,
       content: generateSecuritySection(data, bgHex, accentHex),
     },
@@ -955,7 +1247,11 @@ function getStandardProjectSections(data: ProjectData, themeObj: any, bgHex: str
     {
       id: 'community',
       title: 'Community & Support',
-      enabled: (data.hasIssuesEnabled ?? false) || (data.hasDiscussionsEnabled ?? false) || (data.hasWikiEnabled ?? false) || (data.fundingLinks?.length ?? 0) > 0,
+      enabled:
+        (data.hasIssuesEnabled ?? false) ||
+        (data.hasDiscussionsEnabled ?? false) ||
+        (data.hasWikiEnabled ?? false) ||
+        (data.fundingLinks?.length ?? 0) > 0,
       order: 14,
       content: generateCommunitySection(data, bgHex, accentHex),
     },
@@ -1093,7 +1389,12 @@ function generateEndpointsSection(data: ProjectData): string {
 > See [API Documentation](${data.homepageUrl || `https://github.com/${data.owner}/${data.repo}`}) for full reference.`;
 }
 
-function generateStandardHeader(data: ProjectData, bgHex: string, accentHex: string, themeParam: string): string {
+function generateStandardHeader(
+  data: ProjectData,
+  bgHex: string,
+  accentHex: string,
+  themeParam: string
+): string {
   return `<div align="center">
 
 # 🛠️ ${data.title}
@@ -1111,7 +1412,12 @@ ${data.homepageUrl ? `[**Explore Live Demo 🚀**](${data.homepageUrl})` : ''}
 ---`;
 }
 
-function generateDetailedBadgesSection(data: ProjectData, bgHex: string, accentHex: string, themeParam: string): string {
+function generateDetailedBadgesSection(
+  data: ProjectData,
+  bgHex: string,
+  accentHex: string,
+  themeParam: string
+): string {
   return `### 📊 Repository Metrics
 
 <div align="center">
@@ -1172,9 +1478,13 @@ ${data.techStack.map((t) => `<img src="https://img.shields.io/badge/-${shieldsEs
 </div>`;
 }
 
-function generateProjectLanguagesSection(data: ProjectData, bgHex: string, accentHex: string): string {
+function generateProjectLanguagesSection(
+  data: ProjectData,
+  bgHex: string,
+  accentHex: string
+): string {
   const totalSize = data.totalLanguageSize ?? 0;
-  const languages = (data.languages ?? []).map(l => ({
+  const languages = (data.languages ?? []).map((l) => ({
     name: l.name,
     color: l.color,
     percentage: totalSize > 0 ? Number(((l.size / totalSize) * 100).toFixed(1)) : 0,
@@ -1185,7 +1495,7 @@ function generateProjectLanguagesSection(data: ProjectData, bgHex: string, accen
 
 <div align="center">
 
-${languages.map(l => getLanguageBadge(l, bgHex, accentHex)).join(' ')}
+${languages.map((l) => getLanguageBadge(l, bgHex, accentHex)).join(' ')}
 
 </div>
 
@@ -1194,7 +1504,7 @@ ${languages.map(l => getLanguageBadge(l, bgHex, accentHex)).join(' ')}
 
 | Language | Percentage | Bytes |
 | :--- | :---: | :--- |
-${languages.map(l => `| **${l.name}** | ${l.percentage}% | ${formatBytes(l.bytes || 0)} |`).join('\n')}
+${languages.map((l) => `| **${l.name}** | ${l.percentage}% | ${formatBytes(l.bytes || 0)} |`).join('\n')}
 | **Total** | **100%** | ${formatBytes(data.totalLanguageSize ?? 0)} |
 
 </details>`;
@@ -1210,7 +1520,8 @@ function generateTopicsSection(data: ProjectData, bgHex: string, accentHex: stri
 
 ${topics
   .map(
-    (topic) => `<img src="https://img.shields.io/badge/-${shieldsEscape(topic.name)}-${bgHex}?style=flat-square&logo=github&logoColor=${accentHex}&labelColor=${bgHex}" alt="${topic.name}" />`
+    (topic) =>
+      `<img src="https://img.shields.io/badge/-${shieldsEscape(topic.name)}-${bgHex}?style=flat-square&logo=github&logoColor=${accentHex}&labelColor=${bgHex}" alt="${topic.name}" />`
   )
   .join(' ')}
 
@@ -1245,7 +1556,9 @@ function generateReleasesSection(data: ProjectData, bgHex: string, accentHex: st
 ${releases
   .slice(0, 10)
   .map(
-    (release) => `### ${release.tagName} ${release.isPrerelease ? '🧪 Pre-release' : ''} ${release.isDraft ? '📝 Draft' : ''}
+    (
+      release
+    ) => `### ${release.tagName} ${release.isPrerelease ? '🧪 Pre-release' : ''} ${release.isDraft ? '📝 Draft' : ''}
 **${release.name || release.tagName}** — ${formatDate(release.publishedAt)}
 
 ${release.description || 'No release notes provided.'}
@@ -1261,7 +1574,7 @@ function generateDeploymentsSection(data: ProjectData, bgHex: string, accentHex:
   const environments = data.environments ?? [];
   if (environments.length > 0) {
     content += `### Environments\n\n`;
-    environments.forEach(env => {
+    environments.forEach((env) => {
       content += `- **${env.name}** ${env.url ? `— [${env.url}](${env.url})` : ''}\n`;
     });
     content += '\n';
@@ -1270,8 +1583,17 @@ function generateDeploymentsSection(data: ProjectData, bgHex: string, accentHex:
   const deployments = data.deployments ?? [];
   if (deployments.length > 0) {
     content += `### Recent Deployments\n\n`;
-    deployments.slice(0, 10).forEach(dep => {
-      const stateIcon = dep.state === 'active' ? '🟢' : dep.state === 'success' ? '✅' : dep.state === 'failure' ? '❌' : dep.state === 'inactive' ? '⚪' : '⏳';
+    deployments.slice(0, 10).forEach((dep) => {
+      const stateIcon =
+        dep.state === 'active'
+          ? '🟢'
+          : dep.state === 'success'
+            ? '✅'
+            : dep.state === 'failure'
+              ? '❌'
+              : dep.state === 'inactive'
+                ? '⚪'
+                : '⏳';
       content += `- ${stateIcon} **${dep.environment}** — ${formatDate(dep.createdAt)} ${dep.payload ? `(${dep.payload})` : ''}\n`;
     });
   }
@@ -1279,7 +1601,11 @@ function generateDeploymentsSection(data: ProjectData, bgHex: string, accentHex:
   return content;
 }
 
-function generateProjectPackagesSection(data: ProjectData, bgHex: string, accentHex: string): string {
+function generateProjectPackagesSection(
+  data: ProjectData,
+  bgHex: string,
+  accentHex: string
+): string {
   const packages = data.packages ?? [];
   if (packages.length === 0) return '';
 
@@ -1304,7 +1630,8 @@ function generateWorkflowsSection(data: ProjectData, bgHex: string, accentHex: s
 | :--- | :--- | :--- |
 ${workflows
   .map(
-    (w) => `| ${w.name} | ${w.state === 'active' ? '🟢 Active' : w.state === 'disabled_manually' ? '🔴 Disabled' : w.state} | \`${w.filePath}\` |`
+    (w) =>
+      `| ${w.name} | ${w.state === 'active' ? '🟢 Active' : w.state === 'disabled_manually' ? '🔴 Disabled' : w.state} | \`${w.filePath}\` |`
   )
   .join('\n')}`;
 }
@@ -1315,8 +1642,15 @@ function generateSecuritySection(data: ProjectData, bgHex: string, accentHex: st
   const vulnAlerts = data.vulnerabilityAlerts ?? [];
   if (vulnAlerts.length > 0) {
     content += `### ⚠️ Vulnerability Alerts\n\n`;
-    vulnAlerts.forEach(v => {
-      const severityIcon = v.severity === 'CRITICAL' ? '🔴' : v.severity === 'HIGH' ? '🟠' : v.severity === 'MODERATE' ? '🟡' : '🔵';
+    vulnAlerts.forEach((v) => {
+      const severityIcon =
+        v.severity === 'CRITICAL'
+          ? '🔴'
+          : v.severity === 'HIGH'
+            ? '🟠'
+            : v.severity === 'MODERATE'
+              ? '🟡'
+              : '🔵';
       content += `- ${severityIcon} **${v.severity}** — \`${v.package.name}\` (${v.package.ecosystem})\n`;
     });
     content += '\n';
@@ -1325,9 +1659,9 @@ function generateSecuritySection(data: ProjectData, bgHex: string, accentHex: st
   const depManifests = data.dependencyGraphManifests ?? [];
   if (depManifests.length > 0) {
     content += `### 📋 Dependency Manifests\n\n`;
-    depManifests.forEach(m => {
+    depManifests.forEach((m) => {
       content += `**${m.filename}**\n\n`;
-      m.dependencies.slice(0, 10).forEach(d => {
+      m.dependencies.slice(0, 10).forEach((d) => {
         content += `- \`${d.packageName}\` ${d.requirements ? `(${d.requirements})` : ''} ${d.repository ? `— [${d.repository.name}](${d.repository.url})` : ''}\n`;
       });
       if (m.dependencies.length > 10) content += `... and ${m.dependencies.length - 10} more\n`;
@@ -1366,11 +1700,15 @@ ${data.installCommand}
 ${data.runCommand}
 \`\`\`
 
-${data.testCommand ? `### Testing
+${
+  data.testCommand
+    ? `### Testing
 
 \`\`\`bash
 ${data.testCommand}
-\`\`\`` : ''}
+\`\`\``
+    : ''
+}
 
 ${data.demoUrl ? `Open [${data.demoUrl}](${data.demoUrl}) in your browser to view the application.` : ''}`;
 }
@@ -1394,7 +1732,7 @@ function generateCommunitySection(data: ProjectData, bgHex: string, accentHex: s
   const fundingLinks = data.fundingLinks ?? [];
   if (fundingLinks.length > 0) {
     content += `\n### 💖 Funding\n\n`;
-    fundingLinks.forEach(f => {
+    fundingLinks.forEach((f) => {
       content += `- [${f.platform}](${f.url})\n`;
     });
   }
@@ -1402,7 +1740,7 @@ function generateCommunitySection(data: ProjectData, bgHex: string, accentHex: s
   const mentionableUsers = data.mentionableUsers ?? [];
   if (mentionableUsers.length > 0) {
     content += `\n### 👥 Maintainers\n\n`;
-    mentionableUsers.forEach(u => {
+    mentionableUsers.forEach((u) => {
       content += `- [@${u.login}](${u.avatarUrl}) ${u.name ? `(${u.name})` : ''}\n`;
     });
   }
@@ -1410,7 +1748,11 @@ function generateCommunitySection(data: ProjectData, bgHex: string, accentHex: s
   return content;
 }
 
-function generateEcosystemProjectSection(data: ProjectData, bgHex: string, accentHex: string): string {
+function generateEcosystemProjectSection(
+  data: ProjectData,
+  bgHex: string,
+  accentHex: string
+): string {
   return `## 🌐 Ecosystem Cross-Pollination
 
 <div align="center">
@@ -1520,10 +1862,19 @@ export const DEPLOY_ANIMATED_BADGES: Array<{ id: string; title: string }> = [
 ];
 
 export const DEPLOY_DEFAULT_BADGES: string[] = [
-  'composite', 'snake', 'heatmap', 'trophy', 'activity',
-  'skill-radar', 'language-race', 'repo-constellation',
-  'code-pulse', 'contribution-mountain', 'tech-galaxy',
-  'contribution-flow', 'code-time-heatmap',
+  'composite',
+  'snake',
+  'heatmap',
+  'trophy',
+  'activity',
+  'skill-radar',
+  'language-race',
+  'repo-constellation',
+  'code-pulse',
+  'contribution-mountain',
+  'tech-galaxy',
+  'contribution-flow',
+  'code-time-heatmap',
 ];
 
 export interface DeployExtrasOptions {
@@ -1569,7 +1920,7 @@ export function appendDeployExtras(markdown: string, options: DeployExtrasOption
     out +=
       'This profile is configured with [ReadmeCraft Action](https://github.com/ErBharatMalhotra/readmecraft) for 24-hour scheduled badge & snake refresh:\n\n';
     out +=
-      '```yaml\nname: ReadmeCraft Auto Refresh\non:\n  schedule:\n    - cron: \'0 0 * * *\' # Every midnight\n  workflow_dispatch:\n\njobs:\n  refresh:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Ping Badge Cache Invalidator\n        run: |\n          curl -s "https://readme.bharatdn.com/api/badges?username=' +
+      "```yaml\nname: ReadmeCraft Auto Refresh\non:\n  schedule:\n    - cron: '0 0 * * *' # Every midnight\n  workflow_dispatch:\n\njobs:\n  refresh:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Ping Badge Cache Invalidator\n        run: |\n          curl -s \"https://readme.bharatdn.com/api/badges?username=" +
       username +
       '&type=composite&v=$(date +%s)" > /dev/null\n```\n\n';
     out += '</details>';

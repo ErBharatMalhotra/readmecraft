@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://readme.bharatdn.com'),
   title: {
     default: 'ReadmeCraft | Intelligent Dual-Mode GitHub README Studio',
     template: '%s | ReadmeCraft',
@@ -43,9 +44,10 @@ export const metadata: Metadata = {
     locale: 'en_US',
     images: [
       {
-        url: '/og-readmecraft.svg',
+        url: '/og-readmecraft.png',
         width: 1200,
         height: 630,
+        type: 'image/png',
         alt: 'ReadmeCraft — Intelligent GitHub README Studio',
       },
     ],
@@ -55,7 +57,7 @@ export const metadata: Metadata = {
     title: 'ReadmeCraft — Intelligent GitHub README Studio',
     description:
       'Create world-class GitHub Profile & Repository READMEs in seconds. Auto-detection, Bento grids, GitHolo & GitChronicle widgets.',
-    images: ['/og-readmecraft.svg'],
+    images: ['/og-readmecraft.png'],
     creator: '@ErBharatMalhotra',
     site: '@ErBharatMalhotra',
   },
@@ -114,7 +116,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 '@type': 'Person',
                 name: 'Bharat Malhotra',
                 url: 'https://bharatdn.com',
-                sameAs: ['https://github.com/ErBharatMalhotra', 'https://twitter.com/ErBharatMalhotra'],
+                sameAs: [
+                  'https://github.com/ErBharatMalhotra',
+                  'https://twitter.com/ErBharatMalhotra',
+                ],
               },
               featureList: [
                 'Dual-Mode: Profile & Repository READMEs',
@@ -128,7 +133,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#090d16] text-[#f1f5f9] selection:bg-emerald-500/30 selection:text-emerald-300 antialiased">
+      <body className="min-h-screen bg-[#090d16] text-[#f1f5f9] antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
         {/* Skip link for keyboard accessibility (WCAG 2.4.1) */}
         <a href="#main-content" className="skip-link">
           Skip to main content
