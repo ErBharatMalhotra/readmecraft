@@ -17,6 +17,7 @@ import {
   X,
   Rocket,
   Search,
+  ShieldCheck,
 } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
 import { useAuth } from '@/lib/auth-client';
@@ -204,6 +205,16 @@ export const Header: React.FC<HeaderProps> = ({
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span>Templates</span>
             </Link>
+            {/* Badge Auditor */}
+            <Link
+              href="/audit"
+              className="flex items-center gap-1.5 rounded-lg border border-[#1e293b] bg-[#0e1526] px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-emerald-500/50 hover:text-emerald-400"
+              title="Find dead badges on your profile README"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Audit</span>
+            </Link>
+
             <div className="group relative">
               <button className="flex items-center gap-1.5 rounded-lg border border-[#1e293b] bg-[#0e1526] px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-[#131c31] hover:text-white">
                 <Globe className="h-3.5 w-3.5" />

@@ -32,6 +32,7 @@
 | **Native SVG Badges** | 41 badge types via `/api/badges` — stats, streak, heatmap, snake and composite cards rendered in-house, with a 6-hour edge cache |
 | **GitHub OAuth** | "Sign in with GitHub" → your personal 5,000 req/hr token used automatically |
 | **Star Button** | Native "Star Repo" in header — direct API call, no redirect |
+| **🩺 Badge Auditor** | `/audit` — finds dead badges in any profile README and hands back fixed markdown |
 | **🚀 Deploy Button** | One-click GitHub App install → auto-pushes README to your profile repo |
 | **🧙 Project README Wizard** | `/craft` — analyzes repo, detects type, generates tailored markdown + badges |
 | **🎨 Themes System** | 63 themes in 8 categories (gaming, anime, aesthetic, dev classics, cyberpunk, retro, nature, minimal) |
@@ -130,6 +131,24 @@ https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme
 | `tech-galaxy` | 🌌 Tech-stack galaxy |
 | `streak-calendar` | 🔥 Compact streak calendar |
 | `visitor` | 👀 Visitor card |
+
+### Badge health check (`/audit`)
+
+```
+https://readme.bharatdn.com/audit?u=<login>        # web report
+https://readme.bharatdn.com/api/audit?username=<login>   # JSON
+```
+
+Reads the profile README and flags what no longer renders:
+
+| Rule | Examples |
+|------|----------|
+| Dead host | paused `github-readme-stats.vercel.app`, retired `*.herokuapp.com` (streak stats, typing SVG, activity graph), `travis-ci.org` |
+| Silent breakage | `github.com/…/actions/workflows/*.yml/badge.svg` after a workflow rename, stale `badge.fury.io` / npm version badges, coverage badges with lapsed upload tokens |
+| Third-party risk | shields.io chips, self-hosted readme-stats clones, visitor counters |
+| Native | badges already served from `/api/badges` |
+
+Every dead/risky badge gets a mapped native replacement, and the report returns the whole README with the fixes applied. Hosts without a rule are reported as "unchecked" rather than guessed at.
 | `typing` | ⌨️ Animated typing SVG |
 | `name-banner` | 🏷️ Name banner — `&name=<text>` |
 | `ascii` | 🎨 ASCII banner — `&text=<text>` |
