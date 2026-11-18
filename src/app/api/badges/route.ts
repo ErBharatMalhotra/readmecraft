@@ -3703,6 +3703,37 @@ export async function GET(req: NextRequest) {
     const userToken = searchParams.get('user_token') || undefined; // User's OAuth token from NextAuth
     const themeName = searchParams.get('theme') || 'default';
 
+    // ===== NATIVE TASTE-SCORE BADGE (no username needed) =====
+    // `/api/badges?type=score&value=92&grade=A&theme=gta6`
+    if (type === 'score') {
+      const scoreTheme = getTheme(themeName);
+      const rawValue = Number(searchParams.get('value') ?? searchParams.get('score') ?? 'NaN');
+      const headers = {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      };
+
+      if (!Number.isFinite(rawValue)) {
+        return new NextResponse(generateBadge('Taste Score', 'value required', scoreTheme, 'red'), {
+          status: 400,
+          headers,
+        });
+      }
+
+      const value = Math.max(0, Math.min(100, Math.round(rawValue)));
+      const grade = (searchParams.get('grade') || '').slice(0, 3);
+      const label = searchParams.get('label') || 'Taste Score';
+      const accent = value >= 85 ? 'emerald' : value >= 70 ? 'gold' : 'red';
+
+      const svg = generateBadge(
+        label.slice(0, 24),
+        grade ? `${value}/100 (${grade})` : `${value}/100`,
+        scoreTheme,
+        accent
+      );
+      return new NextResponse(svg, { headers });
+    }
+
     // ===== NATIVE SKILL CHIPS (no username needed) =====
     // `/api/badges?type=skill&name=React&theme=gta6`
     // `/api/badges?type=skill-row&skills=React,Docker,Redis&theme=gta6`
@@ -3840,6 +3871,11 @@ export async function GET(req: NextRequest) {
 
     const theme = getTheme(themeName);
 
+    // GitHub's GraphQL API needs a token. When the deployment token is expired
+    // we get demo data back — say so instead of rendering a confident zero.
+    const degraded = Boolean((profileData as any).__graphQLError);
+    const unavailable = degraded ? 'n/a' : null;
+
     const userData = {
       public_repos: profileData.repositories?.totalCount || 0,
       followers: profileData.followers?.totalCount || 0,
@@ -3880,19 +3916,54 @@ export async function GET(req: NextRequest) {
 
     // ===== SHIELDS COMPATIBLE BADGES =====
     if (type === 'repos')
-      badgeSvg = generateBadge('Public Repos', String(stats.publicRepos), theme);
+      badgeSvg = generateBadge(
+        'Public Repos',
+        unavailable ?? String(stats.publicRepos),
+        theme,
+        degraded ? 'red' : undefined
+      );
     else if (type === 'followers')
-      badgeSvg = generateBadge('Followers', String(stats.followers), theme);
+      badgeSvg = generateBadge(
+        'Followers',
+        unavailable ?? String(stats.followers),
+        theme,
+        degraded ? 'red' : undefined
+      );
     else if (type === 'following')
-      badgeSvg = generateBadge('Following', String(stats.following), theme);
+      badgeSvg = generateBadge(
+        'Following',
+        unavailable ?? String(stats.following),
+        theme,
+        degraded ? 'red' : undefined
+      );
     else if (type === 'language')
-      badgeSvg = generateBadge('Top Language', stats.topLanguage, theme);
+      badgeSvg = generateBadge(
+        'Top Language',
+        unavailable ?? stats.topLanguage,
+        theme,
+        degraded ? 'red' : undefined
+      );
     else if (type === 'streak')
-      badgeSvg = generateBadge('Streak', `${stats.streak} days`, theme, 'gold');
+      badgeSvg = generateBadge(
+        'Streak',
+        unavailable ?? `${stats.streak} days`,
+        theme,
+        degraded ? 'red' : 'gold'
+      );
     else if (type === 'contributions')
-      badgeSvg = generateBadge('Contributions', String(stats.totalContributions), theme);
+      badgeSvg = generateBadge(
+        'Contributions',
+        unavailable ?? String(stats.totalContributions),
+        theme,
+        degraded ? 'red' : undefined
+      );
     else if (type === 'stars')
-      badgeSvg = generateBadge('Stars Given', String(stats.starsGiven), theme);
+      badgeSvg = generateBadge(
+        'Stars Given',
+        unavailable ?? String(stats.starsGiven),
+        theme,
+        degraded ? 'red' : undefined
+      );
 
     // ===== RICH SVG CARDS =====
     else if (type === 'trophy')
@@ -4053,7 +4124,10 @@ export async function GET(req: NextRequest) {
 
     // ===== STATS JSON =====
     else {
-      return createETagResponse({ ...stats, languages: languagesData, username, fromCache }, etag);
+      return createETagResponse(
+        { ...stats, languages: languagesData, username, fromCache, degraded },
+        etag
+      );
     }
 
     return new NextResponse(badgeSvg, {

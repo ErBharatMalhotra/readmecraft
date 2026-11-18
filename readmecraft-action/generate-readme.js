@@ -43,9 +43,9 @@ function generateReadmeMarkdown(existingReadme) {
     return updateExistingReadme(existingReadme);
   }
 
-  // Generate fresh README
-  let markdown = `# ${USERNAME}\n`;
-  markdown += '> Building resilient systems & high-taste developer tools.\n\n';
+  // Generate fresh README. No invented bio: the action only owns the badge
+  // block, everything else belongs to the person whose profile this is.
+  let markdown = `# ${USERNAME}\n\n`;
   markdown += '---\n\n';
 
   // Core badges

@@ -516,13 +516,11 @@ function hasBadgesInTechStack(sections: Section[]): boolean {
 // ============================================================================
 
 export function generateScoreBadge(breakdown: ScoreBreakdown): string {
-  const { score, grade, metrics } = breakdown;
-  const color = colorForGrade(grade);
-  const label = 'ReadmeCraft Score';
-  const message = `${score}/100 (${grade})`;
+  const { score, grade } = breakdown;
 
-  // Simple shields.io compatible URL (or we could generate inline SVG)
-  return `![ReadmeCraft Score](https://img.shields.io/badge/${encodeURIComponent(label)}-${encodeURIComponent(message)}-${color.replace('#', '')}?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0tMSAxN2gxTDExIDEzbDEgM2gxTDExIDE0aDEuNThMMTIgMTZsMS41OCAyeDEtMS40MkwxMSAxM2gxdi0yem0zLjA4LTlsLTEuNjYgMS42Ni0uOTktLjk5LTEuNjYgMS42Ni0uOTktLjk5LTEuNjYgMS42Ni0xLjA4LTEuMDhsMS4wOC0xLjA4LjU0LS41NHoiLz48L3N2Zz4=)`;
+  // Rendered by our own badge engine — no shields.io request, and the colour
+  // threshold lives in one place (the API route) instead of in the markdown.
+  return `![ReadmeCraft Score](https://readme.bharatdn.com/api/badges?type=score&value=${score}&grade=${encodeURIComponent(grade)}&label=ReadmeCraft%20Score&theme=gta6)`;
 }
 
 // ============================================================================

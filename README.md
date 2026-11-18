@@ -109,6 +109,7 @@ https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme
 | `blog` | Blog presence badge |
 | `skill` | Native tech chip — `&name=React` (curated simple-icons subset) |
 | `skill-row` | Row of up to 12 native tech chips — `&skills=React,Docker,Redis` |
+| `score` | Taste Score badge — `&value=92&grade=A&label=ReadmeCraft%20Score` |
 
 ### Visual cards
 
@@ -131,6 +132,10 @@ https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme
 | `tech-galaxy` | 🌌 Tech-stack galaxy |
 | `streak-calendar` | 🔥 Compact streak calendar |
 | `visitor` | 👀 Visitor card |
+
+### Operations: badge numbers need a token
+
+GitHub's GraphQL API has no anonymous access, so live numbers (repos, followers, streak, contributions) need a valid `GITHUB_TOKEN`. If the token is missing or revoked, badges render **`n/a`** and `/api/badges` returns `"degraded": true` instead of a confident `0`. The demo calendar cards keep rendering so a broken token never leaves an empty README.
 
 ### Badge health check (`/audit`)
 

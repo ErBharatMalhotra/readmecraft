@@ -267,6 +267,30 @@ function createGraphQLClient(options: GitHubClientOptions = {}) {
   });
 }
 
+/**
+ * GitHub's GraphQL API has no anonymous access, so an expired or revoked token
+ * fails every call. That used to be invisible: the catch below returned mock
+ * data and callers rendered "0" as if it were real. Surface it instead.
+ */
+async function requestGraphQL<T>(
+  options: GitHubClientOptions,
+  query: string,
+  variables: Record<string, unknown>
+): Promise<T> {
+  try {
+    const client = createGraphQLClient(options);
+    return await client<T>(query, variables);
+  } catch (error: any) {
+    const status = error?.status ?? error?.response?.status;
+    if (status === 401) {
+      throw new Error(
+        'GitHub rejected the application token (401 Bad credentials). Set a valid GITHUB_TOKEN.'
+      );
+    }
+    throw error;
+  }
+}
+
 // ============================================================================
 // ENHANCED RAW DATA INTERFACES (matching GraphQL query)
 // ============================================================================
@@ -577,15 +601,14 @@ export async function fetchProfileData(
 
   const fetcher = async () => {
     try {
-      const graphqlClient = createGraphQLClient(options);
       const to = new Date().toISOString();
       const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
 
-      const result = await graphqlClient<{ user: ProfileDataRaw }>(UNIFIED_PROFILE_QUERY, {
-        username,
-        from,
-        to,
-      });
+      const result = await requestGraphQL<{ user: ProfileDataRaw }>(
+        options,
+        UNIFIED_PROFILE_QUERY,
+        { username, from, to }
+      );
 
       if (!result.user) {
         throw new Error(`GitHub user "${username}" not found`);
@@ -607,11 +630,11 @@ export async function fetchProfileData(
         stack: error?.stack?.slice(0, 500),
       };
       console.error('GraphQL Profile Query Failed:', errorDetail);
-      // Return error in data to debug - but still provide mock fallback
+      // Provide a demo fallback, but do NOT cache it: once the token is fixed
+      // the very next request should return real data.
       const data = getMockProfileData(username);
       (data as any).__graphQLError = errorDetail;
       const etag = getETag(data);
-      cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };
     }
   };
@@ -633,12 +656,11 @@ export async function fetchRepoData(
 
   const fetcher = async () => {
     try {
-      const graphqlClient = createGraphQLClient(options);
-
-      const result = await graphqlClient<{ repository: RepoDataRaw }>(UNIFIED_REPO_QUERY, {
-        owner,
-        name: repo,
-      });
+      const result = await requestGraphQL<{ repository: RepoDataRaw }>(
+        options,
+        UNIFIED_REPO_QUERY,
+        { owner, name: repo }
+      );
 
       if (!result.repository) {
         throw new Error(`Repository "${owner}/${repo}" not found`);
@@ -661,7 +683,7 @@ export async function fetchRepoData(
         stack: error?.stack?.slice(0, 500),
       };
       console.error('Repo GraphQL Query Failed:', errorDetail);
-      // Return error in data to debug
+      // Not cached, for the same reason as the profile fallback above.
       const data: RepoDataRaw = {
         name: repo,
         nameWithOwner: `${owner}/${repo}`,
@@ -721,7 +743,6 @@ export async function fetchRepoData(
       };
       (data as any).__graphQLError = errorDetail;
       const etag = getETag(data);
-      cache.set(cacheKey, { data, etag, timestamp: Date.now() });
       return { data, etag, fromCache: false };
     }
   };
