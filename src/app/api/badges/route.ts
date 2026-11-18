@@ -15,6 +15,8 @@ import {
 import type { ThemePalette } from '@/lib/themes';
 import { getThemeById } from '@/lib/themes';
 import { findTechIcon } from '@/lib/tech-icons';
+import type { ArchitectureModel } from '@/lib/architecture';
+import { fetchArchitectureModel } from '@/lib/architecture';
 
 type Theme = ThemePalette;
 
@@ -666,6 +668,111 @@ function generateTrophySvg(
   });
 
   return createSvg(width, height, `${username}'s Developer Trophies`, inner, theme);
+}
+
+// ============================================================================
+// ARCHITECTURE DIAGRAM (static analysis, no AI)
+// Three layers inferred from dependency manifests and top-level folders. Every
+// box maps to something we actually read, and the caption names the sources.
+// ============================================================================
+function generateArchitectureSvg(model: ArchitectureModel, theme: Theme): string {
+  const c = C(theme);
+  const width = 760;
+  const colWidth = 212;
+  const colGap = 34;
+  const colX = [24, 24 + colWidth + colGap, 24 + 2 * (colWidth + colGap)];
+  const chipH = 30;
+  const chipGap = 8;
+  const chipsTop = 104;
+  const maxChips = 4;
+  const height = chipsTop + maxChips * (chipH + chipGap) + 34;
+  const midY = chipsTop + (maxChips * (chipH + chipGap)) / 2;
+
+  const title = `${model.owner}/${model.repo} — architecture`;
+  let inner = '';
+
+  inner += safeText({
+    x: width / 2,
+    y: 34,
+    content: title,
+    cls: 'badge-title',
+    maxWidth: width - 48,
+    fontSize: 16,
+    fontFamily: 'display',
+    textAnchor: 'middle',
+    truncate: true,
+  });
+
+  const caption = model.degraded
+    ? 'no dependency manifest found — nothing to infer'
+    : `static analysis · ${model.sources.slice(0, 3).join(' + ')}`;
+  inner += safeText({
+    x: width / 2,
+    y: 54,
+    content: caption,
+    cls: 'muted',
+    maxWidth: width - 48,
+    fontSize: 10,
+    fontFamily: 'mono',
+    textAnchor: 'middle',
+    truncate: true,
+  });
+
+  const layers: Array<{ key: 'client' | 'api' | 'data'; title: string; color: string }> = [
+    { key: 'client', title: 'CLIENT', color: c.textSecondary },
+    { key: 'api', title: 'API', color: c.textSecondary },
+    { key: 'data', title: 'DATA', color: c.textSecondary },
+  ];
+
+  layers.forEach((layer, index) => {
+    const x = colX[index];
+    inner += `<text x="${x + 2}" y="86" class="label" fill="${layer.color}" font-size="10" letter-spacing="1.6">${escXml(layer.title)}</text>`;
+
+    const items = model.layers[layer.key];
+    if (items.length === 0) {
+      inner += `<rect x="${x}" y="${chipsTop}" width="${colWidth}" height="${chipH}" rx="${RADIUS.md}" fill="none" stroke="${c.border}" stroke-dasharray="4 4"/>`;
+      inner += `<text x="${x + colWidth / 2}" y="${chipsTop + 19}" class="muted" text-anchor="middle" fill="${c.textMuted}" font-size="10">not detected</text>`;
+      return;
+    }
+
+    items.forEach((item, itemIndex) => {
+      const y = chipsTop + itemIndex * (chipH + chipGap);
+      const boxWidth = Math.min(colWidth, 20 + item.length * 7.2);
+      inner += `<rect x="${x}" y="${y}" width="${boxWidth}" height="${chipH}" rx="${RADIUS.md}" fill="${c.bgElevated}" stroke="${c.border}"/>`;
+      inner += `<text x="${x + 10}" y="${y + 19}" class="value-sm" fill="${c.textPrimary}" font-size="12">${escXml(item)}</text>`;
+    });
+  });
+
+  // Arrows between the detected layers only; a blank layer gets no fake flow.
+  const arrow = (fromX: number, toX: number) => {
+    const start = fromX + 10;
+    const end = toX - 10;
+    return `<g stroke="${c.emerald}" stroke-width="1.5" fill="none"><line x1="${start}" y1="${midY}" x2="${end - 6}" y2="${midY}"/><polygon points="${end},${midY} ${end - 7},${midY - 4} ${end - 7},${midY + 4}" fill="${c.emerald}" stroke="none"/></g>`;
+  };
+  if (model.layers.client.length && model.layers.api.length) {
+    inner += arrow(colX[0] + colWidth, colX[1]);
+  }
+  if (model.layers.api.length && model.layers.data.length) {
+    inner += arrow(colX[1] + colWidth, colX[2]);
+  }
+
+  const tooling = model.layers.tooling.slice(0, 4);
+  if (tooling.length > 0) {
+    let tx = 24;
+    const ty = height - 26;
+    inner += `<text x="24" y="${ty - 12}" class="muted" fill="${c.textMuted}" font-size="9" letter-spacing="1.2">TOOLING</text>`;
+    for (const item of tooling) {
+      const boxWidth = 16 + item.length * 6.4;
+      if (tx + boxWidth > width - 24) break;
+      inner += `<rect x="${tx}" y="${ty - 4}" width="${boxWidth}" height="20" rx="10" fill="none" stroke="${c.border}"/>`;
+      inner += `<text x="${tx + 8}" y="${ty + 10}" class="muted" fill="${c.textSecondary}" font-size="9">${escXml(item)}</text>`;
+      tx += boxWidth + 6;
+    }
+  }
+
+  inner += `<text x="${width - 24}" y="${height - 10}" class="muted" fill="${c.textMuted}" font-size="8" text-anchor="end">no AI · inferred from manifests + folders</text>`;
+
+  return createSvg(width, height, title, inner, theme);
 }
 
 // ============================================================================
@@ -3802,6 +3909,26 @@ export async function GET(req: NextRequest) {
 
     if (!username) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });
+    }
+
+    // ===== ARCHITECTURE DIAGRAM (static analysis) =====
+    if (type === 'architecture') {
+      const archRepo = (searchParams.get('repo') || '').trim();
+      const archTheme = getTheme(themeName);
+      const archHeaders = {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=21600, stale-while-revalidate=604800',
+      };
+
+      if (!archRepo) {
+        return new NextResponse(generateBadge('Architecture', 'repo required', archTheme, 'red'), {
+          status: 400,
+          headers: archHeaders,
+        });
+      }
+
+      const model = await fetchArchitectureModel(username, archRepo, { token, userToken });
+      return new NextResponse(generateArchitectureSvg(model, archTheme), { headers: archHeaders });
     }
 
     // ===== REPOSITORY BADGES (stars, forks, issues, license, size, last-commit) =====

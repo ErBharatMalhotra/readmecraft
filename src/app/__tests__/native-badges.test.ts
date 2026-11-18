@@ -99,6 +99,12 @@ describe('generated README badges', () => {
     }
   });
 
+  it('embeds the architecture diagram as a native badge', () => {
+    const markdown = render(getProjectSections(project, 'standard', 'gta6'));
+    expect(markdown).toContain('type=architecture');
+    expect(markdown).toContain('no AI involved');
+  });
+
   it('prints the profile header snippet for manual review', () => {
     const sections = getProfileSections(profile, 'bento', 'gta6');
     const header = sections.find((s) => s.id === 'header');
@@ -111,6 +117,12 @@ describe('generated README badges', () => {
     const cli = getProjectSections(project, 'cli', 'gta6').find((s) => s.id === 'header');
     // eslint-disable-next-line no-console
     console.log('--- cli project header ---\n' + (cli?.content ?? '(missing)'));
+
+    const arch = getProjectSections(project, 'standard', 'gta6').find(
+      (s) => s.id === 'architecture'
+    );
+    // eslint-disable-next-line no-console
+    console.log('--- architecture section ---\n' + (arch?.content ?? '(missing)'));
 
     expect(header).toBeTruthy();
   });

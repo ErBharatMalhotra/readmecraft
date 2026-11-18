@@ -1081,7 +1081,7 @@ function getAPIProjectSections(
       title: 'System Architecture',
       enabled: true,
       order: 4,
-      content: generateArchitectureSection(data),
+      content: generateArchitectureSection(data, themeParam),
     },
     {
       id: 'endpoints',
@@ -1177,7 +1177,7 @@ function getStandardProjectSections(
       title: 'System Architecture',
       enabled: true,
       order: 7,
-      content: generateArchitectureSection(data),
+      content: generateArchitectureSection(data, themeParam),
     },
     {
       id: 'releases',
@@ -1524,12 +1524,30 @@ ${topics
 </details>`;
 }
 
-function generateArchitectureSection(data: ProjectData): string {
-  return `## 🏗️ Architecture
+function generateArchitectureSection(data: ProjectData, themeParam: string): string {
+  const badge = `<img src="${BADGE_API}?username=${encodeURIComponent(data.owner)}&repo=${encodeURIComponent(data.repo)}&type=architecture${themeParam}" alt="${data.repo} architecture diagram" width="100%" />`;
+  const textDiagram = data.architectureDiagram
+    ? `
+
+<details>
+<summary><b>Text version</b></summary>
 
 \`\`\`
-${data.architectureDiagram || 'Architecture Diagram'}
-\`\`\``;
+${data.architectureDiagram}
+\`\`\`
+
+</details>`
+    : '';
+
+  return `## 🏗️ Architecture
+
+<div align="center">
+
+${badge}
+
+</div>
+
+<sub>Layers inferred by static analysis of \`package.json\` and the repository's folders — no AI involved.</sub>${textDiagram}`;
 }
 
 function generateReleasesSection(data: ProjectData, bgHex: string, accentHex: string): string {

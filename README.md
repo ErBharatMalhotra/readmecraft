@@ -111,6 +111,7 @@ https://readme.bharatdn.com/api/badges?username=<login>&type=<type>&theme=<theme
 | `skill-row` | Row of up to 12 native tech chips — `&skills=React,Docker,Redis` |
 | `score` | Taste Score badge — `&value=92&grade=A&label=ReadmeCraft%20Score` |
 | `chip` | Generic two-part chip for links — `&label=Portfolio&value=Live` (+ optional `&accent=emerald\|gold\|red`) |
+| `architecture` | Static-analysis architecture diagram — `&username=vercel&repo=next.js` (needs a valid token for private repos only; public ones work unauthenticated) |
 
 ### Visual cards
 
