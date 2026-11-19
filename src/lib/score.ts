@@ -24,7 +24,7 @@ export interface ScoreBreakdown {
   highlights: string[]; // Things done well
 }
 
-function getGrade(score: number): ScoreBreakdown['grade'] {
+export function getGrade(score: number): ScoreBreakdown['grade'] {
   if (score >= 97) return 'A+';
   if (score >= 93) return 'A';
   if (score >= 90) return 'A-';

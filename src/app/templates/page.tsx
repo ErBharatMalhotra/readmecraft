@@ -137,13 +137,13 @@ export default function TemplatesPage() {
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <Link
               href="/"
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[#1e293b] bg-[#0e1526] px-3 py-2 text-xs font-semibold text-slate-300 transition-all hover:border-slate-700 hover:text-white sm:px-4"
+              className="flex items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0e1526] px-3 py-2 text-xs font-semibold whitespace-nowrap text-slate-300 transition-all hover:border-slate-700 hover:text-white sm:px-4"
             >
               Open Studio
             </Link>
             <Link
               href="/deploy"
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all hover:from-emerald-400 hover:to-emerald-500 sm:px-4"
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-xs font-bold whitespace-nowrap text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all hover:from-emerald-400 hover:to-emerald-500 sm:px-4"
             >
               1-Click Deploy
             </Link>
@@ -163,7 +163,8 @@ export default function TemplatesPage() {
           </h1>
           <p className="mt-4 text-base text-slate-400 sm:text-lg">
             Hand-crafted, viral aesthetic README templates for engineers, researchers, and students.
-            1-click load into ReadmeCraft studio with {THEMES.length} viral themes and animated SVGs.
+            1-click load into ReadmeCraft studio with {THEMES.length} viral themes and animated
+            SVGs.
           </p>
         </div>
       </div>

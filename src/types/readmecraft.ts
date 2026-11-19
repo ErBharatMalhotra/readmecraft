@@ -295,7 +295,6 @@ export interface ProfileData {
   githubStatsEnabled: boolean;
   githubStreakEnabled: boolean;
   topLanguagesEnabled: boolean;
-
 }
 
 export interface ProjectData {

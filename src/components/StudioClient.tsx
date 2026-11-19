@@ -158,7 +158,9 @@ function HomeInner() {
       setProjectPreset(parsed.projectPreset || 'standard');
       setProfileData(restoredProfile);
       setProjectData(parsed.projectData || SAMPLE_PROJECT);
-      setSections(restoredSections ?? getProfileSections(restoredProfile, restoredPreset, savedTheme));
+      setSections(
+        restoredSections ?? getProfileSections(restoredProfile, restoredPreset, savedTheme)
+      );
       setTheme(savedTheme);
 
       const restoredMarkdown = compileSectionsToMarkdown(

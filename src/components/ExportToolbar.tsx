@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Copy, Download, Check, Sparkles, Share2, Box, Shield } from 'lucide-react';
+import { Copy, Download, Check, Sparkles, Share2, Box, Shield, GitPullRequest } from 'lucide-react';
+import { WritebackPanel } from './WritebackPanel';
 
 interface ExportToolbarProps {
   markdown: string;
@@ -17,6 +18,7 @@ export const ExportToolbar: React.FC<ExportToolbarProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [writebackOpen, setWritebackOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -114,6 +116,13 @@ export const ExportToolbar: React.FC<ExportToolbarProps> = ({
           {/* Primary Export Actions */}
           <div className="flex w-full items-center justify-end gap-3 sm:w-auto">
             <button
+              onClick={() => setWritebackOpen(true)}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-500/20 sm:flex-initial"
+            >
+              <GitPullRequest className="h-3.5 w-3.5" />
+              <span>Write back</span>
+            </button>
+            <button
               onClick={handleDownload}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#1e293b] bg-[#0e1526] px-4 py-2 text-xs font-semibold text-slate-200 transition-all hover:border-slate-700 hover:bg-[#131c31] hover:text-white sm:flex-initial"
             >
@@ -139,6 +148,13 @@ export const ExportToolbar: React.FC<ExportToolbarProps> = ({
           </div>
         </div>
       </aside>
+
+      <WritebackPanel
+        open={writebackOpen}
+        onClose={() => setWritebackOpen(false)}
+        markdown={markdown}
+        defaultRepo={`${activeUsername}/${activeUsername}`}
+      />
     </>
   );
 };

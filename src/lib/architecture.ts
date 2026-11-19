@@ -381,7 +381,7 @@ function githubHeaders(token?: string): Record<string, string> {
   return headers;
 }
 
-async function getJson(url: string, headers: Record<string, string>): Promise<any | null> {
+async function getJson(url: string, headers: Record<string, string>): Promise<any> {
   try {
     const res = await fetch(url, { headers, cache: 'no-store' });
     if (res.status === 401 || res.status === 403) {
@@ -471,11 +471,7 @@ export async function fetchArchitectureModel(
   return job;
 }
 
-async function loadModel(
-  owner: string,
-  repo: string,
-  token?: string
-): Promise<ArchitectureModel> {
+async function loadModel(owner: string, repo: string, token?: string): Promise<ArchitectureModel> {
   const [rootContents, packageJsonRaw] = await Promise.all([
     getJson(`https://api.github.com/repos/${owner}/${repo}/contents/`, githubHeaders(token)),
     getText(rawUrl(owner, repo, 'HEAD', 'package.json')),
@@ -526,12 +522,14 @@ async function loadModel(
       candidates.map(async (entry) => ({
         name: entry.name,
         // download_url keeps the real branch even when we had to guess 'main'.
-        content: await getText(entry.download_url || rawUrl(owner, repo, defaultBranch, entry.name)),
+        content: await getText(
+          entry.download_url || rawUrl(owner, repo, defaultBranch, entry.name)
+        ),
       }))
     );
     files.push(
-      ...fetched.filter(
-        (entry): entry is { name: string; content: string } => Boolean(entry.content)
+      ...fetched.filter((entry): entry is { name: string; content: string } =>
+        Boolean(entry.content)
       )
     );
   }

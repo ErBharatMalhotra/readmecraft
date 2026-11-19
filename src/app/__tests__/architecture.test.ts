@@ -113,8 +113,8 @@ describe('architecture fetching budget', () => {
     ({
       ok,
       status,
-      json: async () => body,
-      text: async () => (typeof body === 'string' ? body : JSON.stringify(body)),
+      json: () => Promise.resolve(body),
+      text: () => Promise.resolve(typeof body === 'string' ? body : JSON.stringify(body)),
     }) as unknown as Response;
 
   const file = (name: string, repo = 'r', branch = 'master') => ({
@@ -137,16 +137,19 @@ describe('architecture fetching budget', () => {
   it('spends two GitHub calls on a node repo and skips other manifests', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (input: unknown) => {
+      vi.fn((input: unknown) => {
         const url = String(input);
         calls.push(url);
         if (url.endsWith('/contents/')) {
-          return respond([file('package.json'), dir('src'), dir('prisma'), file('requirements.txt')]);
+          return respond([
+            file('package.json'),
+            dir('src'),
+            dir('prisma'),
+            file('requirements.txt'),
+          ]);
         }
         if (url.endsWith('/HEAD/package.json')) {
-          return respond(
-            JSON.stringify({ dependencies: { next: '16', '@prisma/client': '6' } })
-          );
+          return respond(JSON.stringify({ dependencies: { next: '16', '@prisma/client': '6' } }));
         }
         return respond('', false, 404);
       })
@@ -166,14 +169,15 @@ describe('architecture fetching budget', () => {
   it('falls back only to manifests the listing proved exist', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (input: unknown) => {
+      vi.fn((input: unknown) => {
         const url = String(input);
         calls.push(url);
         if (url.endsWith('/contents/')) {
           return respond([file('requirements.txt', 'r', 'main'), dir('api')]);
         }
         if (url.endsWith('/HEAD/package.json')) return respond('', false, 404);
-        if (url.endsWith('/main/requirements.txt')) return respond('fastapi==0.110.0\nsqlalchemy>=2.0\n');
+        if (url.endsWith('/main/requirements.txt'))
+          return respond('fastapi==0.110.0\nsqlalchemy>=2.0\n');
         return respond('', false, 404);
       })
     );
@@ -190,7 +194,7 @@ describe('architecture fetching budget', () => {
   it('shares one cold fetch between concurrent requests and then serves cache', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (input: unknown) => {
+      vi.fn((input: unknown) => {
         const url = String(input);
         calls.push(url);
         if (url.endsWith('/contents/')) return respond([file('package.json')]);
@@ -218,7 +222,7 @@ describe('architecture fetching budget', () => {
     vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (input: unknown) => {
+      vi.fn((input: unknown) => {
         calls.push(String(input));
         return respond('', false, 404);
       })

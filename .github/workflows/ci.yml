@@ -6,9 +6,17 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  # Placeholder values only: the build reads these at module scope but never
+  # calls GitHub with them during CI.
+  AUTH_SECRET: ci-secret-not-used-in-production
+  NEXTAUTH_URL: http://localhost:3000
+  AUTH_GITHUB_ID: ci-placeholder
+  AUTH_GITHUB_SECRET: ci-placeholder
+
 jobs:
   build:
-    name: Typecheck & build
+    name: Test, typecheck & build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +34,9 @@ jobs:
 
       - name: Typecheck
         run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
 
       - name: Build
         run: npm run build

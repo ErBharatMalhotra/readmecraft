@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React from 'react';
 import { Sparkles, ExternalLink, Heart } from 'lucide-react';
 
@@ -24,6 +25,13 @@ export const Footer: React.FC = () => {
             The next-generation intelligent dual-mode GitHub README Studio. Zero-typing profile
             ingestion, real repo-byte language detection, and modern high-taste layouts.
           </p>
+          <Link
+            href="/score"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 transition-colors hover:bg-emerald-500/20"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            README Score Card
+          </Link>
           <div className="font-mono text-xs text-slate-500">
             Architected by{' '}
             <a

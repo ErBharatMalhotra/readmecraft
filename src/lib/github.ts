@@ -591,9 +591,7 @@ const LANG_COLORS: Record<string, string> = {
  * node has no size field. Reading `.nodes` silently produced no data at all,
  * which is why every profile used to fall back to a flat 50 KB per repo.
  */
-function languageEntries(
-  languages: any
-): Array<{ name: string; size: number; color?: string }> {
+function languageEntries(languages: any): Array<{ name: string; size: number; color?: string }> {
   if (!languages) return [];
   if (Array.isArray(languages.edges)) {
     return languages.edges

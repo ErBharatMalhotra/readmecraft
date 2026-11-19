@@ -3815,13 +3815,15 @@ function generateDemoCalendar() {
 // MAIN HANDLER WITH ETAG & CACHING
 // ============================================================================
 export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  // Parsed outside the try so the failure path can still render a themed badge.
+  const themeName = searchParams.get('theme') || 'default';
+
   try {
-    const { searchParams } = new URL(req.url);
     const username = searchParams.get('username');
     const type = searchParams.get('type') || 'stats';
     const token = searchParams.get('token') || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
     const userToken = searchParams.get('user_token') || undefined; // User's OAuth token from NextAuth
-    const themeName = searchParams.get('theme') || 'default';
 
     // ===== NATIVE GENERIC CHIP (no username needed) =====
     // `/api/badges?type=chip&label=Portfolio&value=Live&theme=gta6`
@@ -4312,9 +4314,22 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error?.message || 'Failed to generate badge' },
-      { status: 500 }
+    console.error('[badges] generation failed:', error?.message || error);
+
+    // Serve a valid themed SVG instead of a 500/JSON body. GitHub's image proxy
+    // caches whatever it receives, so an error response would leave a broken
+    // image on the user's profile until the cache expired; a short-lived badge
+    // keeps the profile intact and recovers as soon as the upstream is back.
+    return new NextResponse(
+      generateBadge('ReadmeCraft', 'temporarily unavailable', getTheme(themeName), 'red'),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/svg+xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
+          'X-ReadmeCraft-Fallback': '1',
+        },
+      }
     );
   }
 }
