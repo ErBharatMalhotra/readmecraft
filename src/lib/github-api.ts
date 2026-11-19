@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { Octokit } from '@octokit/rest';
 import { graphql } from '@octokit/graphql';
 
@@ -18,7 +19,7 @@ interface DeduplicationEntry<T> {
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const DEDUP_WINDOW_MS = 60 * 1000; // 60 seconds
-const CACHE_VERSION = 'v6'; // Increment to bust cache after GraphQL fixes
+const CACHE_VERSION = 'v9'; // Increment to bust cache after GraphQL fixes
 
 const cache = new Map<string, CacheEntry<any>>();
 const deduplication = new Map<string, DeduplicationEntry<any>>();
@@ -119,7 +120,57 @@ function getMockProfileData(username: string): ProfileDataRaw {
 // UNIFIED GRAPHQL QUERY - BALANCED (Cost: ~400 points)
 // ============================================================================
 
-const UNIFIED_PROFILE_QUERY = `
+// ============================================================================
+// TOKEN SCOPE DETECTION (gates the optional `email` field)
+// ============================================================================
+
+const EMAIL_SCOPES = ['read:user', 'user:email'];
+const SCOPE_TTL_MS = 60 * 60 * 1000;
+const scopeCache = new Map<string, { scopes: string[]; timestamp: number }>();
+
+// Never keep a raw token as a map key; a short hash is enough to dedupe.
+function tokenFingerprint(token: string): string {
+  return createHash('sha256').update(token).digest('hex').slice(0, 16);
+}
+
+/**
+ * GitHub only exposes the GraphQL `email` field to tokens holding read:user or
+ * user:email, and a single unauthorized field fails the whole unified query.
+ * That used to silently downgrade every profile to the REST fallback, losing
+ * language bytes and commit stats. So the field is requested only when the
+ * token actually carries the scope. Classic PAT scopes are reported in the
+ * `x-oauth-scopes` header; fine-grained tokens report none, so they get the
+ * safe query without email instead of a hard failure.
+ */
+async function getTokenScopes(token?: string): Promise<string[]> {
+  if (!token) return [];
+
+  const key = tokenFingerprint(token);
+  const cached = scopeCache.get(key);
+  if (cached && Date.now() - cached.timestamp < SCOPE_TTL_MS) return cached.scopes;
+
+  try {
+    const res = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `token ${token}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+    if (!res.ok) return [];
+    const scopes = (res.headers.get('x-oauth-scopes') || '')
+      .split(',')
+      .map((scope) => scope.trim())
+      .filter(Boolean);
+    scopeCache.set(key, { scopes, timestamp: Date.now() });
+    return scopes;
+  } catch {
+    // Unknown scopes must never break profile loading: use the safe query.
+    return [];
+  }
+}
+
+function buildProfileQuery(includeEmail: boolean): string {
+  return `
   query($username: String!, $from: DateTime!, $to: DateTime!) {
     user(login: $username) {
       login
@@ -132,12 +183,12 @@ const UNIFIED_PROFILE_QUERY = `
       location
       websiteUrl
       twitterUsername
-      email
+      ${includeEmail ? 'email' : ''}
       createdAt
       updatedAt
       url
       resourcePath
-      repositories { totalCount totalDiskUsage }
+      repositories(privacy: PUBLIC, ownerAffiliations: OWNER) { totalCount totalDiskUsage }
       followers { totalCount }
       following { totalCount }
       starredRepositories { totalCount }
@@ -163,7 +214,7 @@ const UNIFIED_PROFILE_QUERY = `
           contributions { totalCount }
         }
       }
-      reposList: repositories(first: 30, orderBy: {field: STARGAZERS, direction: DESC}) {
+      reposList: repositories(first: 100, privacy: PUBLIC, ownerAffiliations: OWNER, orderBy: {field: STARGAZERS, direction: DESC}) {
         nodes {
           name
           description
@@ -174,7 +225,7 @@ const UNIFIED_PROFILE_QUERY = `
           isArchived
           isPrivate
           primaryLanguage { name color }
-          languages(first: 5) { edges { size node { name color } } }
+          languages(first: 10) { edges { size node { name color } } }
           repositoryTopics(first: 5) { nodes { topic { name } } }
           licenseInfo { spdxId }
           homepageUrl
@@ -205,6 +256,7 @@ const UNIFIED_PROFILE_QUERY = `
     }
   }
 `;
+}
 
 const UNIFIED_REPO_QUERY = `
   query($owner: String!, $name: String!) {
@@ -222,7 +274,7 @@ const UNIFIED_REPO_QUERY = `
       defaultBranchRef { name target { ... on Commit { history(first: 1) { nodes { committedDate } } } } }
       licenseInfo { spdxId name url }
       homepageUrl
-      languages(first: 15) { nodes { name color } totalSize }
+      languages(first: 15) { edges { size node { name color } } totalSize }
       repositoryTopics(first: 15) { nodes { topic { name } } }
       releases(first: 5, orderBy: {field: CREATED_AT, direction: DESC}) { nodes { name tagName description publishedAt url isPrerelease isDraft } }
       diskUsage
@@ -306,7 +358,9 @@ export interface ProfileDataRaw {
   location: string | null;
   websiteUrl: string | null;
   twitterUsername: string | null;
-  email: string | null;
+  // Not requested over GraphQL: the `email` field requires the user:email /
+  // read:user token scopes, and one insufficient field fails the whole query.
+  email?: string | null;
   url: string;
   resourcePath: string;
   createdAt: string;
@@ -373,8 +427,10 @@ export interface ProfileDataRaw {
       isPrivate: boolean;
       isTemplate: boolean;
       primaryLanguage: { name: string; color: string } | null;
+      // GitHub only exposes language byte counts on the connection edges; the
+      // `Language` node itself has no size field.
       languages: {
-        nodes: Array<{ name: string; color: string; size: number }>;
+        edges: Array<{ size: number; node: { name: string; color: string } }>;
         totalSize?: number;
       };
       repositoryTopics: { nodes: Array<{ topic: { name: string } }> };
@@ -489,7 +545,10 @@ export interface RepoDataRaw {
   } | null;
   licenseInfo: { spdxId: string; name: string; url: string } | null;
   homepageUrl: string | null;
-  languages: { nodes: Array<{ name: string; color: string; size: number }>; totalSize: number };
+  languages: {
+    edges: Array<{ size: number; node: { name: string; color: string } }>;
+    totalSize: number;
+  };
   repositoryTopics: { nodes: Array<{ topic: { name: string; stargazerCount?: number } }> };
   releases: {
     nodes: Array<{
@@ -592,7 +651,12 @@ export async function fetchProfileData(
   username: string,
   options: GitHubClientOptions = {}
 ): Promise<{ data: ProfileDataRaw; etag: string; fromCache: boolean }> {
-  const cacheKey = getCacheKey(username, 'profile');
+  const authToken = options.userToken || options.token || process.env.GITHUB_TOKEN;
+  const scopes = await getTokenScopes(authToken);
+  const includeEmail = scopes.some((scope) => EMAIL_SCOPES.includes(scope));
+  // The two query variants must not share a cache entry, otherwise a scoped
+  // request could serve an email-less profile (or the reverse).
+  const cacheKey = getCacheKey(username, includeEmail ? 'profile:email' : 'profile');
 
   const cached = cache.get(cacheKey);
   if (cached && isCacheFresh(cached)) {
@@ -606,7 +670,7 @@ export async function fetchProfileData(
 
       const result = await requestGraphQL<{ user: ProfileDataRaw }>(
         options,
-        UNIFIED_PROFILE_QUERY,
+        buildProfileQuery(includeEmail),
         { username, from, to }
       );
 
@@ -622,7 +686,7 @@ export async function fetchProfileData(
     } catch (error: any) {
       const errorDetail = {
         username,
-        message: error?.message,
+        message: error?.message ?? String(error),
         status: error?.status,
         response: error?.response?.data,
         errors: error?.errors,
@@ -675,7 +739,7 @@ export async function fetchRepoData(
       const errorDetail = {
         owner,
         repo,
-        message: error?.message,
+        message: error?.message ?? String(error),
         status: error?.status,
         response: error?.response?.data,
         errors: error?.errors,
@@ -701,7 +765,7 @@ export async function fetchRepoData(
         },
         licenseInfo: null,
         homepageUrl: null,
-        languages: { nodes: [], totalSize: 0 },
+        languages: { edges: [], totalSize: 0 },
         repositoryTopics: { nodes: [] },
         releases: { nodes: [] },
         deployments: { nodes: [] },

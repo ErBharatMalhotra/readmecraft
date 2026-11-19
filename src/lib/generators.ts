@@ -279,19 +279,17 @@ function generateHeaderSection(
     .replace(/[\t ]+/g, ' ')
     .trim();
 
-  // The animated typing line is opt-in. It used to be emitted for every
-  // profile, so deleting it by hand was undone by the next regeneration.
-  const typingIntro =
-    data.typingIntroEnabled === true
-      ? `\n<p align="center">\n  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=typing&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="Animated typing intro" />\n</p>\n`
-      : '';
+  // Both animated header badges ship for every profile by default: the name
+  // banner above the heading and the typing line right under it. Anyone who
+  // does not want them can delete the lines; the generator does not hide them.
+  const nameBanner = `<p align="center">\n  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=name-banner&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="${name} — animated banner" width="100%" />\n</p>\n`;
+
+  const typingIntro = `\n<p align="center">\n  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=typing&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="Animated typing intro" />\n</p>\n`;
 
   return `<div align="center">
 
-<p align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=name-banner&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="${name} — animated banner" width="100%" />
-</p>
-${typingIntro}
+${nameBanner}${typingIntro}
+
 # ${name}${accountAge}
 ### ${cleanBio}
 
@@ -420,11 +418,11 @@ ${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges
 | **Stars Given** | ${metric(formatNumber(data.starredRepositoriesCount ?? 0))} |
 | **Watching** | ${metric(formatNumber(data.watchingCount ?? 0))} |
 | **Public Gists** | ${formatNumber(data.gistsCount ?? 0)} |
-| **Commit Contributions** | ${metric(formatNumber(data.totalCommitContributions ?? 0))} |
-| **Issue Contributions** | ${metric(formatNumber(data.totalIssueContributions ?? 0))} |
-| **PR Contributions** | ${metric(formatNumber(data.totalPullRequestContributions ?? 0))} |
-| **PR Review Contributions** | ${metric(formatNumber(data.totalPullRequestReviewContributions ?? 0))} |
-| **Repos Contributed To** | ${metric(formatNumber(data.totalRepositoriesWithContributedCommits ?? 0))} |
+| **Commits (1yr)** | ${metric(formatNumber(data.totalCommitContributions ?? 0))} |
+| **Issues (1yr)** | ${metric(formatNumber(data.totalIssueContributions ?? 0))} |
+| **Pull Requests (1yr)** | ${metric(formatNumber(data.totalPullRequestContributions ?? 0))} |
+| **PR Reviews (1yr)** | ${metric(formatNumber(data.totalPullRequestReviewContributions ?? 0))} |
+| **Repos Committed To (1yr)** | ${metric(formatNumber(data.totalRepositoriesWithContributedCommits ?? 0))} |
 | **Account Created** | ${data.createdAt ? formatDate(data.createdAt) : 'Unknown'} |
 
 </details>`;
@@ -434,6 +432,11 @@ function generateLanguagesDetailedSection(data: ProfileData, themeParam: string)
   if ((data.languages?.length ?? 0) === 0) return '';
 
   const totalBytes = (data.languages ?? []).reduce((sum, l) => sum + (l.bytes || 0), 0);
+  // Languages are truncated to the top entries, so the displayed shares do not
+  // always add up to exactly 100%. Print the real sum instead of claiming 100%.
+  const shownShare = Number(
+    (data.languages ?? []).reduce((sum, l) => sum + (l.percentage || 0), 0).toFixed(1)
+  );
 
   return `### 🔤 Language Breakdown (by Repository Bytes)
 
@@ -446,10 +449,10 @@ ${(data.languages ?? []).map((l) => getLanguageBadge(l, themeParam)).join(' ')}
 <details open>
 <summary><b>📊 Language Statistics</b></summary>
 
-| Language | Percentage | Estimated Bytes |
+| Language | Share | Bytes |
 | :--- | :---: | :--- |
 ${(data.languages ?? []).map((l) => `| **${l.name}** | ${l.percentage}% | ${l.bytes ? formatBytes(l.bytes) : 'N/A'} |`).join('\n')}
-| **Total** | **100%** | ${totalBytes > 0 ? formatBytes(totalBytes) : 'N/A'} |
+| **Total** | **${shownShare}%** | ${totalBytes > 0 ? formatBytes(totalBytes) : 'N/A'} |
 
 </details>`;
 }
@@ -766,7 +769,7 @@ function generateContributionDetailsSection(
   return `### 📊 Contribution Breakdown
 
 <details open>
-<summary><b>Contribution Types</b></summary>
+<summary><b>Contribution Types (Last 12 Months)</b></summary>
 
 | Type | Count |
 | :--- | :---: |
@@ -774,7 +777,7 @@ function generateContributionDetailsSection(
 | **Issues** | ${metric(formatNumber(data.totalIssueContributions ?? 0))} |
 | **Pull Requests** | ${metric(formatNumber(data.totalPullRequestContributions ?? 0))} |
 | **PR Reviews** | ${metric(formatNumber(data.totalPullRequestReviewContributions ?? 0))} |
-| **Repositories** | ${metric(formatNumber(data.totalRepositoriesWithContributedCommits ?? 0))} |
+| **Repos Committed To** | ${metric(formatNumber(data.totalRepositoriesWithContributedCommits ?? 0))} |
 
 </details>
 

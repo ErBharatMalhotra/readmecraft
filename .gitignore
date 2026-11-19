@@ -53,3 +53,7 @@ PROJECT_CONTEXT.md
 *.ai.md
 *.context.md
 *.log
+
+# Distribution posts and marketing copy (private, do not publish)
+docs/posts/
+RELEASE.md

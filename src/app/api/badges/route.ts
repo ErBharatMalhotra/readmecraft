@@ -2657,9 +2657,13 @@ function generateCodePulseSvg(
   const centerX = width / 2;
   const centerY = height / 2 + 18;
 
-  const commits = stats.totalContributions || 1234;
-  const streak = stats.streak || 42;
-  const repos = stats.publicRepos || 56;
+  // Contributions and commits are different numbers: a contribution includes
+  // issues, PRs and reviews. This card used to label the contribution total as
+  // "Commits". Placeholder defaults (1234/42/56) are gone as well, so an account
+  // without data no longer displays invented activity.
+  const commits = stats.totalCommitContributions ?? 0;
+  const streak = stats.streak ?? 0;
+  const repos = stats.publicRepos ?? 0;
 
   // Viewer-aware greeting
   const viewerHour = viewer ? getViewerHour(viewer.timezone) : -1;
@@ -4072,8 +4076,9 @@ export async function GET(req: NextRequest) {
       publicRepos: userData.public_repos,
       followers: userData.followers,
       following: userData.following,
-      topLanguage: languagesData[0]?.name || 'TypeScript',
+      topLanguage: languagesData[0]?.name || 'n/a',
       totalContributions: calendar?.totalContributions || demoCalendar.totalContributions,
+      totalCommitContributions: profileData.contributionsCollection?.totalCommitContributions ?? 0,
       streak,
       starsGiven: (profileData as any).starredRepositories?.totalCount || 0,
     };
@@ -4335,28 +4340,48 @@ function calculateLanguages(
     Kotlin: '#A97BFF',
   };
 
-  const langCounts: Record<string, number> = {};
-  let totalLangCount = 0;
+  // Byte-weighted, like GitHub's own language bar. Counting occurrences double
+  // counted each repo's primary language (once from primaryLanguage, once from
+  // its languages edges) and made every language look far more common.
+  const langBytes = new Map<string, { bytes: number; color?: string }>();
+  let totalBytes = 0;
+
   repos.forEach((repo) => {
-    if (repo.primaryLanguage && !repo.isFork) {
-      const lang = repo.primaryLanguage.name;
-      langCounts[lang] = (langCounts[lang] || 0) + 1;
-      totalLangCount++;
-    }
-    repo.languages?.nodes?.forEach((l: any) => {
-      if (!repo.isFork) {
-        langCounts[l.name] = (langCounts[l.name] || 0) + 1;
-        totalLangCount++;
-      }
+    if (repo.isFork) return;
+
+    const edges = Array.isArray(repo.languages?.edges) ? repo.languages.edges : [];
+    let repoBytes = 0;
+    edges.forEach((edge: any) => {
+      const name = edge?.node?.name;
+      const size = Number(edge?.size) || 0;
+      if (!name || size <= 0) return;
+      const entry = langBytes.get(name) || { bytes: 0, color: edge?.node?.color };
+      entry.bytes += size;
+      if (!entry.color && edge?.node?.color) entry.color = edge.node.color;
+      langBytes.set(name, entry);
+      repoBytes += size;
     });
+    totalBytes += repoBytes;
+
+    // Repos with no indexed byte data still have a primary language; keep them
+    // in the mix with a single unit of weight instead of dropping them.
+    if (repoBytes === 0 && repo.primaryLanguage?.name) {
+      const name = repo.primaryLanguage.name;
+      const entry = langBytes.get(name) || { bytes: 0, color: repo.primaryLanguage.color };
+      entry.bytes += 1;
+      langBytes.set(name, entry);
+      totalBytes += 1;
+    }
   });
 
-  const sortedLangs = Object.entries(langCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6);
-  return sortedLangs.map(([name, count]) => ({
-    name,
-    percentage: totalLangCount > 0 ? Number(((count / totalLangCount) * 100).toFixed(1)) : 20,
-    color: LANG_COLORS[name] || '#8b5cf6',
-  }));
+  if (totalBytes === 0) return [];
+
+  return [...langBytes.entries()]
+    .sort((a, b) => b[1].bytes - a[1].bytes)
+    .slice(0, 6)
+    .map(([name, entry]) => ({
+      name,
+      percentage: Number(((entry.bytes / totalBytes) * 100).toFixed(1)),
+      color: entry.color || LANG_COLORS[name] || '#8b5cf6',
+    }));
 }

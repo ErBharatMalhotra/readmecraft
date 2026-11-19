@@ -295,8 +295,7 @@ export interface ProfileData {
   githubStatsEnabled: boolean;
   githubStreakEnabled: boolean;
   topLanguagesEnabled: boolean;
-  /** Opt-in animated typing line under the profile banner (default: omitted). */
-  typingIntroEnabled?: boolean;
+
 }
 
 export interface ProjectData {

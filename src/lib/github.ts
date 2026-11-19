@@ -586,46 +586,70 @@ const LANG_COLORS: Record<string, string> = {
   Dockerfile: '#384d54',
 };
 
+/**
+ * GitHub reports language byte counts on the connection *edges*; the Language
+ * node has no size field. Reading `.nodes` silently produced no data at all,
+ * which is why every profile used to fall back to a flat 50 KB per repo.
+ */
+function languageEntries(
+  languages: any
+): Array<{ name: string; size: number; color?: string }> {
+  if (!languages) return [];
+  if (Array.isArray(languages.edges)) {
+    return languages.edges
+      .map((edge: any) => ({
+        name: edge?.node?.name,
+        size: Number(edge?.size) || 0,
+        color: edge?.node?.color || undefined,
+      }))
+      .filter((l: any) => Boolean(l.name));
+  }
+  if (Array.isArray(languages.nodes)) {
+    return languages.nodes
+      .map((node: any) => ({
+        name: node?.name,
+        size: Number(node?.size) || 0,
+        color: node?.color || undefined,
+      }))
+      .filter((l: any) => Boolean(l.name));
+  }
+  return [];
+}
+
 function calculateLanguages(repos: any[]): LanguageStat[] {
-  const langBytes: Record<string, number> = {};
+  const langBytes = new Map<string, { bytes: number; color?: string }>();
   let totalBytes = 0;
 
   repos.forEach((repo) => {
     if (repo.isFork) return;
 
-    if (repo.languages?.nodes) {
-      repo.languages.nodes.forEach((l: any) => {
-        const size = l.size || 1000;
-        langBytes[l.name] = (langBytes[l.name] || 0) + size;
-        totalBytes += size;
-      });
-    } else if (repo.primaryLanguage) {
-      // Fallback: estimate from primary language
-      langBytes[repo.primaryLanguage.name] = (langBytes[repo.primaryLanguage.name] || 0) + 50000;
-      totalBytes += 50000;
-    }
+    const entries = languageEntries(repo.languages);
+    let repoBytes = 0;
+
+    entries.forEach((entry) => {
+      if (!entry.size) return;
+      const current = langBytes.get(entry.name) || { bytes: 0, color: entry.color };
+      current.bytes += entry.size;
+      if (!current.color && entry.color) current.color = entry.color;
+      langBytes.set(entry.name, current);
+      repoBytes += entry.size;
+    });
+    totalBytes += repoBytes;
   });
 
-  const sortedLangs = Object.entries(langBytes)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8);
+  // No byte data means no honest percentage. Returning sample languages here
+  // used to print statistics for users whose repos were never measured.
+  if (totalBytes === 0) return [];
 
-  if (totalBytes === 0) {
-    return [
-      { name: 'TypeScript', percentage: 45, color: '#3178c6', bytes: 0 },
-      { name: 'Python', percentage: 25, color: '#3572A5', bytes: 0 },
-      { name: 'Rust', percentage: 15, color: '#dea584', bytes: 0 },
-      { name: 'Go', percentage: 10, color: '#00ADD8', bytes: 0 },
-      { name: 'JavaScript', percentage: 5, color: '#f1e05a', bytes: 0 },
-    ];
-  }
-
-  return sortedLangs.map(([name, bytes]) => ({
-    name,
-    percentage: Number(((bytes / totalBytes) * 100).toFixed(1)),
-    color: LANG_COLORS[name] || '#8b5cf6',
-    bytes,
-  }));
+  return [...langBytes.entries()]
+    .sort((a, b) => b[1].bytes - a[1].bytes)
+    .slice(0, 8)
+    .map(([name, entry]) => ({
+      name,
+      percentage: Number(((entry.bytes / totalBytes) * 100).toFixed(1)),
+      color: entry.color || LANG_COLORS[name] || '#8b5cf6',
+      bytes: entry.bytes,
+    }));
 }
 
 function calculateLanguagesFromRepoData(languages: any[]): LanguageStat[] {
@@ -948,7 +972,7 @@ export async function fetchGitHubProfile(
       location: userData.location || '',
       website: userData.websiteUrl || '',
       twitter: userData.twitterUsername || '',
-      email: userData.email,
+      email: userData.email ?? null,
       githubUrl: userData.url,
       resourcePath: userData.resourcePath || `/${userData.login}`,
       createdAt: userData.createdAt,
@@ -1021,8 +1045,14 @@ export async function fetchGitHubProfile(
       let repos: any[] = [];
       if (reposRes.ok) repos = await reposRes.json();
 
+      // REST only exposes the primary language per repo. Weighting it by that
+      // repo's own size (KB) is a far better proxy than assuming every repo is
+      // equally large, and forks are skipped because their code belongs to the
+      // upstream project.
       const languages = calculateLanguagesFromRepoData(
-        repos.flatMap((r: any) => (r.language ? [{ name: r.language, size: r.size || 1000 }] : []))
+        repos
+          .filter((r: any) => !r.fork && r.language)
+          .map((r: any) => ({ name: r.language, size: r.size || 0 }))
       );
       const skills = extractSkillsFromData({ reposList: { nodes: repos } }, languages);
 
@@ -1238,7 +1268,7 @@ export async function fetchGitHubProject(
       framework = 'Go';
     }
 
-    const languageStats = calculateLanguagesFromRepoData(repoData.languages?.nodes || []);
+    const languageStats = calculateLanguagesFromRepoData(languageEntries(repoData.languages));
     const languages = languageStats.map((l) => ({
       name: l.name,
       color: l.color,
@@ -1442,9 +1472,19 @@ export async function fetchGitHubProject(
         // Ignore
       }
 
-      const languageStats = calculateLanguagesFromRepoData(
-        repoData.language ? [{ name: repoData.language, size: repoData.size || 10000 }] : []
-      );
+      // The dedicated languages endpoint gives real per-language bytes for a
+      // single repository, so use it instead of guessing from the repo size.
+      let restLanguages: Array<{ name: string; size: number }> = [];
+      try {
+        const { data: langData } = await client.rest.repos.listLanguages({ owner, repo });
+        restLanguages = Object.entries(langData || {}).map(([name, size]) => ({
+          name,
+          size: Number(size) || 0,
+        }));
+      } catch {
+        // Ignore: the empty list simply omits the breakdown.
+      }
+      const languageStats = calculateLanguagesFromRepoData(restLanguages);
       const languages = languageStats.map((l) => ({
         name: l.name,
         color: l.color,
