@@ -106,25 +106,81 @@ function usernameOf(url: string, fallback: string): string {
 
 // ---------------------------------------------------------------------------
 // shields.io static chips: /badge/<label>-<message>-<color>?logo=<slug>
-// Our native skill chip only needs the display name.
+// `--` escapes a literal dash, `_` is a space, a single `-` separates the
+// three parts. A chip with a real label maps 1:1 onto our generic native chip;
+// a logo-only chip (`/badge/-React-61DAFB`) maps onto a skill chip.
 // ---------------------------------------------------------------------------
-function shieldsChipName(url: string): string | null {
+function shieldsSegments(body: string): string[] {
+  const segments: string[] = [];
+  let current = '';
+  for (let i = 0; i < body.length; i += 1) {
+    const char = body[i];
+    if (char === '-' && body[i + 1] === '-') {
+      current += '-';
+      i += 1;
+      continue;
+    }
+    if (char === '-') {
+      segments.push(current);
+      current = '';
+      continue;
+    }
+    if (char === '_') {
+      current += ' ';
+      continue;
+    }
+    current += char;
+  }
+  segments.push(current);
+  return segments;
+}
+
+function shieldsChipFix(url: string): AuditFix | null {
   let path: string;
   try {
-    // Keep the original casing: chip names are display text, not route keys.
+    // Keep the original casing: chip text is display text, not a route key.
     path = new URL(url).pathname;
   } catch {
     return null;
   }
   if (!path.toLowerCase().startsWith('/badge/')) return null;
-  const body = decodeURIComponent(path.slice('/badge/'.length));
-  if (!body) return null;
-  // `/badge/-React-61DAFB` -> ['', 'React', '61DAFB'] (logo-only chips)
-  const parts = body.split('-');
-  const candidate = parts.length >= 3 ? parts[1] : parts[0];
-  const name = candidate.replace(/_/g, ' ').trim();
-  if (!name || name.length > 28 || /^https?:/.test(name)) return null;
-  return name;
+  const [first, second] = shieldsSegments(decodeURIComponent(path.slice('/badge/'.length)));
+
+  // `/badge/-React-61DAFB`: no label, so the message is the skill name.
+  if (!first && second) {
+    const name = second.trim();
+    if (!name || name.length > 28 || /^https?:/.test(name)) return null;
+    return {
+      url: nativeUrl({ type: 'skill', name, theme: themeOf(url) }),
+      reason: 'Same chip rendered by our own engine (curated simple-icons).',
+    };
+  }
+
+  const label = (first || '').trim().slice(0, 32);
+  if (!label) return null;
+  const value = (second || '').trim().slice(0, 40) || label;
+  return {
+    url: nativeUrl({ type: 'chip', label, value, theme: themeOf(url) }),
+    reason: 'Same chip rendered natively by ReadmeCraft — no third-party host in the image path.',
+  };
+}
+
+/** shields' `/github/followers/:user` endpoint has an exact native counterpart. */
+function shieldsGithubFix(url: string): AuditFix | null {
+  let path: string;
+  try {
+    path = new URL(url).pathname.replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
+  const match = path.match(/^\/github\/followers\/([^/]+)$/i);
+  if (!match) return null;
+  const user = decodeURIComponent(match[1]);
+  if (!/^[A-Za-z0-9-]+$/.test(user)) return null;
+  return {
+    url: nativeUrl({ username: user, type: 'followers', theme: themeOf(url) }),
+    reason: 'Native follower badge, counted from the GitHub API on our edge.',
+  };
 }
 
 function classify(url: string, owner: string): AuditFinding {
@@ -231,20 +287,15 @@ function classify(url: string, owner: string): AuditFinding {
 
   // ---- Risky: third-party hosts that can blank a profile ------------------
   if (host === 'img.shields.io') {
-    const skill = shieldsChipName(url);
+    const fix = shieldsGithubFix(url) || shieldsChipFix(url);
     return {
       url,
       host,
-      service: skill ? `shields.io · ${skill}` : 'shields.io',
+      service: 'shields.io',
       severity: 'risky',
       detail:
         'Works today, but every chip is an extra request to a third-party service; when it is slow the whole row flickers.',
-      fix: skill
-        ? {
-            url: nativeUrl({ type: 'skill', name: skill, theme: themeOf(url) }),
-            reason: 'Same chip rendered by our own engine (curated simple-icons).',
-          }
-        : undefined,
+      fix: fix || undefined,
     };
   }
 

@@ -59,6 +59,43 @@ describe('auditReadme', () => {
     );
   });
 
+  it('maps a labelled shields chip onto a native project chip', () => {
+    const report = auditReadme({
+      username: 'octocat',
+      markdown:
+        '<img src="https://img.shields.io/badge/open--source--ai--radar-Python-ff6b35?style=for-the-badge&logo=github" alt="project" />',
+    });
+
+    expect(report.findings[0].fix?.url).toBe(
+      'https://readme.bharatdn.com/api/badges?type=chip&label=open-source-ai-radar&value=Python&theme=gta6'
+    );
+  });
+
+  it('maps shields follower badges onto the native follower badge', () => {
+    const report = auditReadme({
+      username: 'octocat',
+      markdown:
+        '![followers](https://img.shields.io/github/followers/octocat?label=Followers&style=for-the-badge)',
+    });
+
+    expect(report.findings[0].fix?.url).toBe(
+      'https://readme.bharatdn.com/api/badges?username=octocat&type=followers&theme=gta6'
+    );
+  });
+
+  it('rewrites every fixable shields badge, leaving no third-party image behind', () => {
+    const markdown = [
+      '![followers](https://img.shields.io/github/followers/octocat?label=Followers)',
+      '<img src="https://img.shields.io/badge/daily--prompt-public-JavaScript-ff6b35" alt="repo" />',
+      '<img src="https://img.shields.io/badge/-React-61DAFB?logo=react" alt="React" />',
+    ].join('\n');
+
+    const report = auditReadme({ username: 'octocat', markdown });
+
+    expect(report.fixedCount).toBe(3);
+    expect(report.fixedMarkdown).not.toContain('img.shields.io');
+  });
+
   it('leaves our own badges and unknown hosts alone, and rewrites the markdown', () => {
     const markdown = [
       '<img src="https://readme.bharatdn.com/api/badges?username=octocat&type=snake&theme=gta6" />',
