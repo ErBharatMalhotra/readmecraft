@@ -38,6 +38,12 @@ describe('degraded profile statistics', () => {
     expect(md).toContain('| **Public Repositories** |');
   });
 
+  it('omits the animated typing intro unless the profile opts in', () => {
+    expect(markdownFor({ ...SAMPLE_PROFILE })).not.toContain('type=typing');
+    expect(markdownFor({ ...SAMPLE_PROFILE, typingIntroEnabled: false })).not.toContain('type=typing');
+    expect(markdownFor({ ...SAMPLE_PROFILE, typingIntroEnabled: true })).toContain('type=typing');
+  });
+
   it('keeps numeric statistics for a full GraphQL profile', () => {
     const md = markdownFor({ ...SAMPLE_PROFILE, statsUnavailable: false });
 

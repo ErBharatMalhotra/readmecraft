@@ -279,16 +279,19 @@ function generateHeaderSection(
     .replace(/[\t ]+/g, ' ')
     .trim();
 
+  // The animated typing line is opt-in. It used to be emitted for every
+  // profile, so deleting it by hand was undone by the next regeneration.
+  const typingIntro =
+    data.typingIntroEnabled === true
+      ? `\n<p align="center">\n  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=typing&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="Animated typing intro" />\n</p>\n`
+      : '';
+
   return `<div align="center">
 
 <p align="center">
   <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=name-banner&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="${name} — animated banner" width="100%" />
 </p>
-
-<p align="center">
-  <img src="https://readme.bharatdn.com/api/badges?username=${username}&type=typing&name=${encodeURIComponent(name)}&theme=${themeObj.id}" alt="Animated typing intro" />
-</p>
-
+${typingIntro}
 # ${name}${accountAge}
 ### ${cleanBio}
 
