@@ -383,6 +383,11 @@ function generateStatsGridSection(
   const longestStreak = calculateLongestStreak(
     data.contributionCalendar ?? { totalContributions: 0, weeks: [] }
   );
+  // REST-backed profiles carry no contribution calendar, streaks, star-given or
+  // review counts. Printing 0 there would claim a zero-contribution account, so
+  // those rows render `n/a` when the data was never available.
+  const statsUnknown = data.statsUnavailable === true;
+  const metric = (value: string) => (statsUnknown ? 'n/a' : value);
 
   return `### 📈 Velocity & Metrics
 
@@ -402,21 +407,21 @@ ${data.githubStreakEnabled ? `\n![Streak](https://readme.bharatdn.com/api/badges
 
 | Metric | Value |
 | :--- | :--- |
-| **Total Contributions (1yr)** | ${formatNumber(totalContributions)} |
-| **Current Streak** | ${currentStreak} days |
-| **Longest Streak** | ${longestStreak} days |
+| **Total Contributions (1yr)** | ${metric(formatNumber(totalContributions))} |
+| **Current Streak** | ${metric(`${currentStreak} days`)} |
+| **Longest Streak** | ${metric(`${longestStreak} days`)} |
 | **Public Repositories** | ${formatNumber(data.publicRepos)} |
-| **Total Disk Usage** | ${formatBytes(data.totalDiskUsage ?? 0)} |
+| **Total Disk Usage** | ${metric(formatBytes(data.totalDiskUsage ?? 0))} |
 | **Followers** | ${formatNumber(data.followers)} |
 | **Following** | ${formatNumber(data.following)} |
-| **Stars Given** | ${formatNumber(data.starredRepositoriesCount ?? 0)} |
-| **Watching** | ${formatNumber(data.watchingCount ?? 0)} |
+| **Stars Given** | ${metric(formatNumber(data.starredRepositoriesCount ?? 0))} |
+| **Watching** | ${metric(formatNumber(data.watchingCount ?? 0))} |
 | **Public Gists** | ${formatNumber(data.gistsCount ?? 0)} |
-| **Commit Contributions** | ${formatNumber(data.totalCommitContributions ?? 0)} |
-| **Issue Contributions** | ${formatNumber(data.totalIssueContributions ?? 0)} |
-| **PR Contributions** | ${formatNumber(data.totalPullRequestContributions ?? 0)} |
-| **PR Review Contributions** | ${formatNumber(data.totalPullRequestReviewContributions ?? 0)} |
-| **Repos Contributed To** | ${formatNumber(data.totalRepositoriesWithContributedCommits ?? 0)} |
+| **Commit Contributions** | ${metric(formatNumber(data.totalCommitContributions ?? 0))} |
+| **Issue Contributions** | ${metric(formatNumber(data.totalIssueContributions ?? 0))} |
+| **PR Contributions** | ${metric(formatNumber(data.totalPullRequestContributions ?? 0))} |
+| **PR Review Contributions** | ${metric(formatNumber(data.totalPullRequestReviewContributions ?? 0))} |
+| **Repos Contributed To** | ${metric(formatNumber(data.totalRepositoriesWithContributedCommits ?? 0))} |
 | **Account Created** | ${data.createdAt ? formatDate(data.createdAt) : 'Unknown'} |
 
 </details>`;
@@ -753,6 +758,8 @@ function generateContributionDetailsSection(
   accentHex: string,
   themeParam: string = ''
 ): string {
+  const statsUnknown = data.statsUnavailable === true;
+  const metric = (value: string) => (statsUnknown ? 'n/a' : value);
   return `### 📊 Contribution Breakdown
 
 <details open>
@@ -760,11 +767,11 @@ function generateContributionDetailsSection(
 
 | Type | Count |
 | :--- | :---: |
-| **Commits** | ${formatNumber(data.totalCommitContributions ?? 0)} |
-| **Issues** | ${formatNumber(data.totalIssueContributions ?? 0)} |
-| **Pull Requests** | ${formatNumber(data.totalPullRequestContributions ?? 0)} |
-| **PR Reviews** | ${formatNumber(data.totalPullRequestReviewContributions ?? 0)} |
-| **Repositories** | ${formatNumber(data.totalRepositoriesWithContributedCommits ?? 0)} |
+| **Commits** | ${metric(formatNumber(data.totalCommitContributions ?? 0))} |
+| **Issues** | ${metric(formatNumber(data.totalIssueContributions ?? 0))} |
+| **Pull Requests** | ${metric(formatNumber(data.totalPullRequestContributions ?? 0))} |
+| **PR Reviews** | ${metric(formatNumber(data.totalPullRequestReviewContributions ?? 0))} |
+| **Repositories** | ${metric(formatNumber(data.totalRepositoriesWithContributedCommits ?? 0))} |
 
 </details>
 

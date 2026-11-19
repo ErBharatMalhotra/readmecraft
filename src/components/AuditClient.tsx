@@ -215,8 +215,8 @@ export default function AuditClient() {
                 .
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-[#1e293b]">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto rounded-2xl border border-[#1e293b]">
+                <table className="w-full min-w-[520px] text-left text-xs">
                   <thead className="bg-[#0b101c] font-mono text-[10px] tracking-wider text-slate-500 uppercase">
                     <tr>
                       <th className="px-4 py-2.5">Badge</th>
@@ -234,8 +234,11 @@ export default function AuditClient() {
                             <p className="truncate font-mono text-[11px] text-slate-300">
                               {finding.service}
                             </p>
-                            <p className="truncate font-mono text-[10px] text-slate-600">
-                              {finding.host}
+                            <p
+                              className="truncate font-mono text-[10px] text-slate-600"
+                              title={finding.url}
+                            >
+                              {finding.url.replace(/^https?:\/\//, '')}
                             </p>
                           </td>
                           <td className="px-4 py-3">

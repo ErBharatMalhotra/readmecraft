@@ -631,10 +631,24 @@ function calculateLanguages(repos: any[]): LanguageStat[] {
 function calculateLanguagesFromRepoData(languages: any[]): LanguageStat[] {
   if (!languages || languages.length === 0) return [];
 
-  const totalSize = languages.reduce((sum, l) => sum + (l.size || 0), 0);
+  // Callers pass one entry per repository (the REST fallback has no per-repo
+  // language bytes), so the same language repeats. Merge by name before
+  // computing percentages, otherwise the README lists "JavaScript" five times.
+  const merged = new Map<string, { name: string; size: number; color?: string }>();
+  for (const language of languages) {
+    const name = language?.name;
+    if (!name) continue;
+    const entry = merged.get(name) || { name, size: 0, color: language.color };
+    entry.size += language.size || 0;
+    if (!entry.color && language.color) entry.color = language.color;
+    merged.set(name, entry);
+  }
+
+  const totals = [...merged.values()];
+  const totalSize = totals.reduce((sum, l) => sum + l.size, 0);
   if (totalSize === 0) return [];
 
-  return languages
+  return totals
     .map((l) => ({
       name: l.name,
       percentage: Number(((l.size / totalSize) * 100).toFixed(1)),
@@ -739,6 +753,9 @@ export async function fetchGitHubProfile(
 
   try {
     const { data } = await fetchProfileData(username, { token, userToken });
+    // GraphQL needs a token and degrades to mock data without one. Throw so the
+    // REST fallback below returns the real public profile instead of fake stats.
+    if ((data as any).__graphQLError) throw new Error('GraphQL profile fetch failed');
     const userData = data;
 
     // Filter out private repos for all public display
@@ -1085,6 +1102,8 @@ export async function fetchGitHubProfile(
         githubStatsEnabled: true,
         githubStreakEnabled: true,
         topLanguagesEnabled: true,
+        // REST cannot answer contribution/streak/star-given metrics.
+        statsUnavailable: true,
       };
     } catch (fallbackError) {
       console.warn('REST API fallback also failed, returning minimal profile:', fallbackError);
@@ -1144,6 +1163,7 @@ export async function fetchGitHubProfile(
         githubStatsEnabled: true,
         githubStreakEnabled: true,
         topLanguagesEnabled: true,
+        statsUnavailable: true,
       };
     }
   }
@@ -1171,6 +1191,9 @@ export async function fetchGitHubProject(
 
   try {
     const { data } = await fetchRepoData(owner, repo, { token, userToken });
+    // Same as the profile path: never present the degraded GraphQL placeholder
+    // as real repository data when the REST API can answer anonymously.
+    if ((data as any).__graphQLError) throw new Error('GraphQL repo fetch failed');
     const repoData = data;
 
     let packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'cargo' | 'pip' | 'go' = 'npm';

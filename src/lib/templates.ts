@@ -279,7 +279,7 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     role: 'Senior Frontend Engineer',
     badge: 'UI Perfectionist',
     icon: null,
-    theme: 'atom',
+    theme: 'one-dark',
     preset: 'titan',
     bio: 'Crafting performant, accessible React applications with modern patterns. TypeScript, Tailwind, and testing enthusiast.',
     skills: [
@@ -738,7 +738,7 @@ export const COMMUNITY_TEMPLATES: CommunityTemplate[] = [
     role: 'Quality Engineering & Reliability',
     badge: '✅ Shift Left',
     icon: null,
-    theme: 'atom',
+    theme: 'one-dark',
     preset: 'bento',
     bio: "Quality is everyone's job — I build the tools to make it easy. Test architecture, contract testing, visual regression, performance budgets, and CI/CD quality gates.",
     skills: [

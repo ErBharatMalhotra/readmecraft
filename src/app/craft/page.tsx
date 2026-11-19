@@ -63,7 +63,10 @@ export default function CraftPage() {
     if (packageJson) {
       const bin = packageJson.bin || {};
       const scripts = packageJson.scripts || {};
-      const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      // Runtime dependencies decide what the package *is*; devDependencies only
+      // say what it is tested with (got lists express in devDeps and was being
+      // classified as an API service instead of a library).
+      const deps = packageJson.dependencies || {};
 
       // CLI: has bin entry or commander/yargs/oclif
       if (Object.keys(bin).length > 0) return 'cli';
@@ -331,8 +334,11 @@ export default function CraftPage() {
     if (pyprojectToml) tech.push('Python');
     if (topics.length) tech.push(...topics.slice(0, 5));
 
+    // The language often reappears as a repo topic ("javascript" + "JavaScript"),
+    // so collapse case-insensitive duplicates before rendering the stack.
+    const uniqueTech = [...new Map(tech.map((t) => [t.trim().toLowerCase(), t.trim()])).values()];
     md +=
-      tech
+      uniqueTech
         .slice(0, 10)
         .map((t) => `\`${t}\``)
         .join(' ') + '\n\n';
@@ -387,19 +393,23 @@ export default function CraftPage() {
     setError(null);
 
     try {
-      // Fetch repo data from GitHub API
-      const [repoRes, readmeRes, packageRes, cargoRes, pyprojectRes] = await Promise.allSettled([
-        fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`),
-        fetch(`https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/README.md`),
-        fetch(`https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/package.json`),
-        fetch(`https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/Cargo.toml`),
-        fetch(
-          `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/main/pyproject.toml`
-        ),
+      // Fetch repo data from GitHub API first so manifest reads use the repo's
+      // real default branch (hardcoded `main` missed every `master` repo).
+      const repoRes = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`);
+      const repoData = repoRes.ok ? await repoRes.json() : null;
+
+      if (!repoData) throw new Error('Repository not found or private');
+
+      const branch = repoData.default_branch || 'main';
+      const rawUrl = (file: string) =>
+        `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/${branch}/${file}`;
+      const [readmeRes, packageRes, cargoRes, pyprojectRes] = await Promise.allSettled([
+        fetch(rawUrl('README.md')),
+        fetch(rawUrl('package.json')),
+        fetch(rawUrl('Cargo.toml')),
+        fetch(rawUrl('pyproject.toml')),
       ]);
 
-      const repoData =
-        repoRes.status === 'fulfilled' && repoRes.value.ok ? await repoRes.value.json() : null;
       const readme =
         readmeRes.status === 'fulfilled' && readmeRes.value.ok ? await readmeRes.value.text() : '';
       const packageJson =
@@ -412,8 +422,6 @@ export default function CraftPage() {
         pyprojectRes.status === 'fulfilled' && pyprojectRes.value.ok
           ? await pyprojectRes.value.text()
           : '';
-
-      if (!repoData) throw new Error('Repository not found or private');
 
       const analysisData: RepoAnalysis = {
         name: `${parsed.owner}/${parsed.repo}`,

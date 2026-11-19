@@ -369,7 +369,7 @@ const PERSONAS: Record<string, PersonaSEO> = {
     description:
       'Quality-first GitHub profile README template for SDETs and Test Automation engineers. Test architecture, contract testing, visual regression, perf budgets.',
     keywords: ['sdet github readme', 'qa engineer profile', 'test automation readme template'],
-    theme: 'atom',
+    theme: 'one-dark',
     preset: 'bento',
     skills: [
       'TypeScript',
@@ -403,7 +403,7 @@ export async function generateMetadata({
   if (!persona) return { title: 'Template Not Found' };
 
   return {
-    title: `${persona.title} | ReadmeCraft`,
+    title: persona.title,
     description: persona.description,
     keywords: persona.keywords,
     openGraph: {

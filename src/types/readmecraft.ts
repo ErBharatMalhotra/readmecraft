@@ -252,6 +252,12 @@ export interface ProfileData {
   totalRepositoriesWithContributedCommits?: number;
   commitContributionsByRepository?: RepositoryContribution[];
   pullRequestContributionsByRepository?: PullRequestContribution[];
+  /**
+   * True when the profile came from the REST fallback (GraphQL unavailable).
+   * REST has no contribution calendar, streak, star-given or review counts, so
+   * those metrics are unknown and must render as `n/a`, never as a fake zero.
+   */
+  statsUnavailable?: boolean;
 
   // Organizations
   organizations?: Organization[];

@@ -11,7 +11,7 @@ const TEMPLATE_PARAMS = [
   { id: 'devops-platform', theme: 'matrix' },
   { id: 'web3-builder', theme: 'synthwave' },
   { id: 'cs-student', theme: 'tokyonight' },
-  { id: 'react-engineer', theme: 'atom' },
+  { id: 'react-engineer', theme: 'one-dark' },
   { id: 'python-developer', theme: 'matrix' },
   { id: 'mobile-developer', theme: 'tokyonight' },
   { id: 'data-scientist', theme: 'matrix' },
@@ -20,7 +20,7 @@ const TEMPLATE_PARAMS = [
   { id: 'sre-engineer', theme: 'matrix' },
   { id: 'engineering-manager', theme: 'gta6' },
   { id: 'embedded-engineer', theme: 'elden-ring' },
-  { id: 'qa-sdet', theme: 'atom' },
+  { id: 'qa-sdet', theme: 'one-dark' },
 ];
 
 // PERSONAS slugs for /templates/[slug] routes

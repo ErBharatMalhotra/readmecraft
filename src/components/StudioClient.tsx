@@ -58,32 +58,10 @@ function getInitialState(urlTemplate: string | null, urlTheme: string | null) {
     }
   }
 
-  // No template params - check localStorage (client-only)
-  // During SSR, localStorage is not available, so we return defaults
-  if (typeof window !== 'undefined') {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed: ReadmeState = JSON.parse(saved);
-        const savedTheme = localStorage.getItem('readmecraft-theme') || 'gta6';
-        return {
-          mode: parsed.mode || 'profile',
-          profilePreset: parsed.profilePreset || 'bento',
-          projectPreset: parsed.projectPreset || 'standard',
-          profileData: parsed.profileData || SAMPLE_PROFILE,
-          projectData: parsed.projectData || SAMPLE_PROJECT,
-          sections:
-            parsed.sections && parsed.sections.length > 0
-              ? parsed.sections
-              : getProfileSections(SAMPLE_PROFILE, 'bento', 'gta6'),
-          theme: savedTheme,
-          hasLoaded: true,
-        };
-      }
-    } catch (e) {
-      console.warn('Failed to restore from localStorage:', e);
-    }
-  }
+  // No template params: return defaults for both server and the first client
+  // render. The saved session is restored after mount (see the restore effect
+  // in HomeInner); reading localStorage here made the hydrated markdown differ
+  // from the server-rendered one.
 
   // Defaults
   return {
@@ -159,6 +137,40 @@ function HomeInner() {
   // final README, and it stays on screen until the user starts editing.
   const [featuredMarkdown, setFeaturedMarkdown] = useState('');
   const initialMarkdownRef = useRef(markdown);
+  const didRestoreRef = useRef(false);
+
+  // Restore the previous session after hydration, never during render.
+  useEffect(() => {
+    if (didRestoreRef.current || urlTemplate) return;
+    didRestoreRef.current = true;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const parsed: ReadmeState = JSON.parse(saved);
+      const savedTheme = localStorage.getItem('readmecraft-theme') || parsed.theme || 'gta6';
+      const restoredSections =
+        parsed.sections && parsed.sections.length > 0 ? parsed.sections : null;
+      const restoredProfile = parsed.profileData || SAMPLE_PROFILE;
+      const restoredPreset = parsed.profilePreset || 'bento';
+
+      setMode(parsed.mode || 'profile');
+      setProfilePreset(restoredPreset);
+      setProjectPreset(parsed.projectPreset || 'standard');
+      setProfileData(restoredProfile);
+      setProjectData(parsed.projectData || SAMPLE_PROJECT);
+      setSections(restoredSections ?? getProfileSections(restoredProfile, restoredPreset, savedTheme));
+      setTheme(savedTheme);
+
+      const restoredMarkdown = compileSectionsToMarkdown(
+        restoredSections ?? getProfileSections(restoredProfile, restoredPreset, savedTheme)
+      );
+      setMarkdown(restoredMarkdown);
+      // Keep the "untouched" baseline aligned so the featured README still shows.
+      initialMarkdownRef.current = restoredMarkdown;
+    } catch (e) {
+      console.warn('Failed to restore from localStorage:', e);
+    }
+  }, [urlTemplate]);
 
   useEffect(() => {
     if (urlTemplate) return;
@@ -759,7 +771,7 @@ export function StudioClient() {
             activeRepo="ErBharatMalhotra/readmecraft"
           />
           <main
-            id="main-content"
+            id="studio-skeleton"
             className="grid min-h-[750px] w-full flex-1 grid-cols-1 lg:grid-cols-12"
           >
             <div className="h-full overflow-hidden border-r border-[#1e293b] bg-[#090d16] lg:col-span-3 xl:col-span-3">
@@ -788,11 +800,8 @@ export function StudioClient() {
                   </div>
                 </div>
                 <div className="relative flex flex-1">
-                  <label htmlFor="readme-editor" className="visually-hidden">
-                    Markdown editor
-                  </label>
                   <textarea
-                    id="readme-editor"
+                    aria-label="Markdown editor"
                     className="h-full w-full resize-none bg-transparent p-4 font-mono text-xs leading-relaxed text-slate-100 selection:bg-emerald-500/30 focus:outline-none md:text-sm"
                     placeholder="# Start typing your GitHub README markdown here..."
                     readOnly

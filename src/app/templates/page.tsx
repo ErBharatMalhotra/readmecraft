@@ -118,9 +118,9 @@ export default function TemplatesPage() {
   return (
     <div className="min-h-screen bg-[#070b14] text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-300">
       {/* Header Bar */}
-      <header className="sticky top-0 z-50 border-b border-[#1e293b] bg-[#090d16]/90 px-6 py-4 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <Link href="/" className="group flex items-center gap-3">
+      <header className="sticky top-0 z-50 border-b border-[#1e293b] bg-[#090d16]/90 px-4 py-4 backdrop-blur-md sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
+          <Link href="/" className="group flex shrink-0 items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-transform group-hover:scale-105">
               <Sparkles className="h-4 w-4" />
             </div>
@@ -128,22 +128,22 @@ export default function TemplatesPage() {
               <span className="font-['Space_Grotesk'] text-lg font-bold tracking-tight text-white">
                 ReadmeCraft
               </span>
-              <span className="ml-2 rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-400 uppercase">
+              <span className="ml-2 hidden rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-400 uppercase sm:inline-block">
                 Templates
               </span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <Link
               href="/"
-              className="flex items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0e1526] px-4 py-2 text-xs font-semibold text-slate-300 transition-all hover:border-slate-700 hover:text-white"
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[#1e293b] bg-[#0e1526] px-3 py-2 text-xs font-semibold text-slate-300 transition-all hover:border-slate-700 hover:text-white sm:px-4"
             >
               Open Studio
             </Link>
             <Link
               href="/deploy"
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all hover:from-emerald-400 hover:to-emerald-500"
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-xs font-bold text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all hover:from-emerald-400 hover:to-emerald-500 sm:px-4"
             >
               1-Click Deploy
             </Link>
@@ -201,7 +201,9 @@ export default function TemplatesPage() {
                   <div className="mt-1 flex items-center gap-2 font-mono text-xs text-slate-400">
                     <span>{tmpl.role}</span>
                     <span>•</span>
-                    <span className="text-emerald-400 capitalize">{tmpl.theme} theme</span>
+                    <span className="text-emerald-400">
+                      {THEMES.find((t) => t.id === tmpl.theme)?.name ?? tmpl.theme} theme
+                    </span>
                   </div>
 
                   {/* Bio Preview */}

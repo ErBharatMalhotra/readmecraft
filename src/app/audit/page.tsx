@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import AuditClient from '@/components/AuditClient';
 
 export const metadata: Metadata = {
-  title: 'Badge Auditor — find dead README badges | ReadmeCraft',
+  title: 'Badge Auditor — find dead README badges',
   description:
     'Free audit for GitHub profile READMEs: detect dead badges (paused github-readme-stats, retired Heroku hosts, travis-ci.org), silent breakages and stale package badges, then copy a fixed README.',
   alternates: { canonical: '/audit' },

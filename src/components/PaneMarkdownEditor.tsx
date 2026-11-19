@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import type { Section } from '@/types/readmecraft';
 import {
   Code,
@@ -34,13 +34,18 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
   activeUsername = 'ErBharatMalhotra',
 }) => {
   const [editorMode, setEditorMode] = useState<'full' | 'section'>('full');
+  const editorId = useId();
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [activeSectionId, setActiveSectionId] = useState<string>(sections[0]?.id || 'header');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   const activeSection = sections.find((s) => s.id === activeSectionId) || sections[0];
 
   const insertSnippet = (prefix: string, suffix: string = '') => {
-    const textarea = document.getElementById('readme-editor') as HTMLTextAreaElement;
+    // Use the live textarea ref instead of a document-wide id lookup: the page
+    // can hold a hidden copy of the studio (Suspense fallback), and
+    // getElementById would target that stale textarea instead.
+    const textarea = textareaRef.current;
     if (!textarea) return;
 
     const start = textarea.selectionStart;
@@ -210,11 +215,12 @@ export const PaneMarkdownEditor: React.FC<PaneMarkdownEditorProps> = ({
 
       {/* Monospace Raw Markdown Editor Textarea */}
       <div className="relative flex flex-1">
-        <label htmlFor="readme-editor" className="visually-hidden">
+        <label htmlFor={editorId} className="visually-hidden">
           Markdown editor
         </label>
         <textarea
-          id="readme-editor"
+          id={editorId}
+          ref={textareaRef}
           value={editorMode === 'full' ? markdown : activeSection?.content || ''}
           onChange={(e) => {
             if (editorMode === 'full') {

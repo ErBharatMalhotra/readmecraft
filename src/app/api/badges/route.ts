@@ -684,9 +684,18 @@ function generateArchitectureSvg(model: ArchitectureModel, theme: Theme): string
   const chipH = 30;
   const chipGap = 8;
   const chipsTop = 104;
-  const maxChips = 4;
-  const height = chipsTop + maxChips * (chipH + chipGap) + 34;
-  const midY = chipsTop + (maxChips * (chipH + chipGap)) / 2;
+  // Reserve rows for the fullest layer. A fixed 4-row reserve made the fourth
+  // chip of a column collide with the TOOLING strip underneath.
+  const rows = Math.max(
+    1,
+    model.layers.client.length,
+    model.layers.api.length,
+    model.layers.data.length
+  );
+  const chipsBottom = chipsTop + (rows - 1) * (chipH + chipGap) + chipH;
+  const toolingTop = chipsBottom + 26;
+  const height = toolingTop + 40;
+  const midY = chipsTop + ((rows - 1) * (chipH + chipGap) + chipH) / 2;
 
   const title = `${model.owner}/${model.repo} — architecture`;
   let inner = '';
