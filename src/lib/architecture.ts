@@ -344,10 +344,33 @@ export function analyzeArchitecture(input: {
 
 // ---------------------------------------------------------------------------
 // Fetching (public repos, unauthenticated-friendly with a token when present)
+//
+// Request budget on a cold cache: one REST call (the root contents listing) plus
+// one raw `package.json` probe, fired in parallel. The default branch comes from
+// the listing's download_url instead of a separate /repos call, and every other
+// manifest is fetched only when package.json failed to explain the stack — and
+// only if the root listing proved the file exists. A typical Node repo therefore
+// costs 2 calls, not 9, and we never 404-probe manifests that are not there.
 // ---------------------------------------------------------------------------
 
+interface RootEntry {
+  name: string;
+  type: string;
+  download_url?: string | null;
+}
+
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+// A degraded model means "we could not read anything", which is often a
+// transient 403/rate-limit rather than the truth about the repo. Cache it for
+// minutes, not hours, so a hiccup does not blank the diagram all day.
+const DEGRADED_TTL_MS = 2 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 500;
+const MAX_FALLBACK_MANIFESTS = 3;
+
 const cache = new Map<string, { model: ArchitectureModel; timestamp: number }>();
+// Cold concurrent requests for the same repo share one in-flight fetch instead
+// of each spending their own GitHub calls.
+const inflight = new Map<string, Promise<ArchitectureModel>>();
 
 function githubHeaders(token?: string): Record<string, string> {
   const headers: Record<string, string> = {
@@ -384,6 +407,44 @@ async function getText(url: string): Promise<string | null> {
   }
 }
 
+/** raw.githubusercontent.com accepts `HEAD` as a ref, so we can probe the
+ * manifest before (and in parallel with) the branch-aware contents listing. */
+function rawUrl(owner: string, repo: string, ref: string, path: string) {
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path}`;
+}
+
+/** The listing's download_url bakes in the default branch, so parsing it saves
+ * a whole /repos call. Returns null when the URL is missing or unrecognised. */
+function branchFromEntry(entry?: RootEntry): string | null {
+  const url = entry?.download_url;
+  if (!url) return null;
+  const match = url.match(/^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/(.+)$/);
+  if (!match) return null;
+  const parts = match[1].split('/');
+  parts.pop(); // the file name
+  return parts.join('/') || null;
+}
+
+function readCache(key: string): ArchitectureModel | null {
+  const hit = cache.get(key);
+  if (!hit) return null;
+  const ttl = hit.model.degraded ? DEGRADED_TTL_MS : CACHE_TTL_MS;
+  if (Date.now() - hit.timestamp >= ttl) {
+    cache.delete(key);
+    return null;
+  }
+  return hit.model;
+}
+
+function writeCache(key: string, model: ArchitectureModel) {
+  if (!cache.has(key) && cache.size >= MAX_CACHE_ENTRIES) {
+    // Insertion order = FIFO; drop the oldest entry to keep memory flat.
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
+  cache.set(key, { model, timestamp: Date.now() });
+}
+
 export async function fetchArchitectureModel(
   owner: string,
   repo: string,
@@ -391,25 +452,47 @@ export async function fetchArchitectureModel(
 ): Promise<ArchitectureModel> {
   const token = options.userToken || options.token || process.env.GITHUB_TOKEN;
   const key = `${owner}/${repo}`.toLowerCase();
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) return cached.model;
 
-  const repoInfo = await getJson(
-    `https://api.github.com/repos/${owner}/${repo}`,
-    githubHeaders(token)
-  );
-  const defaultBranch = repoInfo?.default_branch || 'main';
+  const cached = readCache(key);
+  if (cached) return cached;
+  const running = inflight.get(key);
+  if (running) return running;
 
-  const [rootContents, packageJsonRaw, ...otherManifests] = await Promise.all([
+  const job = loadModel(owner, repo, token)
+    .then((model) => {
+      writeCache(key, model);
+      return model;
+    })
+    .finally(() => {
+      inflight.delete(key);
+    });
+
+  inflight.set(key, job);
+  return job;
+}
+
+async function loadModel(
+  owner: string,
+  repo: string,
+  token?: string
+): Promise<ArchitectureModel> {
+  const [rootContents, packageJsonRaw] = await Promise.all([
     getJson(`https://api.github.com/repos/${owner}/${repo}/contents/`, githubHeaders(token)),
-    getText(`https://raw.githubusercontent.com/${owner}/${repo}/${defaultBranch}/package.json`),
-    ...MANIFESTS.filter((name) => name !== 'package.json').map(async (name) => ({
-      name,
-      content: await getText(
-        `https://raw.githubusercontent.com/${owner}/${repo}/${defaultBranch}/${name}`
-      ),
-    })),
+    getText(rawUrl(owner, repo, 'HEAD', 'package.json')),
   ]);
+
+  const entries: RootEntry[] = Array.isArray(rootContents)
+    ? rootContents.filter(
+        (entry: any): entry is RootEntry =>
+          entry && typeof entry.name === 'string' && typeof entry.type === 'string'
+      )
+    : [];
+
+  const directories = entries.filter((entry) => entry.type === 'dir').map((entry) => entry.name);
+  const packageEntry = entries.find(
+    (entry) => entry.type === 'file' && entry.name.toLowerCase() === 'package.json'
+  );
+  const defaultBranch = branchFromEntry(packageEntry) || 'main';
 
   let packageJson: ManifestInput['packageJson'];
   if (packageJsonRaw) {
@@ -420,17 +503,40 @@ export async function fetchArchitectureModel(
     }
   }
 
-  const files = otherManifests.filter((entry): entry is { name: string; content: string } =>
-    Boolean(entry.content)
-  );
+  const packageDeps = {
+    ...(packageJson?.dependencies || {}),
+    ...(packageJson?.devDependencies || {}),
+  };
+  // Only pay for extra manifests when package.json explained nothing — a
+  // polyglot root with eslint-only deps still gets its Python/Go layers found.
+  const packageExplainsStack = Object.keys(packageDeps).some((name) => Boolean(lookup(name)));
 
-  const directories = Array.isArray(rootContents)
-    ? rootContents
-        .filter((entry: any) => entry?.type === 'dir' && typeof entry.name === 'string')
-        .map((entry: any) => entry.name)
-    : [];
+  const files: Array<{ name: string; content: string }> = [];
+  if (!packageExplainsStack) {
+    const candidates = entries
+      .filter(
+        (entry) =>
+          entry.type === 'file' &&
+          entry.name.toLowerCase() !== 'package.json' &&
+          MANIFESTS.includes(entry.name)
+      )
+      .slice(0, MAX_FALLBACK_MANIFESTS);
 
-  const model = analyzeArchitecture({
+    const fetched = await Promise.all(
+      candidates.map(async (entry) => ({
+        name: entry.name,
+        // download_url keeps the real branch even when we had to guess 'main'.
+        content: await getText(entry.download_url || rawUrl(owner, repo, defaultBranch, entry.name)),
+      }))
+    );
+    files.push(
+      ...fetched.filter(
+        (entry): entry is { name: string; content: string } => Boolean(entry.content)
+      )
+    );
+  }
+
+  return analyzeArchitecture({
     owner,
     repo,
     defaultBranch,
@@ -438,12 +544,10 @@ export async function fetchArchitectureModel(
     files,
     directories,
   });
-
-  cache.set(key, { model, timestamp: Date.now() });
-  return model;
 }
 
-/** Test/ops helper: drop the in-memory cache. */
+/** Test/ops helper: drop the in-memory cache and any in-flight fetches. */
 export function clearArchitectureCache() {
   cache.clear();
+  inflight.clear();
 }
