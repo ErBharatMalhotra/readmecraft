@@ -104,12 +104,16 @@ export default async function ScorePage({ params }: { params: Promise<{ username
             </code>{' '}
             README to score yet.
           </p>
-          <Link
-            href="/"
-            className="mt-6 inline-block rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-400"
-          >
-            Build one with ReadmeCraft
-          </Link>
+          <p className="mt-5 text-xs text-slate-500">
+            The Studio can build a profile README from your live GitHub data —{' '}
+            <Link
+              href="/"
+              className="text-slate-400 underline decoration-slate-600 underline-offset-2 transition-colors hover:text-emerald-400"
+            >
+              build one in the Studio
+            </Link>{' '}
+            →
+          </p>
         </div>
       </main>
     );

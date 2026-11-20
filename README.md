@@ -27,8 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { token: '${{ secrets.GITHUB_TOKEN }}' }
-      # Pin to a commit SHA or release tag instead of main for reproducible CI
-      - uses: ErBharatMalhotra/readmecraft/readmecraft-action@ced3cbf
+      # Pinned to the v3.4 release tag; use a commit SHA if you need full immutability
+      - uses: ErBharatMalhotra/readmecraft/readmecraft-action@v3.4
         with:
           username: ${{ github.repository_owner }}
           token: ${{ secrets.GITHUB_TOKEN }}
