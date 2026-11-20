@@ -51,6 +51,7 @@ export function GET() {
 
   const staticUrls = [
     { url: BASE_URL, changefreq: 'daily', priority: '1.0' },
+    { url: BASE_URL + '/score', changefreq: 'weekly', priority: '0.9' },
     { url: BASE_URL + '/audit', changefreq: 'weekly', priority: '0.8' },
     { url: BASE_URL + '/deploy', changefreq: 'monthly', priority: '0.5' },
   ];

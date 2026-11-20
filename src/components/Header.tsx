@@ -18,6 +18,7 @@ import {
   Rocket,
   Search,
   ShieldCheck,
+  Trophy,
 } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
 import { useAuth } from '@/lib/auth-client';
@@ -205,6 +206,15 @@ export const Header: React.FC<HeaderProps> = ({
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span>Templates</span>
             </Link>
+            {/* README Score Card */}
+            <Link
+              href="/score"
+              className="flex items-center gap-1.5 rounded-lg border border-[#1e293b] bg-[#0e1526] px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-emerald-500/50 hover:text-emerald-400"
+              title="Score any GitHub profile README out of 100"
+            >
+              <Trophy className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Score</span>
+            </Link>
             {/* Badge Auditor */}
             <Link
               href="/audit"
@@ -297,6 +307,33 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Deploy to GitHub Profile</span>
                 </Link>
               )}
+              <div className="rounded-lg border border-[#1e293b] bg-[#0e1526] p-2">
+                <p className="mb-2 font-mono text-xs text-slate-500 uppercase">Pages</p>
+                <Link
+                  href="/score"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400"
+                >
+                  <Trophy className="h-4 w-4" />
+                  README Score Card
+                </Link>
+                <Link
+                  href="/templates"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Templates
+                </Link>
+                <Link
+                  href="/audit"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-300 hover:text-emerald-400"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  Badge Audit
+                </Link>
+              </div>
               <div className="rounded-lg border border-[#1e293b] bg-[#0e1526] p-2">
                 <p className="mb-2 font-mono text-xs text-slate-500 uppercase">Ecosystem</p>
                 <a

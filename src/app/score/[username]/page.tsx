@@ -52,26 +52,36 @@ export async function generateMetadata({
   if (!USERNAME_PATTERN.test(username)) return { title: 'README Score' };
 
   const readme = await fetchProfileReadme(username);
-  const title = readme
-    ? `${username}'s README scores ${scoreReadmeMarkdown(readme).score}/100`
+  const result = readme ? scoreReadmeMarkdown(readme) : null;
+  const title = result
+    ? `${username}'s README scores ${result.score}/100`
     : `${username} has no profile README yet`;
-  const score = readme ? String(scoreReadmeMarkdown(readme).score) : '0';
-  const grade = readme ? scoreReadmeMarkdown(readme).grade : '—';
+  const description = result
+    ? `${username} scores ${result.score}/100 (${result.grade}) on ReadmeCraft — graded on structure, visuals, documentation, links and hygiene from the live README.md.`
+    : 'ReadmeCraft scores any GitHub profile README on structure, visuals, documentation depth and accessibility — every point derived from the markdown itself.';
+
+  // Raster PNG card: X and LinkedIn cannot render the SVG at /api/og.
+  const ogImage = `/api/og/score?username=${encodeURIComponent(username)}&score=${
+    result ? result.score : '0'
+  }&grade=${encodeURIComponent(result ? result.grade : '—')}`;
+  const pageUrl = `https://readme.bharatdn.com/score/${username}`;
 
   return {
     title,
-    description:
-      'ReadmeCraft scores any GitHub profile README on structure, visuals, documentation depth and accessibility — every point derived from the markdown itself.',
+    description,
+    alternates: { canonical: pageUrl },
     openGraph: {
       title,
-      description: 'Score any GitHub profile README in seconds.',
-      images: [
-        {
-          url: `/api/og?title=${encodeURIComponent(`${username} · README score`)}&subtitle=${encodeURIComponent(
-            'Scored by ReadmeCraft'
-          )}&score=${score}&grade=${encodeURIComponent(grade)}&theme=gta6`,
-        },
-      ],
+      description,
+      url: pageUrl,
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630, type: 'image/png', alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
     },
   };
 }
