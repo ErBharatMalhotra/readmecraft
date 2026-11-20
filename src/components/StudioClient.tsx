@@ -148,8 +148,17 @@ function HomeInner() {
   // which surfaced as React's recoverable "server text didn't match client"
   // error on the editor's char counter.
   useEffect(() => {
-    if (didRestoreRef.current || urlTemplate) return;
+    if (didRestoreRef.current) return;
     didRestoreRef.current = true;
+
+    // A template URL already seeds the editor from the template, so there is no
+    // saved session to restore. Autosave must still be enabled afterwards,
+    // otherwise edits made on a template page were never persisted.
+    if (urlTemplate) {
+      setRestoreDone(true);
+      return;
+    }
+
     const restore = () => {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
