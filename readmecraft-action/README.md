@@ -112,3 +112,7 @@ You can manually trigger the workflow from the **Actions** tab in your repositor
 ## License
 
 MIT © [ErBharatMalhotra](https://github.com/ErBharatMalhotra)
+
+This wrapper is a standalone program that calls the public ReadmeCraft API, so
+it is not a derivative work of the AGPL-3.0 web app. The ReadmeCraft name and
+logo are not licensed.

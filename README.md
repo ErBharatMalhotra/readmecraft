@@ -3,8 +3,40 @@
 > **Production:** `https://readme.bharatdn.com`
 > **Ecosystem:** `githolo.bharatdn.com` · `gitchronicle.bharatdn.com`
 > **Repository:** `ErBharatMalhotra/readmecraft`
-> **License:** AGPL-3.0
+> **License:** AGPL-3.0 (web app) · MIT (GitHub Action wrapper in `readmecraft-action/`)
 > **Author:** Bharat Malhotra (`ErBharatMalhotra`)
+
+---
+
+## ⚡ Quick start
+
+**Option A — hosted studio (zero install):** [readme.bharatdn.com](https://readme.bharatdn.com) · [score your README](https://readme.bharatdn.com/score)
+
+**Option B — auto-updating badges via GitHub Actions.** Drop this in `.github/workflows/readmecraft.yml` in your profile repository (`username/username`):
+
+```yaml
+name: ReadmeCraft Auto-Update
+on:
+  schedule: [{ cron: '0 2 * * *' }] # daily 02:00 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { token: '${{ secrets.GITHUB_TOKEN }}' }
+      # Pin to a commit SHA or release tag instead of main for reproducible CI
+      - uses: ErBharatMalhotra/readmecraft/readmecraft-action@ced3cbf
+        with:
+          username: ${{ github.repository_owner }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          theme: tokyonight
+```
+
+Then set **Settings → Actions → General → Workflow permissions → Read and write**.
+Full inputs, badge types and themes: [`readmecraft-action/README.md`](readmecraft-action/README.md).
 
 ---
 
@@ -495,6 +527,12 @@ src/
 
 ## 📜 License
 
-**AGPL-3.0** © Bharat Malhotra (`ErBharatMalhotra`)
+**Web app — AGPL-3.0** © Bharat Malhotra (`ErBharatMalhotra`)
 
-> **Note:** This project is licensed under AGPL-3.0. If you modify ReadmeCraft and offer it as a service (SaaS, hosted tool, API), you MUST provide your modified source code to users under the same license. For commercial/private use without open-sourcing changes, contact `bharat@bharatdn.com`.
+> If you modify ReadmeCraft and offer it as a service (SaaS, hosted tool, API),
+> you MUST provide your modified source code to users under the same license.
+> For commercial/private use without open-sourcing changes, contact `bharat@bharatdn.com`.
+
+**GitHub Action wrapper — MIT** (`readmecraft-action/`). It only calls the hosted
+API, so companies can drop it into CI without AGPL obligations. The ReadmeCraft
+name and logo are not licensed — see `TRADEMARK.md`.

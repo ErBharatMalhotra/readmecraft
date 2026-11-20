@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import type { AppMode } from '@/types/readmecraft';
-import { Search, Sparkles, Loader2, Key, HelpCircle, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+import { Search, Sparkles, Loader2, Key, HelpCircle, CheckCircle2, Trophy } from 'lucide-react';
 
 interface HeroIngestionProps {
   mode: AppMode;
@@ -171,6 +172,21 @@ export const HeroIngestion: React.FC<HeroIngestionProps> = ({
             </button>
           ))}
         </div>
+
+        {/* Secondary CTA: score-first entry point */}
+        <Link
+          href="/score"
+          className="mt-3 inline-flex items-center gap-1.5 text-xs text-slate-400 transition-colors hover:text-emerald-400"
+        >
+          <Trophy className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>
+            Just curious?{' '}
+            <span className="text-emerald-400 underline decoration-emerald-500/40 underline-offset-2">
+              Check your README score
+            </span>{' '}
+            →
+          </span>
+        </Link>
       </div>
     </section>
   );
