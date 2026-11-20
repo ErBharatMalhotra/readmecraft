@@ -36,7 +36,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - uses: ErBharatMalhotra/readmecraft/readmecraft-action@main
+      # Pinned to the v3.4 release tag; use a commit SHA if you need full immutability
+      - uses: ErBharatMalhotra/readmecraft/readmecraft-action@v3.4
         with:
           username: ${{ github.repository_owner }}
           token: ${{ secrets.GITHUB_TOKEN }}
