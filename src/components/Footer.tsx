@@ -114,7 +114,7 @@ export const Footer: React.FC = () => {
                 rel="noreferrer"
                 className="transition-colors hover:text-emerald-400"
               >
-                MIT License
+                AGPL-3.0 License
               </a>
             </li>
             <li>

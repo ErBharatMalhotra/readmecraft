@@ -16,6 +16,7 @@ interface RepoAnalysis {
   cargoToml?: string;
   pyprojectToml?: string;
   readme?: string;
+  license?: { spdxId?: string | null; name?: string | null } | null;
 }
 
 interface CraftedReadme {
@@ -367,9 +368,16 @@ export default function CraftPage() {
     md += `4. Push to the branch (\`git push origin feature/amazing-feature\`)\n`;
     md += `5. Open a Pull Request\n\n`;
 
-    // License
-    md += `## 📄 License\n\n`;
-    md += `Distributed under the **MIT License**. See \`LICENSE\` for more information.\n\n`;
+    // License — only when GitHub reports one. A hardcoded "MIT" used to be
+    // printed for every repo, including AGPL projects.
+    const licenceName =
+      data.license?.spdxId && data.license.spdxId !== 'NOASSERTION'
+        ? data.license.spdxId
+        : data.license?.name;
+    if (licenceName) {
+      md += `## 📄 License\n\n`;
+      md += `Distributed under the **${licenceName}** licence. See \`LICENSE\` for more information.\n\n`;
+    }
 
     // Footer
     md += `---\n\n`;
@@ -434,6 +442,11 @@ export default function CraftPage() {
         cargoToml: cargoToml || undefined,
         pyprojectToml: pyprojectToml || undefined,
         readme: readme || undefined,
+        // Real SPDX value from the repo, so the generated README never claims a
+        // licence the project does not ship.
+        license: repoData.license
+          ? { spdxId: repoData.license.spdx_id, name: repoData.license.name }
+          : null,
       };
 
       setAnalysis(analysisData);

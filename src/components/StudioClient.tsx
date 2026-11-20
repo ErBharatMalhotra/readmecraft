@@ -94,6 +94,9 @@ function HomeInner() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(initialState.hasLoaded);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  // Autosave must not overwrite the saved session before the deferred restore
+  // has had a chance to read it.
+  const [restoreDone, setRestoreDone] = useState(false);
   const [sections, setSections] = useState<Section[]>(initialState.sections);
   const [markdown, setMarkdown] = useState<string>(() =>
     compileSectionsToMarkdown(initialState.sections)
@@ -140,38 +143,49 @@ function HomeInner() {
   const didRestoreRef = useRef(false);
 
   // Restore the previous session after hydration, never during render.
+  // The restore is deferred to a macrotask: running it in the effect's own tick
+  // rewrote the markdown while sibling Suspense boundaries were still hydrating,
+  // which surfaced as React's recoverable "server text didn't match client"
+  // error on the editor's char counter.
   useEffect(() => {
     if (didRestoreRef.current || urlTemplate) return;
     didRestoreRef.current = true;
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      const parsed: ReadmeState = JSON.parse(saved);
-      const savedTheme = localStorage.getItem('readmecraft-theme') || parsed.theme || 'gta6';
-      const restoredSections =
-        parsed.sections && parsed.sections.length > 0 ? parsed.sections : null;
-      const restoredProfile = parsed.profileData || SAMPLE_PROFILE;
-      const restoredPreset = parsed.profilePreset || 'bento';
+    const restore = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        const parsed: ReadmeState = JSON.parse(saved);
+        const savedTheme = localStorage.getItem('readmecraft-theme') || parsed.theme || 'gta6';
+        const restoredSections =
+          parsed.sections && parsed.sections.length > 0 ? parsed.sections : null;
+        const restoredProfile = parsed.profileData || SAMPLE_PROFILE;
+        const restoredPreset = parsed.profilePreset || 'bento';
 
-      setMode(parsed.mode || 'profile');
-      setProfilePreset(restoredPreset);
-      setProjectPreset(parsed.projectPreset || 'standard');
-      setProfileData(restoredProfile);
-      setProjectData(parsed.projectData || SAMPLE_PROJECT);
-      setSections(
-        restoredSections ?? getProfileSections(restoredProfile, restoredPreset, savedTheme)
-      );
-      setTheme(savedTheme);
+        setMode(parsed.mode || 'profile');
+        setProfilePreset(restoredPreset);
+        setProjectPreset(parsed.projectPreset || 'standard');
+        setProfileData(restoredProfile);
 
-      const restoredMarkdown = compileSectionsToMarkdown(
-        restoredSections ?? getProfileSections(restoredProfile, restoredPreset, savedTheme)
-      );
-      setMarkdown(restoredMarkdown);
-      // Keep the "untouched" baseline aligned so the featured README still shows.
-      initialMarkdownRef.current = restoredMarkdown;
-    } catch (e) {
-      console.warn('Failed to restore from localStorage:', e);
-    }
+        setProjectData(parsed.projectData || SAMPLE_PROJECT);
+        setSections(
+          restoredSections ?? getProfileSections(restoredProfile, restoredPreset, savedTheme)
+        );
+        setTheme(savedTheme);
+
+        const restoredMarkdown = compileSectionsToMarkdown(
+          restoredSections ?? getProfileSections(restoredProfile, restoredPreset, savedTheme)
+        );
+        setMarkdown(restoredMarkdown);
+        // Keep the "untouched" baseline aligned so the featured README still shows.
+        initialMarkdownRef.current = restoredMarkdown;
+      } catch (e) {
+        console.warn('Failed to restore from localStorage:', e);
+      } finally {
+        setRestoreDone(true);
+      }
+    };
+    const timer = setTimeout(restore, 0);
+    return () => clearTimeout(timer);
   }, [urlTemplate]);
 
   useEffect(() => {
@@ -247,9 +261,9 @@ function HomeInner() {
     setHasLoaded(true);
   }, [urlTemplate, urlTheme]); // Re-run when template params change
 
-  // Autosave state to localStorage (only after initial load)
+  // Autosave state to localStorage (only after initial load and restore)
   useEffect(() => {
-    if (!hasLoaded) return;
+    if (!hasLoaded || !restoreDone) return;
     try {
       const stateToSave: ReadmeState = {
         mode,
@@ -264,7 +278,17 @@ function HomeInner() {
     } catch (e) {
       console.warn('Failed to save to localStorage:', e);
     }
-  }, [hasLoaded, mode, profilePreset, projectPreset, profileData, projectData, sections, theme]);
+  }, [
+    hasLoaded,
+    restoreDone,
+    mode,
+    profilePreset,
+    projectPreset,
+    profileData,
+    projectData,
+    sections,
+    theme,
+  ]);
 
   // Global Keyboard Shortcuts (Cmd+K / Ctrl+K, Cmd+S / Ctrl+S)
   useEffect(() => {
